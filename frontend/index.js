@@ -5,75 +5,40 @@ import {
 } from "@airtable/blocks/ui";
 import React from "react";
 import "./style.css";
+import Column from "./src/ui/column"
+import ProjectsPanel from "./src/ui/projectspanel";
+import ProfileCard from "./src/ui/profilecard";
+import RadarNotes from "./src/ui/radarnotes";
 
-/**
- * Dashboard principal - skeleton
- * - Mantém estrutura: left big project, middle columns, right profile+radar
- * - Dados: placeholders (vamos ligar ao Airtable depois)
- */
 
-function Column({ title, items = [] }) {
-  return (
-    <div className="col-card">
-      <div className="col-header">{title}</div>
-      <div className="col-list">
-        {items.length === 0 && <div className="col-empty">Sem dados</div>}
-        {items.map((it, idx) => (
-          <div key={idx} className="col-item">
-            <div className="col-item-name">{it.name || `Pessoa ${idx + 1}`}</div>
-            <div className={`badge ${idx <= 1 ? "badge-free" : idx === 2 ? "badge-1" : "badge-2"}`}>
-              {idx <= 1 ? "Livre" : idx === 2 ? "1 Projeto" : "2 Projetos"}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+function getField(record, fieldName) {
+  const value = record.getCellValue(fieldName);
+  if (!value || value.length === 0) return "—";
+
+  // Para múltiplas seleções
+  if (Array.isArray(value)) {
+    return value.map(v => v.name).join(", ");
+  }
+
+  // Para checkbox
+  if (typeof value === "boolean") {
+    return value ? "Sim" : "Não";
+  }
+
+  return value;
 }
 
-function ProjectsPanel() {
-  return (
-    <div className="projects-panel">
-      <div className="projects-header">Projeto...</div>
-      <div className="projects-body">
-        <p>
-          Pesos e critérios usados para a avaliação do indivíduo selecionado
-          (Depende do projeto)
-        </p>
-      </div>
-    </div>
-  );
+// Retorna um número seguro a partir do campo (linked records array, number, string)
+function getCount(record, fieldName) {
+  const val = record.getCellValue(fieldName);
+  if (!val) return 0;
+  if (Array.isArray(val)) return val.length;
+  if (typeof val === "number") return val;
+  // se for string "2" etc
+  const n = parseInt(val, 10);
+  return isNaN(n) ? 0 : n;
 }
 
-function ProfileCard() {
-  return (
-    <div className="profile-card">
-      <div className="profile-header">Consultor(a)</div>
-      <div className="profile-body">
-        <div className="avatar">👤</div>
-        <div className="profile-info">
-          <div className="profile-name">Nome do Consultor</div>
-          <div className="profile-details">Critérios e detalhes do indivíduo</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RadarNotes() {
-  // placeholder SVG small radar-like graphic
-  return (
-    <div className="radar-card">
-      <div className="radar-header">Notas do Consultor...</div>
-      <div className="radar-body">
-        <svg width="200" height="160" viewBox="0 0 200 160" aria-hidden>
-          <polygon points="100,20 140,70 120,120 80,120 60,70" fill="#e6eefc" stroke="#cbd5e1" />
-          <polygon points="100,40 132,78 116,110 84,110 68,78" fill="#cfe8ff" stroke="#a3bffa" />
-        </svg>
-      </div>
-    </div>
-  );
-}
 
 function Dashboard() {
   // placeholders; quando ligar ao Airtable, substituímos estes arrays por dados reais.
@@ -81,13 +46,51 @@ function Dashboard() {
   const table = base.getTableByName("Dados - Alocação");
   const records = useRecords(table);
 
+  const [selectedPerson, setSelectedPerson] = React.useState(null);
+
   console.log("RECORDS DO AIRTABLE:", records);
 
-  const samplePeople = new Array(12).fill(0).map((_, i) => ({ name: `Pessoa ${i + 1}` }));
+  const people = (records || []).map(record => ({
+  id: record.id,
+  name: record.name,
+  setor: getField(record, "Setor"),
+  prefere: getField(record, "Qual Prefere"),
+  domina: getField(record, "Qual Domina"),
+  dificuldade: getField(record, "Qual Tem Dificuldade"),
+  extra: getField(record, "Disposto a fazer mais um"),
+  // número de alocações (0 quando vazio)
+  alocacoes: getCount(record, "Alocações"),
+  // opcional: campo "Membro" bruto (se for usado para filtrar roles)
+  membroRaw: record.getCellValue("Membro"),
+}));
+
+// filtrar por role (ajuste os termos 'consultor', 'gerent', 'madrinha' se necessário)
+const consultores = people.filter(p => {
+  if (!p.membroRaw) return false;
+  if (Array.isArray(p.membroRaw)) {
+    return p.membroRaw.some(m => (m.name || String(m)).toLowerCase().includes("consultor"));
+  }
+  return String(p.membroRaw).toLowerCase().includes("consultor");
+});
+const gerentes = people.filter(p => {
+  if (!p.membroRaw) return false;
+  if (Array.isArray(p.membroRaw)) {
+    return p.membroRaw.some(m => (m.name || String(m)).toLowerCase().includes("gerent"));
+  }
+  return String(p.membroRaw).toLowerCase().includes("gerent");
+});
+const madrinhas = people.filter(p => {
+  if (!p.membroRaw) return false;
+  if (Array.isArray(p.membroRaw)) {
+    return p.membroRaw.some(m => (m.name || String(m)).toLowerCase().includes("madrinha"));
+  }
+  return String(p.membroRaw).toLowerCase().includes("madrinha");
+});
+
 
   return (
     <div className="app">
-      <h1>TESTE RELOAD</h1>
+      <h1>Dashboard de Alocações</h1>
       <header className="app-header">
         <div className="logo">FGV Jr.</div>
         <div className="title">Dashboard de Alocações</div>
@@ -99,13 +102,16 @@ function Dashboard() {
         </section>
 
         <section className="middle">
-          <Column title="Consultores" items={samplePeople.slice(0, 12)} />
-          <Column title="Gerentes" items={samplePeople.slice(0, 12)} />
-          <Column title="Madrinhas" items={samplePeople.slice(0, 12)} />
+          <Column
+            title="Membros"
+            items={people}
+            onSelect={setSelectedPerson}
+          />
+
         </section>
 
         <aside className="right">
-          <ProfileCard />
+          <ProfileCard person={selectedPerson} />
           <RadarNotes />
         </aside>
       </main>
