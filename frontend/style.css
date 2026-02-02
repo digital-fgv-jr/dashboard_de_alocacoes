@@ -1,3 +1,191 @@
+
+
+/* ===== layout geral: header + left big project + right 3 colunas estreitas ===== */
+:root{
+  --dark-blue:#0f3550;
+  --card-bg:#ffffff;
+  --muted:#7f9bb0;
+}
+
+/* grid principal */
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 480px;
+  grid-template-rows: auto 1fr;
+  gap: 16px;
+
+  max-width: 1400px;      /* <<< CONTROLA O TAMANHO TOTAL */
+  margin: 0 auto;         /* <<< CENTRALIZA O GRID */
+  padding: 12px;
+
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+/* header spanning full width */
+.header-with-logo {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 8px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  background: transparent;
+}
+
+/* logo sizing */
+.app-logo {
+  height: 56px;
+  max-width: 420px;
+  object-fit: contain;
+}
+
+/* content area is a row split: left-panel and right-panel */
+.content {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 480px;
+  gap: 16px;
+  align-items: start;
+}
+
+/* left area: project panel */
+.left-panel {
+  grid-column: 1 / 2;
+}
+
+/* right area: where 3 narrow rank columns live */
+.right-panel {
+  grid-column: 2 / 3;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* wrapper that places the three ranking columns side-by-side */
+.rank-columns {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+/* each Column will be narrow like the design reference */
+.col-card {
+  width: 140px;
+  min-width: 140px;
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+  box-sizing: border-box;
+}
+
+/* title header inside each narrow column */
+.col-header {
+  background: var(--dark-blue);
+  color: white;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* compact list item */
+.col-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 72vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.col-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+}
+
+/* small rank bubble */
+.col-rank {
+  background: var(--dark-blue);
+  color: white;
+  padding: 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  min-width: 36px;
+  text-align: center;
+  font-size: 12px;
+}
+
+/* item name wraps and stays compact */
+.col-item-body {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.1;
+}
+
+/* badge small on right */
+.badge {
+  padding: 6px 8px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* big dark project box (left) */
+.project-info {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+}
+
+.project-title {
+  background: var(--dark-blue);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* large dark box like reference */
+.project-dark-box {
+  background: var(--dark-blue);
+  color: white;
+  height: 420px;
+  border-radius: 10px;
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* profile aside (lower priority visual) */
+.profile-aside {
+  grid-column: 2 / 3;
+  display: none; /* escondemos a coluna de perfil para ficar igual à referência; se quiser, troque para block */
+}
+
+/* mobile fallback: empilhar tudo */
+@media (max-width: 1000px) {
+  .grid-container { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; }
+  .content { grid-template-columns: 1fr; }
+  .rank-columns { flex-direction: row; overflow-x: auto; }
+  .col-card { width: 220px; min-width: 220px; }
+  .project-dark-box { height: 260px; padding: 18px; }
+}
+
 /* Reset mínimo */
 * { box-sizing: border-box; }
 body { margin: 0; font-family: Inter, Arial, sans-serif; background: #f3f4f6; color: #0f172a; }
@@ -27,7 +215,7 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: #f3f4f6; co
 .projects-panel {
   background: white;
   border-radius: 8px;
-  padding: 12px;
+  padding: 12px;   
   box-shadow: 0 1px 3px rgba(2,6,23,0.06);
 }
 .projects-header {
@@ -46,6 +234,40 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: #f3f4f6; co
   min-height: 380px;
   border-radius: 6px;
 }
+
+/* --------------------------
+   ProjectPanel (caixa azul)
+   -------------------------- */
+.project-panel {
+  background: #0f172a;      /* azul escuro */
+  color: #e6eefc;           /* texto claro */
+  padding: 18px;
+  border-radius: 6px;
+  min-height: 120px;
+  margin-top: 12px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+}
+
+.project-panel h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.project-panel .project-info {
+  margin-top: 10px;
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+/* se quiser, alinhamento horizontal em telas largas:
+   (descomente se preferir as infos lado a lado)
+.project-panel .project-info { flex-direction: row; flex-wrap:wrap; }
+.project-panel .project-info > div { min-width: 160px; }
+*/
 
 /* Middle: columns */
 .middle {
@@ -104,4 +326,230 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: #f3f4f6; co
   .grid-container { grid-template-columns: 1fr; }
   .middle { flex-direction: row; overflow-x: auto; }
   .col-card { min-width: 260px; }
+}
+/* ---------- PRIMEIRA SESSÃO: Projects (left) + 3 rankings (right) ---------- */
+.top-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* left: projects */
+.projects-panel {
+  width: 580px;           /* largura da coluna esquerda grande */
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* header grande com pill azul no canto direito */
+.projects-header {
+  background: #0b2540;   /* azul escuro do header */
+  color: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor: pointer;
+}
+.projects-header-title { flex:1; text-align:center; font-weight:700; }
+.projects-header-pill {
+  background: #2563eb;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight:600;
+}
+
+/* grande caixa azul escura */
+.project-big-box {
+  background: #0f172a;
+  color: #e6eefc;
+  border-radius: 8px;
+  min-height: 380px;
+  padding: 28px;
+  box-shadow: inset 0 0 0 6px rgba(255,255,255,0.02);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.project-big-text { max-width: 86%; line-height:1.4; font-size:15px; color: #dbeafe; }
+.project-big-inner h3 { margin:0 0 8px 0; }
+.project-info { font-size:13px; color: #dbeafe; }
+
+/* dropdown lista de projetos */
+.projects-dropdown {
+  background: white;
+  border-radius: 6px;
+  padding: 8px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+  max-height: 260px;
+  overflow:auto;
+}
+.project-dropdown-item { padding: 8px 10px; cursor:pointer; border-radius:6px; }
+.project-dropdown-item:hover { background:#f1f5f9; }
+.project-dropdown-item.active { background: rgba(37,99,235,0.08); }
+
+/* right: rankings section */
+.columns {
+  display:flex;
+  gap: 14px;
+  flex: 1;
+  align-items:flex-start;
+}
+
+/* column card */
+.col-card {
+  background: #fff;
+  border-radius: 8px;
+  width: 360px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+  display:flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* header small dark */
+.col-header {
+  background: #0b2540;
+  color: white;
+  padding: 8px;
+  text-align:center;
+  font-weight:700;
+  border-radius: 4px 4px 0 0;
+}
+
+/* list scroll inside card */
+.col-list { padding: 10px; max-height: 480px; overflow:auto; display:flex; flex-direction:column; gap:10px; }
+
+/* each item: narrow left rank, center name, right badge */
+.col-item {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background: #fbfdff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #eef2f7;
+  cursor:pointer;
+}
+.col-item:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(2,6,23,0.06); }
+
+/* rank number left */
+.col-rank {
+  width:36px;
+  background: #0b2540;
+  color: #fff;
+  font-weight:700;
+  text-align:center;
+  padding:6px 4px;
+  border-radius:6px;
+  flex-shrink:0;
+  font-size:13px;
+}
+
+/* name grows */
+.col-item-body { flex:1; display:flex; align-items:center; }
+.col-item-name { font-size:15px; color:#0f172a; }
+
+/* badges (reuse your existing colors if present) */
+.badge { padding:6px 10px; border-radius:999px; font-weight:700; color:#fff; white-space:nowrap; }
+.badge-free { background:#2563eb; } /* azul */
+.badge-1 { background:#f59e0b; } /* amarelo/laranja */
+.badge-2 { background:#ef4444; } /* vermelho */
+
+/* responsive: stack when narrow */
+@media (max-width: 1100px) {
+  .top-row { flex-direction: column; }
+  .projects-panel { width: 100%; }
+  .columns { flex-direction: column; }
+  .col-card { width: 100%; }
+}
+
+.header-with-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.app-logo {
+  height: 48px;
+  object-fit: contain;
+}
+
+.first-section {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.first-section > * {
+  flex: 1;
+}
+
+/* ===== Header com logo centralizada ===== */
+.header-with-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 8px;
+  background: transparent;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.app-logo {
+  height: 56px;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* responsividade */
+@media (max-width: 600px) {
+  .app-logo { height: 44px; }
+}
+
+.app-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* ===== Header: título centralizado e estilizado ===== */
+.header-with-logo {
+  display: flex;
+  justify-content: center; /* centraliza horizontal */
+  align-items: center;     /* centraliza vertical */
+  padding: 14px 12px;
+  background: transparent;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  box-sizing: border-box;
+}
+
+/* esconder a imagem caso ainda exista no markup (não obrigatório) */
+.app-logo {
+  display: none;
+}
+
+/* título grande e elegante */
+.app-title {
+  font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 22px;         /* ajuste: 18-26 conforme preferir */
+  font-weight: 700;
+  color: #0b2540;          /* tom escuro parecido com o header */
+  letter-spacing: 0.2px;
+  margin: 0;
+  padding: 6px 12px;
+}
+
+/* título responsivo */
+@media (max-width: 900px) {
+  .app-title { font-size: 18px; }
 }

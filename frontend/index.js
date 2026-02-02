@@ -1,122 +1,174 @@
-import {
-  initializeBlock,
-  useBase,
-  useRecords
-} from "@airtable/blocks/ui";
+// frontend/index.js
 import React from "react";
+import { initializeBlock, useBase, useRecords } from "@airtable/blocks/ui";
+
 import "./style.css";
-import Column from "./src/ui/column"
+
+import Column from "./src/ui/column";
 import ProjectsPanel from "./src/ui/projectspanel";
 import ProfileCard from "./src/ui/profilecard";
 import RadarNotes from "./src/ui/radarnotes";
-
-
-function getField(record, fieldName) {
-  const value = record.getCellValue(fieldName);
-  if (!value || value.length === 0) return "—";
-
-  // Para múltiplas seleções
-  if (Array.isArray(value)) {
-    return value.map(v => v.name).join(", ");
-  }
-
-  // Para checkbox
-  if (typeof value === "boolean") {
-    return value ? "Sim" : "Não";
-  }
-
-  return value;
-}
-
-// Retorna um número seguro a partir do campo (linked records array, number, string)
-function getCount(record, fieldName) {
-  const val = record.getCellValue(fieldName);
-  if (!val) return 0;
-  if (Array.isArray(val)) return val.length;
-  if (typeof val === "number") return val;
-  // se for string "2" etc
-  const n = parseInt(val, 10);
-  return isNaN(n) ? 0 : n;
-}
-
+import MemberDetail from "./src/ui/memberdetail";
 
 function Dashboard() {
-  // placeholders; quando ligar ao Airtable, substituímos estes arrays por dados reais.
   const base = useBase();
-  const table = base.getTableByName("Dados - Alocação");
-  const records = useRecords(table);
+  const table = base.getTableByName ? base.getTableByName("Dados - Alocação") : null;
+  const records = useRecords(table) || [];
 
+  const fieldNames = React.useMemo(() => {
+    if (!table || !table.fields) return new Set();
+    return new Set(table.fields.map((f) => f.name));
+  }, [table]);
+  const hasField = React.useCallback((n) => fieldNames.has(n), [fieldNames]);
+
+  const radarFields = React.useMemo(() => {
+    if (!table || !table.fields) return [];
+    const keywords = ["comunic", "tecni", "proativ", "prazo", "qualidade", "nota", "score", "avalia"];
+    return table.fields
+      .map((f) => f.name)
+      .filter((name) => keywords.some((k) => name.toLowerCase().includes(k)))
+      .slice(0, 5);
+  }, [table]);
+
+  const people = React.useMemo(() => {
+    return (records || []).map((r) => {
+      const get = (n) => (hasField(n) && r.getCellValue ? r.getCellValue(n) : null);
+      const name = (get("Name") || r.name || get("Membro") || "").toString().trim();
+      const role = (get("Função") || get("Cargo") || "").toString() || "";
+      const alocacoes = Number(get("Alocações") || get("Alocacoes") || get("Aloc") || 0) || 0;
+
+      let photoUrl = null;
+      const photoCell = get("Foto") || get("Image");
+      if (Array.isArray(photoCell) && photoCell[0] && photoCell[0].url) photoUrl = photoCell[0].url;
+
+      const description = (get("Descrição") || get("Descricao") || get("Bio") || "") || "";
+
+      let projectsLinked = [];
+      const projVal = get("Projeto") || get("Projetos");
+      if (projVal) {
+        if (Array.isArray(projVal)) projectsLinked = projVal.map((x) => (x && x.name ? x.name : String(x)));
+        else projectsLinked = [String(projVal)];
+      }
+
+      const radar = { labels: [], values: [] };
+      radarFields.forEach((f) => {
+        radar.labels.push(f);
+        const raw = (hasField(f) && r.getCellValue) ? r.getCellValue(f) : null;
+        let v = 0;
+        if (typeof raw === "number") v = raw;
+        else if (typeof raw === "string") v = parseFloat(raw.replace(",", ".")) || 0;
+        else if (raw && raw.value !== undefined) v = Number(raw.value) || 0;
+        radar.values.push(v);
+      });
+
+      return {
+        id: r.id,
+        name,
+        role,
+        alocacoes,
+        photoUrl,
+        description,
+        radar,
+        projectsLinked,
+        __rawRecord: r,
+      };
+    });
+  }, [records, hasField, radarFields]);
+
+  const projects = React.useMemo(() => {
+    const s = new Set();
+    (people || []).forEach((p) => (p.projectsLinked || []).forEach((pr) => s.add(pr)));
+    return Array.from(s).sort((a, b) => a.localeCompare(b, "pt", { sensitivity: "base" }));
+  }, [people]);
+
+  const [selectedProject, setSelectedProject] = React.useState(null);
   const [selectedPerson, setSelectedPerson] = React.useState(null);
+  const [view, setView] = React.useState("list");
 
-  console.log("RECORDS DO AIRTABLE:", records);
+  const selectedProjectObj = React.useMemo(() => {
+    if (!selectedProject) return null;
+    const peopleInProject = (people || []).filter((p) => (p.projectsLinked || []).includes(selectedProject));
+    const sample = peopleInProject[0] ? peopleInProject[0].__rawRecord : null;
+    let client = "-", status = "-";
+    if (sample && sample.getCellValue) {
+      client = (hasField("Cliente") ? sample.getCellValue("Cliente") : (hasField("Client") ? sample.getCellValue("Client") : "-")) || "-";
+      status = (hasField("Status") ? sample.getCellValue("Status") : "-") || "-";
+    }
+    return { name: selectedProject, client, status, peopleCount: peopleInProject.length };
+  }, [selectedProject, people, hasField]);
 
-  const people = (records || []).map(record => ({
-  id: record.id,
-  name: record.name,
-  setor: getField(record, "Setor"),
-  prefere: getField(record, "Qual Prefere"),
-  domina: getField(record, "Qual Domina"),
-  dificuldade: getField(record, "Qual Tem Dificuldade"),
-  extra: getField(record, "Disposto a fazer mais um"),
-  // número de alocações (0 quando vazio)
-  alocacoes: getCount(record, "Alocações"),
-  // opcional: campo "Membro" bruto (se for usado para filtrar roles)
-  membroRaw: record.getCellValue("Membro"),
-}));
+  const filteredPeople = selectedProject ? people.filter((p) => (p.projectsLinked || []).includes(selectedProject)) : people;
 
-// filtrar por role (ajuste os termos 'consultor', 'gerent', 'madrinha' se necessário)
-const consultores = people.filter(p => {
-  if (!p.membroRaw) return false;
-  if (Array.isArray(p.membroRaw)) {
-    return p.membroRaw.some(m => (m.name || String(m)).toLowerCase().includes("consultor"));
+  const byName = (a, b) => a.name.localeCompare(b.name, "pt", { sensitivity: "base" });
+  let consultants = (filteredPeople || []).filter((p) => /consultor/i.test(p.role)).sort(byName);
+  let managers = (filteredPeople || []).filter((p) => /gerent|manager|gerente/i.test(p.role)).sort(byName);
+  let madrinhas = (filteredPeople || []).filter((p) => /madrinh/i.test(p.role)).sort(byName);
+
+  if (consultants.length === 0 && managers.length === 0 && madrinhas.length === 0) {
+    const sorted = [...(filteredPeople || [])].sort(byName);
+    const n = sorted.length;
+    const firstCut = Math.ceil(n / 3);
+    const secondCut = Math.ceil((2 * n) / 3);
+    consultants = sorted.slice(0, firstCut);
+    managers = sorted.slice(firstCut, secondCut);
+    madrinhas = sorted.slice(secondCut);
   }
-  return String(p.membroRaw).toLowerCase().includes("consultor");
-});
-const gerentes = people.filter(p => {
-  if (!p.membroRaw) return false;
-  if (Array.isArray(p.membroRaw)) {
-    return p.membroRaw.some(m => (m.name || String(m)).toLowerCase().includes("gerent"));
-  }
-  return String(p.membroRaw).toLowerCase().includes("gerent");
-});
-const madrinhas = people.filter(p => {
-  if (!p.membroRaw) return false;
-  if (Array.isArray(p.membroRaw)) {
-    return p.membroRaw.some(m => (m.name || String(m)).toLowerCase().includes("madrinha"));
-  }
-  return String(p.membroRaw).toLowerCase().includes("madrinha");
-});
 
+  const handleSelectPerson = (p) => {
+    if (!p) return;
+    const sanitized = {
+      id: p.id,
+      name: p.name,
+      role: p.role,
+      alocacoes: p.alocacoes,
+      photoUrl: p.photoUrl,
+      description: p.description,
+      radar: p.radar,
+      projectsLinked: p.projectsLinked,
+    };
+    setSelectedPerson(sanitized);
+    setView("detail");
+  };
+
+  if (view === "detail" && selectedPerson) {
+    return (
+      <MemberDetail person={selectedPerson} onBack={() => { setSelectedPerson(null); setView("list"); }} />
+    );
+  }
 
   return (
-    <div className="app">
-      <h1>Dashboard de Alocações</h1>
-      <header className="app-header">
-        <div className="logo">FGV Jr.</div>
-        <div className="title">Dashboard de Alocações</div>
+    <div className="grid-container">
+      <header className="header-with-logo">
+          <h1 className="app-title">FGV Jr. — Dashboard de Alocações</h1>
       </header>
 
-      <main className="grid-container">
-        <section className="left">
-          <ProjectsPanel />
-        </section>
+      <div className="top-row">
+        <ProjectsPanel
+          projects={projects}
+          selectedProject={selectedProject}
+          onSelectProject={setSelectedProject}
+          projectInfo={selectedProjectObj}
+        />
 
-        <section className="middle">
-          <Column
-            title="Membros"
-            items={people}
-            onSelect={setSelectedPerson}
-          />
+        <div className="columns">
+          <Column title="Consultores" items={consultants} onSelect={handleSelectPerson} />
+          <Column title="Gerentes" items={managers} onSelect={handleSelectPerson} />
+          <Column title="Madrinhas" items={madrinhas} onSelect={handleSelectPerson} />
+        </div>
+      </div>
 
-        </section>
-
-        <aside className="right">
-          <ProfileCard person={selectedPerson} />
-          <RadarNotes />
-        </aside>
-      </main>
+      <aside className="right">
+        <ProfileCard person={selectedPerson} />
+        {selectedPerson && selectedPerson.radar && selectedPerson.radar.values && (
+          <div className="radar-card">
+            <h3 className="radar-header">Competências</h3>
+            <RadarNotes values={selectedPerson.radar.values} labels={selectedPerson.radar.labels} />
+          </div>
+        )}
+      </aside>
     </div>
   );
 }
 
 initializeBlock(() => <Dashboard />);
+

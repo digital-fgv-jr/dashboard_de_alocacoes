@@ -1,4 +1,5 @@
 import "../../style.css";
+import React from "react";
 
 export default function Column({ title, items = [], onSelect }) {
   return (
@@ -6,45 +7,28 @@ export default function Column({ title, items = [], onSelect }) {
       <div className="col-header">{title}</div>
 
       <div className="col-list">
-        {items.length === 0 && (
-          <div className="col-empty">Sem dados</div>
-        )}
+        {items.length === 0 && <div className="col-empty">Sem dados</div>}
 
         {items.map((it, idx) => {
-          // 🔒 Proteções para dados ainda vazios
           const name = it.name || `Pessoa ${idx + 1}`;
-          const alocacoes = it.alocacoes ?? null;
-
-          // 🎯 Lógica do badge (pronta para o futuro)
-          let badgeClass = "badge-free";
-          let badgeText = "Sem informação";
-
-          if (typeof alocacoes === "number") {
-            if (alocacoes === 0) {
-              badgeClass = "badge-free";
-              badgeText = "Livre";
-            } else if (alocacoes === 1) {
-              badgeClass = "badge-1";
-              badgeText = "1 Projeto";
-            } else {
-              badgeClass = "badge-2";
-              badgeText = `${alocacoes} Projetos`;
-            }
-          }
-          
-          console.log("ITEM DO MAP:", {
-            name: it.name,
-            alocacoes: it.alocacoes,
-          });
-
+          const alocacoes = it.alocacoes ?? 0;
+          const badgeText = alocacoes > 0 ? `${alocacoes}` : "Livre";
+          const badgeClass = alocacoes > 0 ? "badge-busy" : "badge-free";
 
           return (
-            <div key={it.id || idx} className="col-item">
-              <div className="col-item-name">{name}</div>
+            <div
+              key={it.id || idx}
+              className="col-item"
+              onClick={() => onSelect && onSelect(it)}
+            >
+              <div className="col-rank">#{String(idx + 1).padStart(2, "0")}</div>
 
-              <div className={`badge ${badgeClass}`}>
-                {badgeText}
+              <div className="col-item-body">
+                <div className="col-item-name">{name}</div>
+                {it.role && <div className="col-item-role">{it.role}</div>}
               </div>
+
+              <div className={`badge ${badgeClass}`}>{badgeText}</div>
             </div>
           );
         })}
