@@ -22,15 +22,14 @@ export function score() {
         else if (record.alocacoes === 2) {score += 1} 
         else if (record.alocacoes === 3) {nem_mostra = true};
 
-        const proj = proj_dado.find(param => param.name == record.name)
+        const proj = proj_dado.find(param => param.name === record.name)
 
         return {
             id: record.id,
-            name: record.name,
+            ...proj,
             padrinho: apadrinhar,
             sobrecarga: nem_mostra,
-            score: score+record.nota120,
-            notas: proj
+            score: score+record.nota120            
         }
 
     })  

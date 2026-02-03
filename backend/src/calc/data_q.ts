@@ -69,8 +69,8 @@ export function get_info_proj() {
             mape_exp: mape_mexp,
             masf_exp: masf_mexp,
             masm_exp: masm_mexp,
-            nps: (m_nps/total),
-            eficiencia: (m_qap/total)
+            nps: total > 0 ? (m_nps/total) : 0,
+            eficiencia: total > 0 ? (m_qap/total) : 0
         }
 
     })
