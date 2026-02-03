@@ -1,15 +1,7 @@
-import { get_membros } from "./data";
-import { base } from "@airtable/blocks"
-import { useBase, useRecords } from '@airtable/blocks/ui'
-
+import { get_membros } from "./data_t";
 // ^^ Importações ^^ //
 
-const historico = base.getTableByName("Forms - Alocação")
-const querry_h = await historico.selectRecordsAsync()
-
 // ^^ Constantes usadas ^^ //
-
-
 
 export function score() {
     const dado = get_membros()

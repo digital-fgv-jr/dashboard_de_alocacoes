@@ -37,7 +37,7 @@ function get_field(record:AirtableRecord, fieldName:string) {
  
   // Para múltiplas seleções
   if (Array.isArray(value)) {
-    return value.map(v => v.name).join(", ");
+    return value.map(v => v.name);
   }
 
   // Para checkbox
@@ -86,7 +86,6 @@ export function get_membros() {
         dificuldade: get_field(record, "Qual Tem Dificuldade"),
         extra: get_field(record, "Disposto a fazer mais um"),
         alocacoes: get_count(record, "Alocações"),
-        membroRaw: record.getCellValue("Membro"),
 
     }))
     return membro;
