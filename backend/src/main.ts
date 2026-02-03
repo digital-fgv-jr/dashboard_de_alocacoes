@@ -1,4 +1,9 @@
-export function run(): void {
-    console.log('Testando')
+import { score } from "./calc/processing";
+
+
+export function run() {
+
+    score()
+    return null
     
 }

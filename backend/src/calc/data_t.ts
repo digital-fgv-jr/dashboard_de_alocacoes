@@ -21,7 +21,7 @@ type AirtableRecord = {
 
 
 
-function get_field(record:AirtableRecord, fieldName:string) {
+export function get_field(record:AirtableRecord, fieldName:string) {
   const value = record.getCellValue(fieldName);
   if (
     typeof value === "string" && value.length === 0
@@ -37,7 +37,7 @@ function get_field(record:AirtableRecord, fieldName:string) {
  
   // Para múltiplas seleções
   if (Array.isArray(value)) {
-    return value.map(v => v.name);
+    return value.map(v => v.name).join(", ");
   }
 
   // Para checkbox
@@ -50,7 +50,7 @@ function get_field(record:AirtableRecord, fieldName:string) {
 
 
 // Retorna um número seguro a partir do campo (linked records array, number, string)
-function get_count(record:AirtableRecord, fieldName:string) {
+export function get_count(record:AirtableRecord, fieldName:string) {
 
   const val = record.getCellValue(fieldName);
   if (typeof val === "number" || !val || Array.isArray(val) || typeof val === "string") {
@@ -78,14 +78,16 @@ export function get_membros() {
     const info = useRecords(dados);
 
     const membro = (info || []).map(record => ({
+
         id: record.id,
-        name: record.name,
+        name: record.name as string,
         setor: get_field(record, "Setor"),
         prefere: get_field(record, "Qual Prefere"),
         domina: get_field(record, "Qual Domina"),
         dificuldade: get_field(record, "Qual Tem Dificuldade"),
         extra: get_field(record, "Disposto a fazer mais um"),
         alocacoes: get_count(record, "Alocações"),
+        nota120: get_count(record, "Av 120") as number,
 
     }))
     return membro;

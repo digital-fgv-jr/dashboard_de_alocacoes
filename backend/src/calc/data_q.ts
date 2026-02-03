@@ -61,15 +61,16 @@ export function get_info_proj() {
             }
         })
 
-
+        let total = (maem_mexp + mape_mexp + masf_mexp + masm_mexp)
 
         return {
-            nome: mem.name,
+            name: mem.name,
             maem_exp: maem_mexp,
             mape_exp: mape_mexp,
             masf_exp: masf_mexp,
             masm_exp: masm_mexp,
-            nps: (m_nps/(maem_mexp + mape_mexp + masf_mexp + masm_mexp))
+            nps: (m_nps/total),
+            eficiencia: (m_qap/total)
         }
 
     })
