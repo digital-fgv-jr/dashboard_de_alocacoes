@@ -1,4 +1,4 @@
-// projectspanel.js - VERSÃO PROFISSIONAL ORIGINAL
+// projectspanel.js - VERSÃO COM AJUSTES FINAIS
 import React, { useState, useEffect } from "react";
 import "../../style.css";
 
@@ -10,11 +10,11 @@ export default function ProjectsPanel({
 }) {
   const [open, setOpen] = useState(false);
   const [criteria, setCriteria] = useState([
-    { id: 'nps', name: 'NPS do Profissional', weight: 30, description: 'Satisfação média de clientes anteriores' },
-    { id: 'experience', name: 'Experiência na Área', weight: 25, description: 'Anos de experiência no setor do projeto' },
-    { id: 'technical', name: 'Avaliação 120', weight: 20, description: 'Avaliação de 120 horas do membro' },
-    { id: 'availability', name: 'Disponibilidade', weight: 15, description: 'Capacidade de dedicação ao projeto' },
-    { id: 'cultural', name: 'Preferencia', weight: 10, description: 'Preferência do cliente pelo profissional' }
+    { id: 'nps', name: 'NPS do Profissional', weight: 30 },
+    { id: 'experience', name: 'Experiência na Área', weight: 25 },
+    { id: 'technical', name: 'Avaliação 120°', weight: 20 },
+    { id: 'availability', name: 'Disponibilidade', weight: 15 },
+    { id: 'cultural', name: 'Preferência', weight: 10 }
   ]);
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState('');
@@ -65,11 +65,11 @@ export default function ProjectsPanel({
 
   const handleResetWeights = () => {
     setCriteria([
-      { id: 'nps', name: 'NPS do Profissional', weight: 30, description: 'Satisfação média de clientes anteriores' },
-      { id: 'experience', name: 'Experiência na Área', weight: 25, description: 'Anos de experiência no setor do projeto' },
-      { id: 'technical', name: 'Avaliação 120', weight: 20, description: 'Avaliação de 120 horas do membro' },
-      { id: 'availability', name: 'Disponibilidade', weight: 15, description: 'Capacidade de dedicação ao projeto' },
-      { id: 'cultural', name: 'Preferencia', weight: 10, description: 'Preferência do cliente pelo profissional' }
+      { id: 'nps', name: 'NPS do Profissional', weight: 30 },
+      { id: 'experience', name: 'Experiência na Área', weight: 25 },
+      { id: 'technical', name: 'Avaliação 120°', weight: 20 },
+      { id: 'availability', name: 'Disponibilidade', weight: 15 },
+      { id: 'cultural', name: 'Preferência', weight: 10 }
     ]);
   };
 
@@ -95,12 +95,33 @@ export default function ProjectsPanel({
     return (
       <>
         <div className="project-header-info">
-          <div className="project-badge">
-            <span className="project-status">{projectData.status}</span>
-            <span className="project-client">{projectData.client}</span>
-            <span className="project-members">{projectData.members}</span>
-          </div>
           <h2 className="project-title">{selectedProject}</h2>
+          
+          <div className="project-meta-creative">
+            <div className="meta-card">
+              <div className="meta-header">
+                <div className="meta-icon">⏳</div>
+                <div className="meta-label">FASE</div>
+              </div>
+              <div className="meta-value">{projectData.status}</div>
+            </div>
+            
+            <div className="meta-card">
+              <div className="meta-header">
+                <div className="meta-icon">🏢</div>
+                <div className="meta-label">PARCEIRO</div>
+              </div>
+              <div className="meta-value">{projectData.client}</div>
+            </div>
+            
+            <div className="meta-card">
+              <div className="meta-header">
+                <div className="meta-icon">👥</div>
+                <div className="meta-label">TIME</div>
+              </div>
+              <div className="meta-value">{projectData.members}</div>
+            </div>
+          </div>
         </div>
 
         <div className="criteria-controls-section">
@@ -160,8 +181,6 @@ export default function ProjectsPanel({
                     <span>100</span>
                   </div>
                 </div>
-                
-                <p className="criterion-description">{criterion.description}</p>
               </div>
             ))}
           </div>
@@ -228,14 +247,6 @@ export default function ProjectsPanel({
         <div className="projects-header-title">
           <span className="project-icon">📁</span>
           {selectedProject || "Todos os Projetos"}
-          {selectedProject && (
-            <span className="project-count">
-              {selectedProject === "Projeto 1" ? "8 membros" : 
-               selectedProject === "Projeto 2" ? "5 membros" : 
-               selectedProject === "Projeto 3" ? "12 membros" : 
-               projectInfo?.peopleCount || ""}
-            </span>
-          )}
         </div>
         <button className="projects-toggle">
           {open ? "▲" : "▼"}
