@@ -1,4 +1,4 @@
-// frontend/index.js - Versão atualizada compacta
+// frontend/index.js - Dashboard de Alocações FGV Jr. (Botão Voltar ao lado do avatar)
 import React from "react";
 import { initializeBlock, useBase, useRecords } from "@airtable/blocks/ui";
 
@@ -6,9 +6,7 @@ import "./style.css";
 
 import Column from "./src/ui/column";
 import ProjectsPanel from "./src/ui/projectspanel";
-import ProfileCard from "./src/ui/profilecard";
 import RadarNotes from "./src/ui/radarnotes";
-import MemberDetail from "./src/ui/memberdetail";
 
 function Dashboard() {
   const base = useBase();
@@ -93,7 +91,23 @@ function Dashboard() {
 
   const [selectedProject, setSelectedProject] = React.useState(null);
   const [selectedPerson, setSelectedPerson] = React.useState(null);
-  const [view, setView] = React.useState("dashboard");
+
+  // Dados de exemplo para a sessão 2
+  const consultantNotes = React.useMemo(() => [
+    { letter: 'A', value: 8.5, label: 'Comunicação' },
+    { letter: 'B', value: 7.2, label: 'Habilidade Técnica' },
+    { letter: 'C', value: 9.0, label: 'Proatividade' },
+    { letter: 'D', value: 8.8, label: 'Entrega no Prazo' },
+    { letter: 'E', value: 7.5, label: 'Qualidade' }
+  ], []);
+
+  const competencyMetrics = React.useMemo(() => [
+    { name: 'Comunicação', value: 85, color: '#3b82f6' },
+    { name: 'Técnica', value: 72, color: '#10b981' },
+    { name: 'Proatividade', value: 90, color: '#f59e0b' },
+    { name: 'Prazo', value: 88, color: '#8b5cf6' },
+    { name: 'Qualidade', value: 75, color: '#ef4444' }
+  ], []);
 
   const selectedProjectObj = React.useMemo(() => {
     if (!selectedProject) return null;
@@ -150,31 +164,116 @@ function Dashboard() {
 
   const handleSelectPerson = (p) => {
     if (!p) return;
-    const sanitized = {
-      id: p.id,
-      name: p.name,
-      role: p.role,
-      alocacoes: p.alocacoes,
-      photoUrl: p.photoUrl,
-      description: p.description,
-      radar: p.radar,
-      projectsLinked: p.projectsLinked,
-    };
-    setSelectedPerson(sanitized);
-    setView("detail");
+    setSelectedPerson(p);
   };
 
-  if (view === "detail" && selectedPerson) {
+  const handleGoBack = () => {
+    setSelectedPerson(null);
+  };
+
+  // Renderizar a sessão 2
+  const renderSession2 = () => {
+    if (!selectedPerson) return null;
+
     return (
-      <MemberDetail 
-        person={selectedPerson} 
-        onBack={() => { 
-          setSelectedPerson(null); 
-          setView("dashboard"); 
-        }} 
-      />
+      <div className="bottom-section">
+        {/* Painel de Perfil e Notas (Esquerda) */}
+        <div className="profile-panel">
+          {/* Header com botão Voltar e Avatar */}
+          <div className="profile-header-with-back">
+            <button className="back-button" onClick={handleGoBack}>
+              ← Voltar
+            </button>
+            <div className="profile-avatar">
+              {selectedPerson.photoUrl ? (
+                <img src={selectedPerson.photoUrl} alt={selectedPerson.name} />
+              ) : (
+                selectedPerson.name.charAt(0).toUpperCase()
+              )}
+            </div>
+          </div>
+
+          <div className="profile-info">
+            <h2 className="profile-name">{selectedPerson.name}</h2>
+            <span className="profile-role">{selectedPerson.role || "Consultor(a)"}</span>
+          </div>
+
+          <div className="profile-meta">
+            <div className="meta-item">
+              <strong>Alocações:</strong> {selectedPerson.alocacoes || 0}
+            </div>
+            <div className="meta-item">
+              <strong>ID:</strong> {selectedPerson.id}
+            </div>
+          </div>
+
+          {/* Notas do Consultor */}
+          <div className="consultant-notes">
+            <h3 className="notes-title">Notas do Consultor</h3>
+            <div className="notes-grid">
+              {consultantNotes.map((note, index) => (
+                <div key={index} className="note-item">
+                  <div className="note-letter">{note.letter}</div>
+                  <div className="note-label">{note.label}</div>
+                  <div className="note-value">{note.value.toFixed(1)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Painel de Competências (Direita) */}
+        <div className="competencies-panel">
+          <div className="competencies-header">
+            <h2 className="competencies-title">Competências</h2>
+            <div className="overall-score">
+              <span className="score-icon">★</span>
+              <span>8.2</span>
+            </div>
+          </div>
+
+          {/* Radar ou Placeholder */}
+          <div className="radar-container">
+            {selectedPerson.radar && selectedPerson.radar.values && selectedPerson.radar.values.length > 0 ? (
+              <div className="radar-wrapper">
+                <RadarNotes 
+                  values={selectedPerson.radar.values} 
+                  labels={selectedPerson.radar.labels} 
+                />
+              </div>
+            ) : (
+              <div className="radar-placeholder">
+                <div className="placeholder-icon">📊</div>
+                <div>Sem métricas de competências disponíveis</div>
+                <small>Adicione dados de avaliação para visualizar o gráfico</small>
+              </div>
+            )}
+          </div>
+
+          {/* Métricas Detalhadas */}
+          <div className="metrics-grid">
+            {competencyMetrics.map((metric, index) => (
+              <div key={index} className="metric-card">
+                <div className="metric-header">
+                  <span className="metric-name">{metric.name}</span>
+                  <span className="metric-value">{metric.value}%</span>
+                </div>
+                <div className="metric-bar">
+                  <div 
+                    className="metric-progress" 
+                    style={{ 
+                      width: `${metric.value}%`,
+                      background: metric.color 
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     );
-  }
+  };
 
   return (
     <div className="grid-container">
@@ -211,28 +310,8 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* SESSÃO 2: Aside Direito (SÓ APARECE QUANDO HÁ PESSOA SELECIONADA) */}
-        {selectedPerson && (
-          <div className="bottom-section">
-            <aside className="right-aside">
-              <ProfileCard person={selectedPerson} />
-              {selectedPerson.radar && selectedPerson.radar.values && selectedPerson.radar.values.length > 0 ? (
-                <div className="radar-card">
-                  <h3 className="radar-header">Competências</h3>
-                  <RadarNotes 
-                    values={selectedPerson.radar.values} 
-                    labels={selectedPerson.radar.labels} 
-                  />
-                </div>
-              ) : (
-                <div className="radar-card">
-                  <h3 className="radar-header">Competências</h3>
-                  <div className="radar-empty">Sem métricas para exibir</div>
-                </div>
-              )}
-            </aside>
-          </div>
-        )}
+        {/* SESSÃO 2: Detalhes do Consultor (apenas quando selecionado) */}
+        {selectedPerson && renderSession2()}
       </div>
     </div>
   );
