@@ -109,7 +109,7 @@ export default function ProjectsPanel({
             <div className="meta-card">
               <div className="meta-header">
                 <div className="meta-icon">🏢</div>
-                <div className="meta-label">PARCEIRO</div>
+                <div className="meta-label">CLIENTE</div>
               </div>
               <div className="meta-value">{projectData.client}</div>
             </div>
@@ -117,7 +117,7 @@ export default function ProjectsPanel({
             <div className="meta-card">
               <div className="meta-header">
                 <div className="meta-icon">👥</div>
-                <div className="meta-label">TIME</div>
+                <div className="meta-label">EQUIPE</div>
               </div>
               <div className="meta-value">{projectData.members}</div>
             </div>
