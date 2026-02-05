@@ -27,7 +27,7 @@ export function get_field(record:AirtableRecord, fieldName:string) {
     ||
     Array.isArray(value) && value.length === 0
   ) {
-    return "—";
+    return ["—"];
     } 
     else if (!value) 
     {

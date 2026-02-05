@@ -52,10 +52,12 @@ export function get_info_proj() {
         projeto.forEach(exp => {
             if (exp.equipe.includes(mem.name)) {
 
-                if (macro_em.includes(exp.macro)) {maem_mexp += 1}
-                else if (macro_pe.includes(exp.macro)) {mape_mexp += 1}
-                else if (macro_sf.includes(exp.macro)) {masf_mexp += 1}
-                else if (macro_sm.includes(exp.macro)) {masm_mexp += 1};
+                let macro = Array.isArray(exp.macro) ? exp.macro[0] ?? "" : exp.macro;
+
+                if (macro_em.includes(macro)) {maem_mexp += 1}
+                else if (macro_pe.includes(macro)) {mape_mexp += 1}
+                else if (macro_sf.includes(macro)) {masf_mexp += 1}
+                else if (macro_sm.includes(macro)) {masm_mexp += 1};
 
                 m_nps += exp.NPS
                 m_qap += exp.QAP

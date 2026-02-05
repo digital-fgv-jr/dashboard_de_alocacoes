@@ -1,19 +1,30 @@
 // ProjectRankingConfig.js
 import React, { useState, useEffect } from "react";
 
-export default function ProjectRankingConfig({ projectId, criteria: initialCriteria }) {
+export default function ProjectRankingConfig({ projectId, criteria: initialCriteria, onWeightsChange }) {
   // Se não forem fornecidos critérios, usamos exemplos
   const [criteria, setCriteria] = useState(
     initialCriteria || [
       { id: 'nps', name: 'NPS do Consultor', weight: 30, description: 'Satisfação média dos clientes anteriores' },
-      { id: 'experience', name: 'Experiência na Área', weight: 25, description: 'Anos de experiência no setor do projeto' },
-      { id: 'skill_match', name: 'Habilidade Técnica', weight: 20, description: 'Avaliação técnica específica' },
+      { id: 'experience', name: 'Experiência na Área', weight: 25, description: 'Número de projetos completos no setor do projeto' },
+      { id: 'preferencia', name: 'Preferência', weight: 20, description: 'Avaliação técnica específica' },
       { id: 'availability', name: 'Disponibilidade', weight: 15, description: 'Capacidade de dedicação ao projeto' },
-      { id: 'cultural_fit', name: 'Fit Cultural', weight: 10, description: 'Adequação à cultura do cliente' },
+      { id: 'av_120', name: 'Avaliação 120°', weight: 5, description: 'Média final da avaliação 120 rodada' },
+      { id: 'qap', name: 'Eficiência', weight: 5, description: 'Média dos QAPs dos projetos realizados'},
+
     ]
   );
 
   const totalWeight = criteria.reduce((sum, criterion) => sum + criterion.weight, 0);
+
+  const map_pesos = useMemo(() =>{
+    const total = criteria.reduce((s, c) => s + (Number(c.weight) || 0), 0) || 1;
+    const peso = {};
+    for (const c of criteria){
+      m[c.id] = (Number(c.weight) || 0) / total
+    }
+    return peso;
+  }, [criteria])
 
   const handleWeightChange = (id, newWeight) => {
     setCriteria(prev =>
@@ -23,9 +34,15 @@ export default function ProjectRankingConfig({ projectId, criteria: initialCrite
     );
   };
 
-  const handleSave = async () => {
-    console.log("wait a lil")
-    }
+  const handleSave = () => {
+    if (totalWeight !== 100) return;
+
+      const obj = Object.fromEntries(
+        (criteria || []).map(c => [c.id, (Number(c.weight) || 0) / 100])
+      );
+
+    onWeightsChange?.(obj);
+  };
 
   const handleReset = () => {
     // Restaurar os pesos padrão (inicialCriteria)

@@ -7,6 +7,7 @@ import "./style.css";
 import Column from "./src/ui/column";
 import ProjectsPanel from "./src/ui/projectspanel";
 import RadarNotes from "./src/ui/radarnotes";
+import ProjectRankingConfig from "./src/ui/ProjectRankingConfig";
 import { score } from "./src/backend/src/calc/processing";
 import { get_field, get_count } from "./src/backend/src/calc/data_t";
 
@@ -37,12 +38,14 @@ function Dashboard() {
     .sort((a, b) => a.localeCompare(b, "pt", {sensitivity: "base"}));
   }, [lista_projetos]);
 
-  const macro_projetos = React.useMemo (() => {
-    return (lista_projetos || [])
-    .map(projeto => projeto.macro)
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b, "pt", {sensitivity: "base"}));
-  }, [lista_projetos]);
+  const [pesos , setWeights] = React.useState({
+    nps: 0.30,
+    experience: 0.25,
+    preferencia: 0.20,
+    availability: 0.15,
+    av_120: 0.05,
+    qap: 0.05,
+  });
 
   const fieldNames = React.useMemo(() => {
     if (!table || !table.fields) return new Set();
@@ -152,21 +155,22 @@ function Dashboard() {
 
     let nota = 0
 
-    if (dispon === 0) { nota += 3}
-    else if (dispon === 1) {nota += 2}
-    else if (dispon === 2) {nota += 1};
+    if (dispon === 0) { nota += 3 * (pesos.availability)}
+    else if (dispon === 1) {nota += 2 * (pesos.availability)}
+    else if (dispon === 2) {nota += 1 * (pesos.availability)};
 
-    nota += NPS
-    nota += eficiencia
-    nota += av_120
-    if (prefere.includes(macroe)) nota += 1;
-    if (bom.includes(macroe)) nota +=1;
-    if (ruim.includes(macroe)) nota -=1;
+    nota += NPS * (pesos.nps)
+    nota += eficiencia * (pesos.preferencia)
+    nota += av_120 * (pesos.av_120)
 
-    if (macro_em.includes(macroe)) nota += em_exp
-    else if (macro_pe.includes(macroe)) nota += pe_exp
-    else if (macro_sf.includes(macroe)) nota += sf_exp
-    else if (macro_sm.includes(macroe)) nota += sm_exp;
+    if (prefere.includes(macroe)) nota += 1 * (pesos.preferencia);
+    if (bom.includes(macroe)) nota +=1 * (pesos.preferencia);
+    if (ruim.includes(macroe)) nota -=1 * (pesos.preferencia);
+
+    if (macro_em.includes(macroe)) nota += em_exp * (pesos.experience)
+    else if (macro_pe.includes(macroe)) nota += pe_exp * (pesos.experience)
+    else if (macro_sf.includes(macroe)) nota += sf_exp * (pesos.experience)
+    else if (macro_sm.includes(macroe)) nota += sm_exp * (pesos.experience);
 
     return {
       id: membro.id,
@@ -204,26 +208,20 @@ function Dashboard() {
     else return a.name.localeCompare(b.name, "pt", { sensitivity: "base"})
   }
   
-  let consultants = (filteredPeople || []).filter((p) => 
-    /consultor/i.test(p.role)
-  ).sort(byScoreThenName);
-  
-  let managers = (filteredPeople || []).filter((p) => 
-    /gerent|manager|gerente/i.test(p.role)
-  ).sort(byScoreThenName);
-  
-  let madrinhas = (filteredPeople || []).filter((p) => 
-    /madrinh/i.test(p.role)
-  ).sort(byScoreThenName);
+  let todos = (filteredPeople || [])
+  .filter((p) => p.padrinho === false )
+  .sort(byScoreThenName);
 
-  if (consultants.length === 0 && managers.length === 0 && madrinhas.length === 0) {
-    const sorted = [...(filteredPeople || [])].sort(byScoreThenName);
-    const n = sorted.length;
-    const firstCut = Math.ceil(n / 3);
-    const secondCut = Math.ceil((2 * n) / 3);
-    consultants = sorted.slice(0, firstCut);
-    managers = sorted.slice(firstCut, secondCut);
-    madrinhas = sorted.slice(secondCut);
+  let consultants = todos
+  let managers = todos
+  
+  let madrinhas = (filteredPeople || [])
+  .filter((p) => p.padrinho === true ) 
+  .sort(byScoreThenName);
+
+
+  if (!filteredPeople?.length) {
+    console.warn("Nenhuma pessoa carregada do Airtable");
   }
 
   const handleSelectPerson = (p) => {
@@ -236,32 +234,10 @@ function Dashboard() {
     setSelectedProjects({});
   };
 
-  // Função para determinar o cargo baseado na role
   const getSpecificRole = (person) => {
-    const role = person?.role || "";
-    const roleLower = role.toLowerCase();
-    
-    if (/consultor/i.test(roleLower)) {
-      return "Consultor(a)";
-    }
-    
-    if (/gerent|manager|gerente/i.test(roleLower)) {
-      return "Gerente";
-    }
-    
-    if (/madrinh/i.test(roleLower)) {
-      return "Madrinha";
-    }
-    
-    if (consultants.some(c => c.id === person.id)) {
-      return "Consultor(a)";
-    } else if (managers.some(m => m.id === person.id)) {
-      return "Gerente";
-    } else if (madrinhas.some(m => m.id === person.id)) {
-      return "Madrinha";
-    }
-    
-    return role || "Membro da Equipe";
+    return person?.padrinho === true
+      ? "Madrinha"
+      : "Membro da Equipe";
   };
 
   // Função para obter descrição do critério
@@ -353,7 +329,8 @@ function Dashboard() {
       { id: 'experience', name: 'Experiência na Área', color: '#10b981' },
       { id: 'technical', name: 'Avaliação 120°', color: '#f59e0b' },
       { id: 'availability', name: 'Disponibilidade', color: '#8b5cf6' },
-      { id: 'cultural', name: 'Preferência', color: '#ef4444' }
+      { id: 'cultural', name: 'Preferência', color: '#ef4444' },
+      { id: 'qap', name: "Eficiênia", color:'#FFFFFF',}
     ];
 
     // Usar dados do radar ou dados padrão
@@ -654,6 +631,19 @@ function Dashboard() {
               selectedProject={selectedProject}
               onSelectProject={setSelectedProject}
               projectInfo={selectedProjectObj}
+            />
+
+           <ProjectRankingConfig
+              projectId={selectedProjectObj?.name ?? ""}
+              onWeightsChange={setWeights}
+             criteria={[
+              { id: "nps", name: "NPS do Profissional", weight: 30, description: "Satisfação média do cliente" },
+              { id: "experience", name: "Experiência", weight: 25, description: "Experiência na macroetapa" },
+              { id: "preferencia", name: "Preferência", weight: 20, description: 'Avaliação técnica específica' },
+              { id: "availability", name: "Disponibilidade", weight: 15, description: "Capacidade de dedicação" },
+              { id: "av_120", name: "Avaliação 120°", weight: 5, description: 'Média final da avaliação 120 rodada'},
+              { id: "qap", name: "Eficiência", weight: 5, description: 'Média dos QAPs dos projetos realizados'}
+              ]}
             />
 
             <div className="columns-container">
