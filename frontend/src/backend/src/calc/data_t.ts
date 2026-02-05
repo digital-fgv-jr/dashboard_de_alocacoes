@@ -1,7 +1,5 @@
 import { base } from '@airtable/blocks';
 import { useBase, useRecords } from '@airtable/blocks/ui'
-import Field from '@airtable/blocks/dist/types/src/models/field';
-import RecordQueryResult from '@airtable/blocks/dist/types/src/models/record_query_result';
 
 // ^^ Importações ^^ //
 
