@@ -21,11 +21,11 @@ function Dashboard() {
 
   const radarFields = React.useMemo(() => {
     if (!table || !table.fields) return [];
-    const keywords = ["comunic", "tecni", "proativ", "prazo", "qualidade", "nota", "score", "avalia"];
+    const keywords = ["comunic", "tecni", "proativ", "prazo", "qualidade", "nota", "score", "avalia", "qap"];
     return table.fields
       .map((f) => f.name)
       .filter((name) => keywords.some((k) => name.toLowerCase().includes(k)))
-      .slice(0, 5);
+      .slice(0, 6);
   }, [table]);
 
   const people = React.useMemo(() => {
@@ -92,6 +92,52 @@ function Dashboard() {
   const [selectedPerson, setSelectedPerson] = React.useState(null);
   const [selectedProjects, setSelectedProjects] = React.useState({});
 
+  // Lista de macroetapas existentes
+  const MACRO_ETAPAS = [
+    "Avaliação Estratégica",
+    "Plano Operacional", 
+    "Plano de Negócios",
+    "Sumário Executivo",
+    "Plano Financeiro",
+    "EVE",
+    "Plano de Marketing",
+    "Análise Setorial",
+    "Pesquisa de Mercado",
+    "Cliente Oculto"
+  ];
+
+  // Função para determinar macroetapa baseada no nome do projeto (para projetos fictícios)
+  const getMacroEtapaForProject = (projectName) => {
+    if (!projectName) return "Plano de Negócios";
+    
+    // Para projetos fictícios, atribuir uma macroetapa baseada no nome
+    if (projectName === "Projeto 1") return "Plano de Negócios";
+    if (projectName === "Projeto 2") return "Plano Financeiro";
+    if (projectName === "Projeto 3") return "Pesquisa de Mercado";
+    
+    // Para projetos reais, buscar do campo "Macroetapa" do primeiro membro
+    const peopleInProject = (people || []).filter((p) => 
+      (p.projectsLinked || []).includes(projectName)
+    );
+    
+    if (peopleInProject.length === 0) return "Plano de Negócios";
+    
+    const sample = peopleInProject[0] ? peopleInProject[0].__rawRecord : null;
+    if (sample && sample.getCellValue) {
+      // Tenta buscar do campo "Macroetapa" ou variações
+      const macroEtapa = (hasField("Macroetapa") ? sample.getCellValue("Macroetapa") : 
+                         (hasField("Macro etapa") ? sample.getCellValue("Macro etapa") : 
+                         (hasField("Etapa") ? sample.getCellValue("Etapa") : null))) || null;
+      
+      if (macroEtapa) {
+        return String(macroEtapa);
+      }
+    }
+    
+    // Se não encontrar, retorna a primeira macroetapa da lista
+    return MACRO_ETAPAS[0];
+  };
+
   const selectedProjectObj = React.useMemo(() => {
     if (!selectedProject) return null;
     const peopleInProject = (people || []).filter((p) => 
@@ -104,15 +150,20 @@ function Dashboard() {
     let client = "-", status = "-";
     
     if (sample && sample.getCellValue) {
+      // Buscar informações do projeto
       client = (hasField("Cliente") ? sample.getCellValue("Cliente") : 
                (hasField("Client") ? sample.getCellValue("Client") : "-")) || "-";
       status = (hasField("Status") ? sample.getCellValue("Status") : "-") || "-";
     }
     
+    // Determinar a macroetapa
+    const macroEtapa = getMacroEtapaForProject(selectedProject);
+    
     return { 
       name: selectedProject, 
       client, 
       status, 
+      macroEtapa,
       peopleCount: peopleInProject.length 
     };
   }, [selectedProject, people, hasField]);
@@ -148,6 +199,7 @@ function Dashboard() {
   const handleSelectPerson = (p) => {
     if (!p) return;
     setSelectedPerson(p);
+    setSelectedProjects({});
   };
 
   const handleGoBack = () => {
@@ -155,7 +207,6 @@ function Dashboard() {
     setSelectedProjects({});
   };
 
-  // Função para determinar o cargo baseado na role
   const getSpecificRole = (person) => {
     const role = person?.role || "";
     const roleLower = role.toLowerCase();
@@ -183,148 +234,141 @@ function Dashboard() {
     return role || "Membro da Equipe";
   };
 
-  // Função para obter descrição do critério
   const getCriterionDescription = (name, value) => {
-    if (name && name.includes('NPS')) return 'Satisfação média do cliente';
-    if (name && name.includes('Experiência')) return 'Anos na área relacionada';
-    if (name && name.includes('Avaliação')) return 'Feedback 120° da equipe';
-    if (name && name.includes('Disponibilidade')) return 'Capacidade de dedicação';
-    if (name && name.includes('Preferência')) return 'Afinidade com o projeto';
-    return 'Critério de avaliação';
+    if (name && name.includes('NPS')) return 'Satisfação média do cliente com atendimento';
+    if (name && name.includes('Experiência')) return 'Anos de experiência na área relacionada';
+    if (name && name.includes('Avaliação')) return 'Feedback 120° da equipe interna';
+    if (name && name.includes('Disponibilidade')) return 'Capacidade atual de dedicação ao projeto';
+    if (name && name.includes('Preferência')) return 'Afinidade pessoal com o tipo de projeto';
+    if (name && name.includes('QAP')) return 'Qualidade no Atendimento ao Projeto';
+    return 'Critério de avaliação de desempenho';
   };
 
-  // Função para calcular a disponibilidade baseado nas alocações
   const getAvailabilityScore = (alocacoes) => {
-    // Se não está alocado em nenhum projeto: disponibilidade 10/10
     if (alocacoes === 0) return 10;
-    // Se está em 1 projeto: 6.67/10 (3 projetos seria 0, então linearmente: 10 - (alocações * 3.33))
     if (alocacoes === 1) return 6.67;
     if (alocacoes === 2) return 3.33;
     if (alocacoes >= 3) return 0;
     return 0;
   };
 
-  // Função para obter status de disponibilidade baseado no número de alocações
   const getAvailabilityStatus = (alocacoes) => {
+    const score = getAvailabilityScore(alocacoes);
+    
     if (alocacoes === 0) return { 
-      text: '🟢 Livre', 
+      text: '🟢 Totalmente Livre', 
       color: '#10b981', 
-      description: 'Disponível para novos projetos',
-      score: 10
+      description: 'Disponível para novos projetos - Nenhuma alocação atual',
+      score: score
     };
     if (alocacoes === 1) return { 
-      text: '🟡 1 projeto', 
+      text: '🟡 Parcialmente Disponível', 
       color: '#f59e0b', 
-      description: 'Alocado em 1 projeto',
-      score: 6.67
+      description: 'Alocado em 1 projeto - Pode assumir mais atividades',
+      score: score
     };
     if (alocacoes === 2) return { 
-      text: '🟠 2 projetos', 
+      text: '🟠 Pouco Disponível', 
       color: '#f97316', 
-      description: 'Alocado em 2 projetos',
-      score: 3.33
+      description: 'Alocado em 2 projetos - Capacidade limitada',
+      score: score
     };
     if (alocacoes >= 3) return { 
-      text: '🔴 3+ projetos', 
+      text: '🔴 Indisponível', 
       color: '#ef4444', 
-      description: 'Máximo de alocações atingido',
-      score: 0
+      description: 'Máximo de alocações atingido - Não pode assumir novos projetos',
+      score: score
     };
     return { 
       text: '🔴 Ocupado', 
       color: '#ef4444', 
       description: 'Com múltiplas alocações',
-      score: 0
+      score: score
     };
   };
 
-  // Função para alternar a seleção de um projeto
+  const getTotalAllocations = (person) => {
+    const baseAllocations = person.alocacoes || 0;
+    const selectedCount = Object.values(selectedProjects).filter(Boolean).length;
+    return baseAllocations + selectedCount;
+  };
+
   const toggleProjectSelection = (projectId) => {
+    const totalAllocations = getTotalAllocations(selectedPerson);
+    
+    if (totalAllocations >= 3 && !selectedProjects[projectId]) {
+      return;
+    }
+    
     setSelectedProjects(prev => ({
       ...prev,
       [projectId]: !prev[projectId]
     }));
   };
 
-  // Lista de projetos para sugestão (mesmos da primeira sessão)
   const projectSuggestions = [
-    { id: 1, name: "Projeto 1", status: "Em andamento", client: "Cliente A" },
-    { id: 2, name: "Projeto 2", status: "Planejamento", client: "Cliente B" },
-    { id: 3, name: "Projeto 3", status: "Concluído", client: "Cliente C" },
+    { id: 1, name: "Projeto 1" },
+    { id: 2, name: "Projeto 2" },
+    { id: 3, name: "Projeto 3" },
     ...projects.filter(p => !["Projeto 1", "Projeto 2", "Projeto 3"].includes(p))
       .map((p, index) => ({ 
         id: index + 4, 
-        name: p, 
-        status: "Status", 
-        client: "Cliente" 
+        name: p
       }))
   ];
 
-  // Renderizar a sessão 2
   const renderSession2 = () => {
     if (!selectedPerson) return null;
 
-    // Critérios de avaliação
     const criteriaList = [
       { id: 'nps', name: 'NPS do Profissional', color: '#3b82f6' },
       { id: 'experience', name: 'Experiência na Área', color: '#10b981' },
       { id: 'technical', name: 'Avaliação 120°', color: '#f59e0b' },
       { id: 'availability', name: 'Disponibilidade', color: '#8b5cf6' },
-      { id: 'cultural', name: 'Preferência', color: '#ef4444' }
+      { id: 'cultural', name: 'Preferência', color: '#ef4444' },
+      { id: 'qap', name: 'QAP', color: '#ec4899' }
     ];
 
-    // Usar dados do radar ou dados padrão
+    const totalAllocations = getTotalAllocations(selectedPerson);
+    const availabilityStatus = getAvailabilityStatus(totalAllocations);
+    const availabilityScore = getAvailabilityScore(totalAllocations);
+
     let radarLabels = [];
     let radarValues = [];
 
     if (selectedPerson.radar && selectedPerson.radar.values && selectedPerson.radar.values.length > 0) {
-      radarLabels = selectedPerson.radar.labels;
-      radarValues = selectedPerson.radar.values;
+      radarLabels = selectedPerson.radar.labels.slice(0, 6);
+      radarValues = selectedPerson.radar.values.slice(0, 6);
+      
+      while (radarLabels.length < 6) {
+        radarLabels.push(criteriaList[radarLabels.length]?.name || `Critério ${radarLabels.length + 1}`);
+      }
+      while (radarValues.length < 6) {
+        radarValues.push(7.5);
+      }
     } else {
       radarLabels = criteriaList.map(c => c.name);
-      radarValues = [8.5, 7.2, 9.0, 8.8, 7.5];
+      radarValues = [8.5, 7.2, 9.0, availabilityScore, 7.5, 8.3];
     }
 
-    // Calcular nota geral
+    const availabilityIndex = radarLabels.findIndex(label => 
+      label.toLowerCase().includes('disponibilidade')
+    );
+    if (availabilityIndex !== -1) {
+      radarValues[availabilityIndex] = availabilityScore;
+    }
+
     let overallScore = 8.2;
     if (radarValues.length > 0) {
       const sum = radarValues.reduce((a, b) => a + b, 0);
       overallScore = sum / radarValues.length;
     }
 
-    // Obter status de disponibilidade
-    const availabilityStatus = getAvailabilityStatus(selectedPerson.alocacoes || 0);
-    
-    // Calcular pontuação de disponibilidade
-    const availabilityScore = getAvailabilityScore(selectedPerson.alocacoes || 0);
-
-    // Preparar dados para as métricas (substituindo a disponibilidade com o valor calculado)
-    const metricsData = [];
-    for (let i = 0; i < Math.min(radarLabels.length, 5); i++) {
-      let value = radarValues[i] || 0;
-      let name = radarLabels[i] || criteriaList[i]?.name || `Critério ${i + 1}`;
-      
-      // Se for a métrica de disponibilidade, usar o valor calculado
-      if (name.includes('Disponibilidade')) {
-        value = availabilityScore;
-      }
-      
-      const percentage = (value / 10) * 100;
-      metricsData.push({
-        name,
-        value: value.toFixed(1),
-        percentage: percentage.toFixed(0),
-        color: criteriaList[i]?.color || '#3b82f6',
-        description: getCriterionDescription(name, value)
-      });
-    }
-
-    // Determinar o cargo específico
     const memberRole = getSpecificRole(selectedPerson);
+    const currentProjects = selectedPerson.projectsLinked || [];
 
     return (
       <div className="bottom-section">
-        {/* Novo cabeçalho para a segunda sessão - SEM O HEADER ORIGINAL */}
         <div className="profile-section-header">
           <div className="profile-header-content">
             <button className="profile-back-button" onClick={handleGoBack}>
@@ -332,16 +376,16 @@ function Dashboard() {
               <span className="back-label">Voltar para Alocações</span>
             </button>
             <div className="profile-header-info">
-              <h1 className="profile-main-title">Perfil do Membro</h1>
-              <p className="profile-subtitle">Detalhes e métricas de avaliação</p>
+              <h1 className="profile-main-title">{selectedPerson.name}</h1>
+              <p className="profile-subtitle">
+                {memberRole} • {currentProjects.length} projeto{currentProjects.length !== 1 ? 's' : ''} ativo{currentProjects.length !== 1 ? 's' : ''}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Grid Principal com 3 colunas */}
         <div className="member-detail-grid-three">
           
-          {/* Coluna 1: Perfil */}
           <div className="profile-left-card">
             <div className="profile-header-left">
               <div className="avatar-container-left">
@@ -365,6 +409,26 @@ function Dashboard() {
               <div className="profile-info-left">
                 <h3 className="member-name-left">{selectedPerson.name}</h3>
                 <div className="member-role-badge-left">{memberRole}</div>
+                
+                <div className="occupation-display">
+                  <div className="occupation-label">Nível de Ocupação:</div>
+                  <div className="occupation-value">{totalAllocations}/3 projetos</div>
+                  <div className="occupation-bar">
+                    <div className="occupation-track"></div>
+                    <div 
+                      className="occupation-fill" 
+                      style={{ 
+                        width: `${(totalAllocations / 3) * 100}%`,
+                        backgroundColor: availabilityStatus.color
+                      }}
+                    ></div>
+                  </div>
+                  <div className="occupation-labels">
+                    <span>Livre</span>
+                    <span>Máximo</span>
+                  </div>
+                </div>
+                
                 <div className="member-meta-left">
                   <div className="meta-item-left">
                     <span className="meta-label-left">ID:</span>
@@ -372,13 +436,12 @@ function Dashboard() {
                   </div>
                   <div className="meta-item-left">
                     <span className="meta-label-left">ALOCAÇÕES:</span>
-                    <span className="meta-value-left">{selectedPerson.alocacoes || 0}</span>
+                    <span className="meta-value-left">{totalAllocations}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Descrição */}
             <div className="profile-description-left">
               <h4 className="description-title-left">Sobre</h4>
               <p className="description-content-left">
@@ -387,7 +450,6 @@ function Dashboard() {
               </p>
             </div>
 
-            {/* Status de Disponibilidade */}
             <div className="availability-status-left">
               <div className="status-header-left">
                 <h4>Status de Disponibilidade</h4>
@@ -404,7 +466,6 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Nota Geral */}
             <div className="overall-score-left">
               <div className="score-header-left">
                 <h4>Nota Geral</h4>
@@ -420,7 +481,6 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Coluna 2: Radar + Sugestões de Alocação */}
           <div className="radar-middle-card">
             <div className="card-header-middle">
               <h3>Perfil de Habilidades</h3>
@@ -430,121 +490,147 @@ function Dashboard() {
               </div>
             </div>
             
-            {selectedPerson.radar && selectedPerson.radar.values && selectedPerson.radar.values.length > 0 ? (
-              <div className="radar-container-middle">
-                <div className="radar-wrapper-middle">
-                  <RadarNotes 
-                    values={radarValues} 
-                    labels={radarLabels} 
-                  />
+            <div className="radar-container-middle">
+              <div className="radar-wrapper-middle">
+                <RadarNotes 
+                  values={radarValues} 
+                  labels={radarLabels} 
+                />
+              </div>
+              <div className="radar-legend-middle">
+                <div className="legend-item-middle">
+                  <div className="legend-dot-middle" style={{ backgroundColor: '#3b82f6' }}></div>
+                  <span>Perfil do Membro</span>
                 </div>
-                <div className="radar-legend-middle">
-                  <div className="legend-item-middle">
-                    <div className="legend-dot-middle" style={{ backgroundColor: '#3b82f6' }}></div>
-                    <span>Avaliação do Membro</span>
-                  </div>
-                  <div className="legend-item-middle">
-                    <div className="legend-dot-middle" style={{ backgroundColor: '#e2e8f0' }}></div>
-                    <span>Escala de Referência</span>
-                  </div>
+                <div className="legend-item-middle">
+                  <div className="legend-dot-middle" style={{ backgroundColor: '#e2e8f0' }}></div>
+                  <span>Escala de Referência</span>
                 </div>
               </div>
-            ) : (
-              <div className="radar-placeholder-middle">
-                <div className="placeholder-icon-middle">📊</div>
-                <div className="placeholder-title-middle">Sem dados de habilidades</div>
-                <p className="placeholder-text-middle">
-                  Adicione métricas de avaliação para visualizar o perfil gráfico.
-                </p>
-              </div>
-            )}
+            </div>
             
-            {/* Sugestões de Alocação (sempre visível) */}
-            <div className="project-suggestions-always">
-              <div className="suggestions-header-always">
-                <h4>Sugerir Alocação para:</h4>
-              </div>
-              <div className="suggestions-list-always">
-                {projectSuggestions.slice(0, 3).map((project) => (
-                  <div key={project.id} className="project-suggestion-item-always">
-                    <div className="project-info-always">
-                      <div className="project-name-always">{project.name}</div>
-                      <div className="project-details-always">
-                        <span className="project-client-always">{project.client}</span>
-                        <span className="project-status-always">{project.status}</span>
-                      </div>
-                    </div>
-                    <button 
-                      className={`select-project-btn-always ${selectedProjects[project.id] ? 'selected' : ''}`}
-                      onClick={() => toggleProjectSelection(project.id)}
-                    >
-                      {selectedProjects[project.id] ? '✓ Selecionado' : 'Selecionar'}
-                    </button>
+            <div className="allocation-suggestions-container">
+              <div className="suggestions-header-elegant">
+                <div className="suggestions-title-wrapper">
+                  <div className="suggestion-icon">
+                    <span>📋</span>
                   </div>
-                ))}
+                  <h4>Sugerir Alocação para:</h4>
+                </div>
+                <div className="suggestions-count-badge">
+                  <span>3</span>
+                </div>
+              </div>
+              
+              <div className="suggestions-list-elegant">
+                {projectSuggestions.slice(0, 3).map((project, index) => {
+                  const isSelected = selectedProjects[project.id];
+                  const canSelect = totalAllocations < 3 || isSelected;
+                  
+                  return (
+                    <div 
+                      key={project.id} 
+                      className={`suggestion-item-elegant ${isSelected ? 'selected' : ''} ${!canSelect && !isSelected ? 'disabled' : ''}`}
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <div className="suggestion-item-content">
+                        <div className="project-info-minimal">
+                          <div className="project-name-elegant">{project.name}</div>
+                        </div>
+                        
+                        <button 
+                          className={`allocate-btn-elegant ${isSelected ? 'selected' : ''}`}
+                          onClick={() => toggleProjectSelection(project.id)}
+                          disabled={!canSelect && !isSelected}
+                          title={!canSelect && !isSelected ? "Membro já está no máximo de projetos (3)" : ""}
+                        >
+                          {isSelected ? (
+                            <>
+                              <span className="check-icon">✓</span>
+                              Selecionado
+                            </>
+                          ) : 'Alocar'}
+                        </button>
+                      </div>
+                      
+                      {!canSelect && !isSelected && (
+                        <div className="allocation-warning">
+                          <span className="warning-icon">⚠️</span>
+                          Limite de projetos atingido
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {/* Coluna 3: Métricas Detalhadas */}
           <div className="metrics-right-card">
             <div className="card-header-right">
               <h3>Métricas Detalhadas</h3>
               <div className="metrics-count-right">
-                {metricsData.length} critérios
+                {criteriaList.length} critérios
               </div>
             </div>
 
             <div className="metrics-list-right">
-              {metricsData.map((metric, index) => (
-                <div key={index} className="metric-item-right">
-                  <div className="metric-header-right">
-                    <div className="metric-title-right">
-                      <span className="metric-number-right">0{index + 1}</span>
-                      <span className="metric-name-right">{metric.name}</span>
+              {criteriaList.map((criterion, index) => {
+                let value = 0;
+                let name = criterion.name;
+                
+                if (name.includes('NPS')) value = 8.5;
+                else if (name.includes('Experiência')) value = 7.2;
+                else if (name.includes('Avaliação')) value = 9.0;
+                else if (name.includes('Disponibilidade')) value = availabilityScore;
+                else if (name.includes('Preferência')) value = 7.5;
+                else if (name.includes('QAP')) value = 8.3;
+                
+                const percentage = (value / 10) * 100;
+                
+                return (
+                  <div key={index} className="metric-item-right">
+                    <div className="metric-header-right">
+                      <div className="metric-title-right">
+                        <span className="metric-number-right">0{index + 1}</span>
+                        <span className="metric-name-right">{name}</span>
+                      </div>
+                      <div className="metric-score-right">
+                        <span className="score-value-right">{value.toFixed(1)}</span>
+                        <span className="score-max-right">/10</span>
+                      </div>
                     </div>
-                    <div className="metric-score-right">
-                      <span className="score-value-right">{metric.value}</span>
-                      <span className="score-max-right">/10</span>
+                    
+                    <div className="metric-description-right">
+                      {getCriterionDescription(name, value)}
+                    </div>
+                    
+                    <div className="progress-container-right">
+                      <div className="progress-bar-right">
+                        <div 
+                          className="progress-fill-right" 
+                          style={{ 
+                            width: `${percentage}%`,
+                            background: criterion.color
+                          }}
+                        ></div>
+                      </div>
+                      <div className="progress-labels-right">
+                        <span className="progress-percentage-right">{percentage.toFixed(0)}%</span>
+                        <span className={`progress-status-right ${
+                          value >= 8 ? 'status-excellent' :
+                          value >= 6 ? 'status-good' :
+                          value >= 4 ? 'status-regular' : 'status-needs-improvement'
+                        }`}>
+                          {value >= 8 ? 'Excelente' : 
+                           value >= 6 ? 'Bom' : 
+                           value >= 4 ? 'Regular' : 'A Melhorar'}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="metric-description-right">{metric.description}</div>
-                  
-                  <div className="progress-container-right">
-                    <div className="progress-bar-right">
-                      <div 
-                        className="progress-fill-right" 
-                        style={{ 
-                          width: `${metric.percentage}%`,
-                          background: metric.color
-                        }}
-                      ></div>
-                    </div>
-                    <div className="progress-labels-right">
-                      <span className="progress-percentage-right">{metric.percentage}%</span>
-                      <span className={`progress-status-right ${
-                        parseFloat(metric.value) >= 8 ? 'status-excellent' :
-                        parseFloat(metric.value) >= 6 ? 'status-good' :
-                        parseFloat(metric.value) >= 4 ? 'status-regular' : 'status-needs-improvement'
-                      }`}>
-                        {parseFloat(metric.value) >= 8 ? 'Excelente' : 
-                         parseFloat(metric.value) >= 6 ? 'Bom' : 
-                         parseFloat(metric.value) >= 4 ? 'Regular' : 'A Melhorar'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Nota Explicativa */}
-            <div className="metrics-note-right">
-              <p>
-                <strong>Disponibilidade:</strong> Calculada baseada no número de projetos atuais.
-                <br />
-                0 projetos = 10/10 • 1 projeto = 6.7/10 • 2 projetos = 3.3/10 • 3+ projetos = 0/10
-              </p>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -554,7 +640,6 @@ function Dashboard() {
 
   return (
     <div className="grid-container">
-      {/* HEADER APENAS NA PRIMEIRA SESSÃO */}
       {!selectedPerson && (
         <header className="header-with-logo">
           <h1 className="app-title">FGV Jr. — Dashboard de Alocações</h1>
@@ -562,7 +647,6 @@ function Dashboard() {
       )}
 
       <div className="main-content">
-        {/* SESSÃO 1: Projetos + 3 Colunas */}
         {!selectedPerson && (
           <div className="top-section">
             <ProjectsPanel
@@ -592,7 +676,6 @@ function Dashboard() {
           </div>
         )}
 
-        {/* SESSÃO 2: Detalhes do Membro (apenas quando selecionado) */}
         {selectedPerson && renderSession2()}
       </div>
     </div>

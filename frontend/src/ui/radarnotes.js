@@ -2,52 +2,185 @@ import "../../style.css";
 import React from "react";
 
 export default function RadarNotes({ values = [], labels = [] }) {
-  const N = values.length;
-  if (N === 0) return <div className="radar-empty">Sem métricas</div>;
+  // Alterado para 6 valores e 6 labels (agora com QAP)
+  const N = 6;
+  const safeValues = Array(N).fill(0).map((_, i) => values[i] || 0);
+  const safeLabels = Array(N).fill(0).map((_, i) => labels[i] || `Critério ${i + 1}`);
 
-  const cx = 100, cy = 100, radius = 70;
+  // Configurações do radar
+  const cx = 200, cy = 200, radius = 140;
   const angle = (i) => -Math.PI / 2 + (i * (2 * Math.PI)) / N;
 
-  const outer = [];
-  const inner = [];
+  // Calcular pontos do radar
+  const points = [];
   for (let i = 0; i < N; i++) {
     const a = angle(i);
-    const ox = cx + radius * Math.cos(a);
-    const oy = cy + radius * Math.sin(a);
-    outer.push(`${ox},${oy}`);
-
-    const val = Math.max(0, Number(values[i] || 0));
-    const norm = Math.min(1, val / 10);
-    const ix = cx + radius * norm * Math.cos(a);
-    const iy = cy + radius * norm * Math.sin(a);
-    inner.push(`${ix},${iy}`);
+    const val = Math.max(0, Math.min(10, Number(safeValues[i] || 0)));
+    const norm = val / 10;
+    const x = cx + radius * norm * Math.cos(a);
+    const y = cy + radius * norm * Math.sin(a);
+    points.push({ x, y, value: val });
   }
 
-  const gridLines = [0.25, 0.5, 0.75, 1].map((f) => {
-    const pts = [];
-    for (let i = 0; i < N; i++) {
-      const a = angle(i);
-      pts.push(`${cx + radius * f * Math.cos(a)},${cy + radius * f * Math.sin(a)}`);
-    }
-    return pts.join(" ");
+  // Gerar grades (3 círculos concêntricos)
+  const gridLevels = [0.33, 0.66, 1];
+  const gridCircles = gridLevels.map(level => {
+    const r = radius * level;
+    return { r, stroke: level === 1 ? '#cbd5e1' : '#e2e8f0' };
   });
 
+  // Cores e estilos
+  const axisColor = '#cbd5e1';
+  const labelColor = '#4b5563';
+  const polygonFill = 'url(#radar-gradient)';
+  const polygonStroke = '#3b82f6';
+  const pointColor = '#3b82f6';
+  const pointHaloColor = '#93c5fd';
+
   return (
-    <svg className="radar-svg" viewBox="0 0 200 200" width="100%" height="180" role="img" aria-label="Radar de competências">
-      {gridLines.map((pts, i) => (
-        <polygon key={i} points={pts} fill="none" stroke="#ddd" strokeWidth="0.8" />
-      ))}
+    <div className="radar-enhanced-container">
+      <svg 
+        className="radar-svg-enhanced" 
+        viewBox="0 0 400 400" 
+        width="100%" 
+        height="100%"
+        role="img" 
+        aria-label="Radar de competências"
+      >
+        <defs>
+          <linearGradient id="radar-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(59, 130, 246, 0.4)" />
+            <stop offset="100%" stopColor="rgba(59, 130, 246, 0.1)" />
+          </linearGradient>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          
+          {/* Gradiente para os pontos */}
+          <radialGradient id="point-gradient">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#1d4ed8" />
+          </radialGradient>
+        </defs>
 
-      <polygon points={outer.join(" ")} fill="none" stroke="#ccc" strokeWidth="1" />
-      <polygon points={inner.join(" ")} fill="#60a5fa" fillOpacity="0.35" stroke="#3b82f6" strokeWidth="1.5" />
+        {/* Grades concêntricas */}
+        {gridCircles.map((circle, i) => (
+          <circle
+            key={i}
+            cx={cx}
+            cy={cy}
+            r={circle.r}
+            fill="none"
+            stroke={circle.stroke}
+            strokeWidth="1"
+          />
+        ))}
 
-      {labels.map((lab, i) => {
-        const a = angle(i);
-        const lx = cx + (radius + 18) * Math.cos(a);
-        const ly = cy + (radius + 18) * Math.sin(a);
-        const anchor = Math.abs(Math.cos(a)) < 0.2 ? "middle" : (Math.cos(a) > 0 ? "start" : "end");
-        return <text key={i} x={lx} y={ly} fontSize="10" textAnchor={anchor}>{lab}</text>;
-      })}
-    </svg>
+        {/* Linhas dos eixos */}
+        {Array.from({ length: N }).map((_, i) => {
+          const a = angle(i);
+          const x2 = cx + radius * Math.cos(a);
+          const y2 = cy + radius * Math.sin(a);
+          return (
+            <line 
+              key={`axis-${i}`}
+              x1={cx} 
+              y1={cy} 
+              x2={x2} 
+              y2={y2} 
+              stroke={axisColor} 
+              strokeWidth="1"
+            />
+          );
+        })}
+
+        {/* Área do radar (polígono) */}
+        <polygon 
+          points={points.map(p => `${p.x},${p.y}`).join(" ")} 
+          fill={polygonFill}
+          stroke={polygonStroke}
+          strokeWidth="2"
+          filter="url(#glow)"
+          className="radar-area"
+        />
+
+        {/* Pontos nos vértices com halo */}
+        {points.map((point, i) => (
+          <g key={i} className="radar-point-group">
+            <circle 
+              cx={point.x} 
+              cy={point.y} 
+              r="8" 
+              fill="url(#point-gradient)"
+              stroke="white"
+              strokeWidth="2"
+              className="radar-point"
+            />
+            <circle 
+              cx={point.x} 
+              cy={point.y} 
+              r="12" 
+              fill={pointHaloColor}
+              opacity="0.3"
+              className="radar-point-halo"
+            />
+          </g>
+        ))}
+
+        {/* Rótulos dos eixos */}
+        {safeLabels.map((label, i) => {
+          const a = angle(i);
+          const labelRadius = radius + 45;
+          const lx = cx + labelRadius * Math.cos(a);
+          const ly = cy + labelRadius * Math.sin(a);
+          
+          let textAnchor = "middle";
+          if (Math.cos(a) > 0.1) textAnchor = "start";
+          if (Math.cos(a) < -0.1) textAnchor = "end";
+          
+          let baseline = "middle";
+          if (Math.sin(a) < -0.1) baseline = "hanging";
+          if (Math.sin(a) > 0.1) baseline = "baseline";
+          
+          return (
+            <g key={i} className="radar-label-group">
+              <text 
+                x={lx} 
+                y={ly} 
+                fontSize="13" 
+                textAnchor={textAnchor}
+                dominantBaseline={baseline}
+                fill={labelColor}
+                fontWeight="600"
+                className="radar-label"
+              >
+                {label.length > 15 ? label.substring(0, 15) + "..." : label}
+              </text>
+              <text 
+                x={lx} 
+                y={ly + 18} 
+                fontSize="11" 
+                textAnchor={textAnchor}
+                dominantBaseline={baseline}
+                fill="#3b82f6"
+                fontWeight="700"
+                className="radar-value"
+              >
+                {points[i].value.toFixed(1)}/10
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Níveis de referência (0, 5, 10) */}
+        <text x={cx} y={cy - radius - 10} textAnchor="middle" fontSize="10" fill="#9ca3af">10</text>
+        <text x={cx} y={cy - radius/2} textAnchor="middle" fontSize="10" fill="#9ca3af">5</text>
+        <text x={cx} y={cy + 5} textAnchor="middle" fontSize="10" fill="#9ca3af">0</text>
+      </svg>
+    </div>
   );
 }
