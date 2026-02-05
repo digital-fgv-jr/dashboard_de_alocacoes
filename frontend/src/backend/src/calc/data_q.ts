@@ -7,7 +7,6 @@ import { get_field, get_count, get_membros } from "./data_t"
 // ^^ Imports ^^ //
 
 const dados_h = base.getTableByName("Zapier - Pipefy - Projetos")
-const querry_h = await dados_h.selectRecordsAsync()
 
 
 const macro_pe: string[] = [ "Avaliação Estratégica", "Plano Operacional", "Plano de Negócios", "Sumário Executivo" ]

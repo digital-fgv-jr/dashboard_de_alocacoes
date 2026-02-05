@@ -16,12 +16,16 @@ function Dashboard() {
   const tabela_proj = base.getTableByName ? base.getTableByName("Zapier - Pipefy - Projetos") : null;
   const records = useRecords(table) || [];
   const scores = score()
-  const base_projetos = useRecords(tabela_proj)
+  const base_projetos = tabela_proj ? useRecords(tabela_proj) : [];
+  const macro_pe = [ "Avaliação Estratégica", "Plano Operacional", "Plano de Negócios", "Sumário Executivo" ]
+  const macro_sf = [ "Plano Financeiro", "EVE" ]
+  const macro_sm = [ "Plano de Marketing" ]
+  const macro_em = [ "Análise Setorial", "Pesquisa de Mercado", "Cliente Oculto" ]
 
   const lista_projetos = React.useMemo(() => {
     return base_projetos.map((records) => ({
       id:records.id,
-      nome: records.name,
+      nome: get_field(records, "Projeto"),
       macro: get_field(records, "Macroetapas")
     }))
   }, [base_projetos]);
@@ -33,7 +37,12 @@ function Dashboard() {
     .sort((a, b) => a.localeCompare(b, "pt", {sensitivity: "base"}));
   }, [lista_projetos]);
 
-
+  const macro_projetos = React.useMemo (() => {
+    return (lista_projetos || [])
+    .map(projeto => projeto.macro)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, "pt", {sensitivity: "base"}));
+  }, [lista_projetos]);
 
   const fieldNames = React.useMemo(() => {
     if (!table || !table.fields) return new Set();
@@ -118,33 +127,77 @@ function Dashboard() {
 
   const selectedProjectObj = React.useMemo(() => {
     if (!selectedProject) return null;
-    const peopleInProject = (people || []).filter((p) => 
-      (p.projectsLinked || []).includes(selectedProject)
-    );
-    
-    if (peopleInProject.length === 0) return null;
-    
-    const sample = peopleInProject[0] ? peopleInProject[0].__rawRecord : null;
-    let client = "-", status = "-";
-    
-    if (sample && sample.getCellValue) {
-      client = (hasField("Cliente") ? sample.getCellValue("Cliente") : 
-               (hasField("Client") ? sample.getCellValue("Client") : "-")) || "-";
-      status = (hasField("Status") ? sample.getCellValue("Status") : "-") || "-";
-    }
+
+    const projeto = lista_projetos.find(proj => proj.nome === selectedProject);
     
     return { 
       name: selectedProject, 
-      client, 
-      status, 
-      peopleCount: peopleInProject.length 
+      macro: projeto?.macro ?? "-",
     };
-  }, [selectedProject, people, hasField]);
+  }, [selectedProject, lista_projetos]);
 
-  const filteredPeople = selectedProject 
-    ? people.filter((p) => (p.projectsLinked || []).includes(selectedProject))
-    : people;
+  const score_recalc = (scores || []).map(membro =>{
+    const NPS = membro.nps
+    const dispon = membro.disponibilidade
+    const macroe = selectedProjectObj?.macro ?? "";
+    const av_120 = membro.nota_120
+    const prefere = Array.isArray(membro.gosta) ? membro.gosta : [];
+    const bom = Array.isArray(membro.bom) ? membro.bom : [];
+    const ruim = Array.isArray(membro.ruim) ? membro.ruim : [];
+    const eficiencia = membro.eficiencia
+    const em_exp = membro.maem_exp
+    const sf_exp = membro.masf_exp
+    const sm_exp = membro.masm_exp
+    const pe_exp = membro.mape_exp
 
+    let nota = 0
+
+    if (dispon === 0) { nota += 3}
+    else if (dispon === 1) {nota += 2}
+    else if (dispon === 2) {nota += 1};
+
+    nota += NPS
+    nota += eficiencia
+    nota += av_120
+    if (prefere.includes(macroe)) nota += 1;
+    if (bom.includes(macroe)) nota +=1;
+    if (ruim.includes(macroe)) nota -=1;
+
+    if (macro_em.includes(macroe)) nota += em_exp
+    else if (macro_pe.includes(macroe)) nota += pe_exp
+    else if (macro_sf.includes(macroe)) nota += sf_exp
+    else if (macro_sm.includes(macroe)) nota += sm_exp;
+
+    return {
+      id: membro.id,
+      nome: membro.nome,
+      score: nota
+    }
+
+  })
+
+  const score_array = React.useMemo(() => {
+    const m = new Map();
+   (score_recalc || []).forEach((r) => {
+     if (r?.id) m.set(r.id, r.score);
+    });
+    return m;
+  }, [score_recalc]);
+
+  const fundir_ppl_score = React.useMemo(() => {
+   return (people || []).map((p) => {
+      const newScore = score_array.get(p.id);
+      if (typeof newScore === "number") {
+        return { ...p, score: newScore };
+      }
+      return p;
+    });
+  }, [people, score_array]);
+
+  const filteredPeople = React.useMemo(() => {
+    return (fundir_ppl_score || []).filter(pessoa => pessoa.sobrecarga !== true)
+  }, [fundir_ppl_score])
+  
   const byScoreThenName = (a, b) => {
     const diferenca = (b.score ?? 0) - (a.score ?? 0);
     if (diferenca != 0 ) return diferenca;

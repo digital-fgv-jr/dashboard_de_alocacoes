@@ -30,11 +30,10 @@ export function score() {
         const proj = proj_dado.find(param => param.nome === record.name)
 
         return {
+            ...(proj ?? {}),
             id: record.id,
-            ...proj,
             padrinho: apadrinhar,
             sobrecarga: nem_mostra,
-            score: score+record.nota120, 
             disponibilidade: record.alocacoes,
             bom: record.domina as string[],
             ruim: record.dificuldade as string[],

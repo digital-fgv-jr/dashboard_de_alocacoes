@@ -6,7 +6,6 @@ import RecordQueryResult from '@airtable/blocks/dist/types/src/models/record_que
 // ^^ Importações ^^ //
 
 const dados = base.getTableByName("Dados - Alocação")
-const querry_d = await dados.selectRecordsAsync();
 
 // ^^ constantes usadas ^^ //
 
@@ -37,7 +36,7 @@ export function get_field(record:AirtableRecord, fieldName:string) {
  
   // Para múltiplas seleções
   if (Array.isArray(value)) {
-    return value.map(v => v.name).join(", ");
+    return value.map(v => v.name);
   }
 
   // Para checkbox
@@ -66,6 +65,8 @@ export function get_count(record:AirtableRecord, fieldName:string) {
         const n = parseInt(val, 10);
         return isNaN(n) ? 0 : n;
         }
+    
+      return 0;
 
 }
 
