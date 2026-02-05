@@ -176,38 +176,124 @@ body {
   min-height: 0;
 }
 
-/* CAIXA DE BOAS-VINDAS - ESTILO ORIGINAL */
+/* CAIXA DE BOAS-VINDAS - ESTILO SIMPLIFICADO */
 .project-big-box {
-  flex: 1;
-  background: #0f172a;
-  color: #e6eefc;
-  border-radius: 7px;
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  margin-top: 10px;
-  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.02);
-  min-height: 0;
+    flex: 1;
+    background: #0f172a;
+    color: #e6eeff;
+    border-radius: 7px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 10px;
+    box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.02);
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
 }
 
+/* Título principal - compacto */
 .project-big-box h3 {
-  margin: 20px 0 10px 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #93c5fd;
+    margin: 8px 0 6px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #93c5fd;
+    line-height: 1.3;
 }
 
+/* Texto descritivo - muito compacto */
 .project-big-box p {
-  max-width: 90%;
-  line-height: 1.5;
-  font-size: 14px;
-  color: #dbeafe;
-  margin: 0 0 20px 0;
+    max-width: 98%;
+    line-height: 1.3;
+    font-size: 11px;
+    color: #dbeafe;
+    margin: 0 0 8px 0;
 }
 
+/* Container das dicas */
+.project-big-box .help-tips {
+    width: 100%;
+    margin-top: 4px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Subtítulo "Como configurar:" - compacto */
+.project-big-box .help-tips h4 {
+    margin: 4px 0 6px 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: #93c5fd;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.project-big-box .help-tips h4:before {
+    content: "⚙️";
+    font-size: 10px;
+}
+
+/* Lista de dicas - super compacta */
+.project-big-box .help-tips ul {
+    max-width: 98%;
+    text-align: left;
+    color: #dbeafe;
+    font-size: 10px;
+    line-height: 1.3;
+    margin: 0;
+    padding-left: 12px;
+}
+
+/* Itens da lista - mínimos */
+.project-big-box .help-tips li {
+    margin-bottom: 4px;
+    padding-left: 2px;
+    position: relative;
+}
+
+/* Texto em negrito */
+.project-big-box .help-tips strong {
+    color: #93c5fd;
+    font-weight: 700;
+    font-size: 10px;
+}
+
+/* Ícone decorativo na caixa */
+.project-big-box::before {
+    content: "📊";
+    font-size: 20px;
+    margin-bottom: 5px;
+    opacity: 0.8;
+}
+
+/* STATUS BAR - mostra que está pronto para começar */
+.ready-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: 8px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.ready-status:before {
+    content: "✅";
+    font-size: 9px;
+}
 .help-tips {
   margin-top: 20px;
   padding: 18px;
@@ -1691,17 +1777,17 @@ body {
 
 .action-buttons {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   margin-top: 16px;
 }
 
 .btn-primary, .btn-secondary {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 24px;
+  gap: 6px;
+  padding: 12px 16px;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -2115,3 +2201,4 @@ body {
     font-size: 13px;
   }
 }
+

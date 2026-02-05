@@ -302,7 +302,7 @@ export default function ProjectsPanel({
               disabled={totalWeight !== 100}
             >
               <span className="btn-icon">📊</span>
-              Atualizar Ranking para {selectedArea}
+              Atualizar Ranking
             </button>
           </div>
         </div>
