@@ -7,11 +7,14 @@ import Column from "./src/ui/column";
 import ProjectsPanel from "./src/ui/projectspanel";
 import RadarNotes from "./src/ui/radarnotes";
 
+// Componente principal do Dashboard de Alocações
 function Dashboard() {
+  // Configuração inicial: base de dados, tabela e registros
   const base = useBase();
   const table = base.getTableByName ? base.getTableByName("Dados - Alocação") : null;
   const records = useRecords(table) || [];
 
+  // Mapeamento de campos disponíveis na tabela
   const fieldNames = React.useMemo(() => {
     if (!table || !table.fields) return new Set();
     return new Set(table.fields.map((f) => f.name));
@@ -19,6 +22,7 @@ function Dashboard() {
   
   const hasField = React.useCallback((n) => fieldNames.has(n), [fieldNames]);
 
+  // Identificação de campos relacionados ao gráfico de radar
   const radarFields = React.useMemo(() => {
     if (!table || !table.fields) return [];
     const keywords = ["comunic", "tecni", "proativ", "prazo", "qualidade", "nota", "score", "avalia", "qap"];
@@ -28,13 +32,18 @@ function Dashboard() {
       .slice(0, 6);
   }, [table]);
 
+  // Processamento dos dados dos membros da equipe
   const people = React.useMemo(() => {
     return (records || []).map((r) => {
+      // Função auxiliar para obter valores de células
       const get = (n) => (hasField(n) && r.getCellValue ? r.getCellValue(n) : null);
+      
+      // Extração de informações básicas
       const name = (get("Name") || r.name || get("Membro") || "").toString().trim();
       const role = (get("Função") || get("Cargo") || "").toString() || "";
       const alocacoes = Number(get("Alocações") || get("Alocacoes") || get("Aloc") || 0) || 0;
 
+      // Processamento da foto do membro
       let photoUrl = null;
       const photoCell = get("Foto") || get("Image");
       if (Array.isArray(photoCell) && photoCell[0] && photoCell[0].url) {
@@ -43,6 +52,7 @@ function Dashboard() {
 
       const description = (get("Descrição") || get("Descricao") || get("Bio") || "") || "";
 
+      // Processamento dos projetos vinculados
       let projectsLinked = [];
       const projVal = get("Projeto") || get("Projetos");
       if (projVal) {
@@ -53,6 +63,7 @@ function Dashboard() {
         }
       }
 
+      // Construção dos dados do gráfico de radar
       const radar = { labels: [], values: [] };
       radarFields.forEach((f) => {
         radar.labels.push(f);
@@ -78,6 +89,7 @@ function Dashboard() {
     });
   }, [records, hasField, radarFields]);
 
+  // Extração da lista de projetos únicos
   const projects = React.useMemo(() => {
     const s = new Set();
     (people || []).forEach((p) => {
@@ -88,11 +100,12 @@ function Dashboard() {
     return Array.from(s).sort((a, b) => a.localeCompare(b, "pt", { sensitivity: "base" }));
   }, [people]);
 
+  // Estados de controle da interface
   const [selectedProject, setSelectedProject] = React.useState(null);
   const [selectedPerson, setSelectedPerson] = React.useState(null);
   const [selectedProjects, setSelectedProjects] = React.useState({});
 
-  // Lista de macroetapas existentes
+  // Lista de macroetapas do processo
   const MACRO_ETAPAS = [
     "Avaliação Estratégica",
     "Plano Operacional", 
@@ -106,16 +119,16 @@ function Dashboard() {
     "Cliente Oculto"
   ];
 
-  // Função para determinar macroetapa baseada no nome do projeto (para projetos fictícios)
+  // Determinação da macroetapa com base no projeto
   const getMacroEtapaForProject = (projectName) => {
     if (!projectName) return "Plano de Negócios";
     
-    // Para projetos fictícios, atribuir uma macroetapa baseada no nome
+    // Mapeamento para projetos de exemplo
     if (projectName === "Projeto 1") return "Plano de Negócios";
     if (projectName === "Projeto 2") return "Plano Financeiro";
     if (projectName === "Projeto 3") return "Pesquisa de Mercado";
     
-    // Para projetos reais, buscar do campo "Macroetapa" do primeiro membro
+    // Para projetos reais, busca do campo "Macroetapa"
     const peopleInProject = (people || []).filter((p) => 
       (p.projectsLinked || []).includes(projectName)
     );
@@ -124,7 +137,6 @@ function Dashboard() {
     
     const sample = peopleInProject[0] ? peopleInProject[0].__rawRecord : null;
     if (sample && sample.getCellValue) {
-      // Tenta buscar do campo "Macroetapa" ou variações
       const macroEtapa = (hasField("Macroetapa") ? sample.getCellValue("Macroetapa") : 
                          (hasField("Macro etapa") ? sample.getCellValue("Macro etapa") : 
                          (hasField("Etapa") ? sample.getCellValue("Etapa") : null))) || null;
@@ -134,10 +146,10 @@ function Dashboard() {
       }
     }
     
-    // Se não encontrar, retorna a primeira macroetapa da lista
     return MACRO_ETAPAS[0];
   };
 
+  // Construção do objeto do projeto selecionado
   const selectedProjectObj = React.useMemo(() => {
     if (!selectedProject) return null;
     const peopleInProject = (people || []).filter((p) => 
@@ -150,13 +162,11 @@ function Dashboard() {
     let client = "-", status = "-";
     
     if (sample && sample.getCellValue) {
-      // Buscar informações do projeto
       client = (hasField("Cliente") ? sample.getCellValue("Cliente") : 
                (hasField("Client") ? sample.getCellValue("Client") : "-")) || "-";
       status = (hasField("Status") ? sample.getCellValue("Status") : "-") || "-";
     }
     
-    // Determinar a macroetapa
     const macroEtapa = getMacroEtapaForProject(selectedProject);
     
     return { 
@@ -168,12 +178,15 @@ function Dashboard() {
     };
   }, [selectedProject, people, hasField]);
 
+  // Filtragem de pessoas com base no projeto selecionado
   const filteredPeople = selectedProject 
     ? people.filter((p) => (p.projectsLinked || []).includes(selectedProject))
     : people;
 
+  // Função de ordenação por nome
   const byName = (a, b) => a.name.localeCompare(b.name, "pt", { sensitivity: "base" });
   
+  // Categorização dos membros por função
   let consultants = (filteredPeople || []).filter((p) => 
     /consultor/i.test(p.role)
   ).sort(byName);
@@ -186,6 +199,7 @@ function Dashboard() {
     /madrinh/i.test(p.role)
   ).sort(byName);
 
+  // Distribuição alternativa caso não haja categorias definidas
   if (consultants.length === 0 && managers.length === 0 && madrinhas.length === 0) {
     const sorted = [...(filteredPeople || [])].sort(byName);
     const n = sorted.length;
@@ -196,6 +210,7 @@ function Dashboard() {
     madrinhas = sorted.slice(secondCut);
   }
 
+  // Manipulação da seleção de pessoa
   const handleSelectPerson = (p) => {
     if (!p) return;
     setSelectedPerson(p);
@@ -207,6 +222,7 @@ function Dashboard() {
     setSelectedProjects({});
   };
 
+  // Determinação da função específica do membro
   const getSpecificRole = (person) => {
     const role = person?.role || "";
     const roleLower = role.toLowerCase();
@@ -234,9 +250,10 @@ function Dashboard() {
     return role || "Membro da Equipe";
   };
 
+  // Descrições dos critérios de avaliação
   const getCriterionDescription = (name, value) => {
     if (name && name.includes('NPS')) return 'Satisfação média do cliente com atendimento';
-    if (name && name.includes('Experiência')) return 'Anos de experiência na área relacionada';
+    if (name && name.includes('Experiência')) return 'Experiência na área relacionada';
     if (name && name.includes('Avaliação')) return 'Feedback 120° da equipe interna';
     if (name && name.includes('Disponibilidade')) return 'Capacidade atual de dedicação ao projeto';
     if (name && name.includes('Preferência')) return 'Afinidade pessoal com o tipo de projeto';
@@ -244,6 +261,7 @@ function Dashboard() {
     return 'Critério de avaliação de desempenho';
   };
 
+  // Cálculo da pontuação de disponibilidade
   const getAvailabilityScore = (alocacoes) => {
     if (alocacoes === 0) return 10;
     if (alocacoes === 1) return 6.67;
@@ -252,6 +270,7 @@ function Dashboard() {
     return 0;
   };
 
+  // Determinação do status de disponibilidade
   const getAvailabilityStatus = (alocacoes) => {
     const score = getAvailabilityScore(alocacoes);
     
@@ -287,12 +306,14 @@ function Dashboard() {
     };
   };
 
+  // Cálculo do total de alocações
   const getTotalAllocations = (person) => {
     const baseAllocations = person.alocacoes || 0;
     const selectedCount = Object.values(selectedProjects).filter(Boolean).length;
     return baseAllocations + selectedCount;
   };
 
+  // Alternar seleção de projeto para alocação
   const toggleProjectSelection = (projectId) => {
     const totalAllocations = getTotalAllocations(selectedPerson);
     
@@ -306,6 +327,7 @@ function Dashboard() {
     }));
   };
 
+  // Lista de sugestões de projetos para alocação
   const projectSuggestions = [
     { id: 1, name: "Projeto 1" },
     { id: 2, name: "Projeto 2" },
@@ -317,12 +339,13 @@ function Dashboard() {
       }))
   ];
 
+  // Renderização da sessão de detalhes do membro
   const renderSession2 = () => {
     if (!selectedPerson) return null;
 
     const criteriaList = [
       { id: 'nps', name: 'NPS do Profissional', color: '#3b82f6' },
-      { id: 'experience', name: 'Experiência na Área', color: '#10b981' },
+      { id: 'experience', name: 'Experiência', color: '#10b981' },
       { id: 'technical', name: 'Avaliação 120°', color: '#f59e0b' },
       { id: 'availability', name: 'Disponibilidade', color: '#8b5cf6' },
       { id: 'cultural', name: 'Preferência', color: '#ef4444' },

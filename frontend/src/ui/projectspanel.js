@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
 import "../../style.css";
 
+// Painel de projetos com configuração de critérios de ranking
 export default function ProjectsPanel({
   selectedProject,
   onSelectProject = () => {},
   projects = [],
   projectInfo = null,
 }) {
+  // Estado de controle do dropdown
   const [open, setOpen] = useState(false);
   
-  // Estado para armazenar pesos por área
+  // Configuração dos pesos por área (consultores, gerentes, madrinhas)
   const [weightsByArea, setWeightsByArea] = useState({
     consultores: [
       { id: 'nps', name: 'NPS do Profissional', weight: 25 },
@@ -37,21 +39,25 @@ export default function ProjectsPanel({
     ]
   });
   
+  // Estados para controle da edição de pesos
   const [selectedArea, setSelectedArea] = useState('consultores');
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [totalWeight, setTotalWeight] = useState(100);
 
+  // Lista completa de projetos (incluindo exemplos)
   const allProjects = ["Projeto 1", "Projeto 2", "Projeto 3", ...projects.filter(p => !["Projeto 1", "Projeto 2", "Projeto 3"].includes(p))];
 
   // Critérios atuais baseados na área selecionada
   const currentCriteria = weightsByArea[selectedArea];
 
+  // Atualização do peso total sempre que os critérios mudam
   useEffect(() => {
     const total = currentCriteria.reduce((sum, criterion) => sum + criterion.weight, 0);
     setTotalWeight(total);
   }, [currentCriteria]);
 
+  // Manipulação da alteração de pesos
   const handleWeightChange = (id, newWeight) => {
     const weight = Math.max(0, Math.min(100, parseInt(newWeight) || 0));
     
@@ -67,6 +73,7 @@ export default function ProjectsPanel({
     handleWeightChange(id, parseInt(value));
   };
 
+  // Controles para edição direta dos valores
   const handleInputClick = (id, currentWeight) => {
     setEditingId(id);
     setEditValue(currentWeight.toString());
@@ -90,8 +97,8 @@ export default function ProjectsPanel({
     }
   };
 
+  // Restauração dos pesos padrão para a área atual
   const handleResetWeights = () => {
-    // Resetar para valores padrão da área atual
     const defaultWeights = {
       consultores: [
         { id: 'nps', name: 'NPS do Profissional', weight: 25 },
@@ -125,6 +132,7 @@ export default function ProjectsPanel({
     }));
   };
 
+  // Salvamento dos pesos configurados
   const handleSaveWeights = () => {
     if (totalWeight === 100) {
       console.log(`Pesos salvos para ${selectedProject} - ${selectedArea}:`, currentCriteria);
@@ -132,6 +140,7 @@ export default function ProjectsPanel({
     }
   };
 
+  // Renderização do seletor de área
   const renderAreaSelector = () => {
     const areas = [
       { id: 'consultores', label: 'Consultores', icon: '👨‍💼' },
@@ -164,10 +173,11 @@ export default function ProjectsPanel({
     );
   };
 
+  // Renderização dos controles de critérios
   const renderCriteriaControls = () => {
     if (!selectedProject) return null;
 
-    // Macroetapa específica para cada projeto
+    // Determinação da macroetapa específica para cada projeto
     const getMacroEtapaForProject = (projectName) => {
       switch(projectName) {
         case "Projeto 1":
@@ -188,7 +198,7 @@ export default function ProjectsPanel({
         <div className="project-header-info">
           <h2 className="project-title">{selectedProject}</h2>
           
-          {/* MACROETAPA SIMPLES */}
+          {/* Exibição da macroetapa do projeto */}
           <div className="macroetapa-simple">
             <div className="macroetapa-header-simple">
               <div className="macroetapa-icon-simple">📊</div>
@@ -212,7 +222,7 @@ export default function ProjectsPanel({
           {/* Seletor de Área */}
           {renderAreaSelector()}
           
-          {/* CRITÉRIOS EM COLUNA - UM EMBAIXO DO OUTRO */}
+          {/* Lista vertical de critérios com controles de peso */}
           <div className="criteria-list-vertical">
             {currentCriteria.map((criterion, index) => (
               <div 
@@ -258,6 +268,7 @@ export default function ProjectsPanel({
                   </div>
                 </div>
                 
+                {/* Controle deslizante para ajuste visual do peso */}
                 <div className="slider-container-vertical">
                   <input
                     type="range"
@@ -277,6 +288,7 @@ export default function ProjectsPanel({
             ))}
           </div>
           
+          {/* Painel de validação do peso total */}
           <div className={`total-panel ${totalWeight === 100 ? 'valid' : 'invalid'}`}>
             <div className="total-info">
               <span className="total-label">Soma total dos pesos:</span>
@@ -291,6 +303,7 @@ export default function ProjectsPanel({
             </div>
           </div>
           
+          {/* Botões de ação */}
           <div className="action-buttons">
             <button className="btn-secondary" onClick={handleResetWeights}>
               <span className="btn-icon">↺</span>
@@ -310,6 +323,7 @@ export default function ProjectsPanel({
     );
   };
 
+  // Renderização da tela de boas-vindas
   const renderWelcomeBox = () => {
     if (selectedProject) return null;
     
@@ -336,6 +350,7 @@ export default function ProjectsPanel({
 
   return (
     <div className="projects-panel">
+      {/* Cabeçalho com seletor de projetos */}
       <div className="projects-header" onClick={() => setOpen((s) => !s)}>
         <div className="projects-header-title">
           <span className="project-icon">📁</span>
@@ -346,6 +361,7 @@ export default function ProjectsPanel({
         </button>
       </div>
 
+      {/* Dropdown com lista de projetos */}
       {open && (
         <div className="projects-dropdown">
           <div
@@ -362,7 +378,7 @@ export default function ProjectsPanel({
           </div>
 
           {allProjects.map((projectName, i) => {
-            // Determinar macroetapa para cada projeto
+            // Determinação da macroetapa para cada projeto
             const getProjectMacroEtapa = (name) => {
               switch(name) {
                 case "Projeto 1":
@@ -388,9 +404,9 @@ export default function ProjectsPanel({
                 <div className="dropdown-project-info">
                   <div className="dropdown-project-name">{projectName}</div>
                   <div className="dropdown-project-meta">
-                    {projectName === "Projeto 1" && `Cliente A • Em andamento • ${macroEtapa}`}
-                    {projectName === "Projeto 2" && `Cliente B • Planejamento • ${macroEtapa}`}
-                    {projectName === "Projeto 3" && `Cliente C • Concluído • ${macroEtapa}`}
+                    {projectName === "Projeto 1" && `${macroEtapa}`}
+                    {projectName === "Projeto 2" && `${macroEtapa}`}
+                    {projectName === "Projeto 3" && `${macroEtapa}`}
                     {!["Projeto 1", "Projeto 2", "Projeto 3"].includes(projectName) && `Cliente • Status • ${macroEtapa}`}
                   </div>
                 </div>
@@ -400,6 +416,7 @@ export default function ProjectsPanel({
         </div>
       )}
 
+      {/* Área principal de informações e controles */}
       <div className="project-info">
         {selectedProject ? renderCriteriaControls() : renderWelcomeBox()}
       </div>
