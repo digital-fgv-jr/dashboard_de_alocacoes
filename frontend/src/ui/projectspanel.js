@@ -12,7 +12,7 @@ export default function ProjectsPanel({
 }) {
   const [open, setOpen] = useState(false);
 
-  const allProjects = ["Projeto 1", "Projeto 2", "Projeto 3", ...projects.filter(p => !["Projeto 1", "Projeto 2", "Projeto 3"].includes(p))];
+  const allProjects = [ ...projects.filter(p => !["Projeto 1", "Projeto 2", "Projeto 3"].includes(p))];
 
   const renderAreaSelector = () => {
     const areas = [

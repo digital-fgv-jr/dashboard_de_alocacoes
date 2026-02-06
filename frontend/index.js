@@ -211,9 +211,13 @@ function Dashboard() {
     nota += eficiencia * (pesos.preferencia)
     nota += av_120 * (pesos.av_120)
 
-    if (prefere.includes(macroe)) nota += 1 * (pesos.preferencia);
-    if (bom.includes(macroe)) nota +=1 * (pesos.preferencia);
-    if (ruim.includes(macroe)) nota -=1 * (pesos.preferencia);
+    let pref = 5
+
+    if (prefere.includes(macroe)) pref += 2;
+    if (bom.includes(macroe)) pref += 3;
+    if (ruim.includes(macroe)) pref -= 5;
+    
+    nota += pref * (pesos.preferencia)
 
     if (macro_em.includes(macroe)) nota += em_exp * (pesos.experience)
     else if (macro_pe.includes(macroe)) nota += pe_exp * (pesos.experience)
@@ -254,9 +258,13 @@ function Dashboard() {
     nota += eficiencia * (pesos.preferencia)
     nota += av_120 * (pesos.av_120)
 
-    if (prefere.includes(macroe)) nota += 1 * (pesos.preferencia);
-    if (bom.includes(macroe)) nota +=1 * (pesos.preferencia);
-    if (ruim.includes(macroe)) nota -=1 * (pesos.preferencia);
+    let pref = 5
+
+    if (prefere.includes(macroe)) pref += 2;
+    if (bom.includes(macroe)) pref += 3;
+    if (ruim.includes(macroe)) pref -= 5;
+    
+    nota += pref * (pesos.preferencia)
 
     if (macro_em.includes(macroe)) nota += em_exp * (pesos.experience)
     else if (macro_pe.includes(macroe)) nota += pe_exp * (pesos.experience)
@@ -297,9 +305,13 @@ function Dashboard() {
     nota += eficiencia * (pesos.preferencia)
     nota += av_120 * (pesos.av_120)
 
-    if (prefere.includes(macroe)) nota += 1 * (pesos.preferencia);
-    if (bom.includes(macroe)) nota +=1 * (pesos.preferencia);
-    if (ruim.includes(macroe)) nota -=1 * (pesos.preferencia);
+    let pref = 5
+
+    if (prefere.includes(macroe)) pref += 2;
+    if (bom.includes(macroe)) pref += 3;
+    if (ruim.includes(macroe)) pref -= 5;
+    
+    nota += pref * (pesos.preferencia)
 
     if (macro_em.includes(macroe)) nota += em_exp * (pesos.experience)
     else if (macro_pe.includes(macroe)) nota += pe_exp * (pesos.experience)
@@ -470,18 +482,17 @@ function Dashboard() {
     }));
   };
 
-  // Lista de projetos para sugestão (mesmos da primeira sessão)
-  const projectSuggestions = [
-    { id: 1, name: "Projeto 1" },
-    { id: 2, name: "Projeto 2" },
-    { id: 3, name: "Projeto 3" },
-    ...nomes_projetos
-      .filter(p => !["Projeto 1", "Projeto 2", "Projeto 3"].includes(p))
-      .map((p, index) => ({ 
-        id: index + 4, 
-        name: p, 
-      }))
-  ];
+  const projectSuggestions = React.useMemo(() => {
+
+    return (lista_projetos || [])
+      .filter(p => (p.equipe ?? 0) === 0)
+      .map(p => ({
+        id: p.id, 
+        name: p.nome,
+        macro: p.macro,
+      }));
+  }, [lista_projetos]);
+
 
   const pesosAtuais = selectedArea === "consultores"
     ? pesosConsultores
@@ -502,51 +513,74 @@ function Dashboard() {
   const renderSession2 = () => {
     if (!selectedPerson) return null;
 
-    const criteriaList = [
-      { id: 'nps', name: 'NPS do Profissional', color: '#3b82f6' },
-      { id: 'experience', name: 'Experiência na Área', color: '#10b981' },
-      { id: 'technical', name: 'Avaliação 120°', color: '#f59e0b' },
-      { id: 'availability', name: 'Disponibilidade', color: '#8b5cf6' },
-      { id: 'cultural', name: 'Preferência', color: '#ef4444' },
-      { id: 'cultural', name: 'Preferência', color: '#ef4444' },
-      { id: 'qap', name: 'QAP', color: '#ec4899' }
-    ];
 
     // Usar dados do radar ou dados padrão
     const totalAllocations = selectedPerson?.alocacoes ?? 0;
     const availabilityStatus = getAvailabilityStatus(totalAllocations);
     const availabilityScore = getAvailabilityScore(totalAllocations);
 
-    let radarLabels = [];
-    let radarValues = [];
+    const clamp10 = (v) => Math.max(0, Math.min(10, v));
 
-    if (selectedPerson.radar && selectedPerson.radar.values && selectedPerson.radar.values.length > 0) {
-      radarLabels = selectedPerson.radar.labels.slice(0, 6);
-      radarValues = selectedPerson.radar.values.slice(0, 6);
-      
-      while (radarLabels.length < 6) {
-        radarLabels.push(criteriaList[radarLabels.length]?.name || `Critério ${radarLabels.length + 1}`);
-      }
-      while (radarValues.length < 6) {
-        radarValues.push(7.5);
-      }
-    } else {
-      radarValues = [8.5, 7.2, 9.0, availabilityScore, 7.5, 8.3];
-    }
-
-    const availabilityIndex = radarLabels.findIndex(label => 
-      label.toLowerCase().includes('disponibilidade')
-    );
-    if (availabilityIndex !== -1) {
-      radarValues[availabilityIndex] = availabilityScore;
-    }
-
-    // Calcular nota geral
-    let overallScore = 8.2;
-    if (radarValues.length > 0) {
-      const sum = radarValues.reduce((a, b) => a + b, 0);
-      overallScore = sum / radarValues.length;
+    const num = (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
     };
+    const macro = selectedProjectObj?.macro ?? "";
+
+    const experienceScore =
+      macro_em.includes(macro) ? num(selectedPerson?.maem_exp) :
+      macro_pe.includes(macro) ? num(selectedPerson?.mape_exp) :
+      macro_sf.includes(macro) ? num(selectedPerson?.masf_exp) :
+      macro_sm.includes(macro) ? num(selectedPerson?.masm_exp) :
+      0;
+
+      const preferenciaScore = (() => {
+        const gosta = Array.isArray(selectedPerson?.gosta) ? selectedPerson.gosta : [];
+        const bom = Array.isArray(selectedPerson?.bom) ? selectedPerson.bom : [];
+        const ruim = Array.isArray(selectedPerson?.ruim) ? selectedPerson.ruim : [];
+
+        let s = 5;
+        if (gosta.includes(macro)) s += 2;
+        if (bom.includes(macro)) s += 3;
+        if (ruim.includes(macro)) s -= 5;
+
+  return clamp10(s);
+})();
+
+
+      const radarLabels = [
+        "NPS",
+        "Experiência",
+        "Avaliação 120°",
+        "Disponibilidade",
+        "Preferência",
+        "Eficiência"
+      ];
+
+      const radarValues = [
+        clamp10(num(selectedPerson?.nps)),
+        clamp10(experienceScore),
+        clamp10(num(selectedPerson?.nota_120)),
+        clamp10(availabilityScore),
+        clamp10(preferenciaScore),
+        clamp10(num(selectedPerson?.eficiencia)),
+      ];
+
+      const criteriaList = [
+        { name: "NPS do Profissional", value: radarValues[0], description: "Satisfação média do cliente", color: "#3b82f6" },
+        { name: "Experiência na Área", value: radarValues[1], description: "Experiência na macroetapa selecionada", color: "#10b981" },
+        { name: "Avaliação 120°", value: radarValues[2], description: "Média final da avaliação 120°", color: "#f59e0b" },
+        { name: "Disponibilidade", value: radarValues[3], description: "Baseada no número de projetos", color: "#8b5cf6" },
+        { name: "Preferência", value: radarValues[4], description: "Afinidade com o tipo de projeto", color: "#ef4444" },
+        { name: "Eficiência", value: radarValues[5], description: "Média dos QAPs", color: "#ec4899" },
+      ].map(m => ({
+        ...m,
+        percentage: Math.round((m.value / 10) * 100),
+      }));
+
+      const overallScore = radarValues.length
+        ? radarValues.reduce((a, b) => a + b, 0) / radarValues.length
+        : 0;
 
     // Obter status de disponibilidade    
     const memberRole = getSpecificRole(selectedPerson);
@@ -659,7 +693,7 @@ function Dashboard() {
               </div>
             </div>
             
-            {selectedPerson.radar && selectedPerson.radar.values && selectedPerson.radar.values.length > 0 ? (
+            {radarValues.length > 0 ? (
               <div className="radar-container-middle">
                 <div className="radar-wrapper-middle">
                   <RadarNotes 
