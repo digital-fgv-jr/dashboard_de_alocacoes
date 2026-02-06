@@ -1,4 +1,4 @@
-import { useMembros } from "./data_t";
+import { useMembros, useMemMembros } from "./data_t";
 import { get_info_proj, useProjetos } from "./data_q";
 // ^^ Importações ^^ //
 
@@ -11,14 +11,16 @@ const macro_em: string[] = [ "Análise Setorial", "Pesquisa de Mercado", "Client
 
 export function useScores() {
   const dado = useMembros();
+  const dado_2 = useMemMembros();
   const proj = useProjetos();
-  const proj_dado = get_info_proj(dado, proj);
+  const proj_dado = get_info_proj(dado_2, proj);
 
   return dado.map(record => {
     const apadrinhar = record.setor === "Gestão de Pessoas";
-    const projInfo = proj_dado.find(p => p.nome === record.nome);
+    const projInfo = proj_dado.find(p => p.m_id === record.id_membro);
     let sobrecarga = false;
     if(record.disponibilidade >= 3) {sobrecarga = true}
+    console.log(projInfo?.disponibilidade)
 
     return {
       ...(projInfo ?? {}),
@@ -29,7 +31,7 @@ export function useScores() {
       ruim: record.dificuldade,
       gosta: record.prefere,
       nota_120: record.nota120,
-      disponibilidade: record.disponibilidade
+      //disponibilidade: record.disponibilidade
     };
   });
 }

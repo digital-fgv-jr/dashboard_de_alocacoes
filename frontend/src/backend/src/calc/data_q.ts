@@ -1,5 +1,5 @@
 import { useBase, useRecords } from "@airtable/blocks/ui"
-import { get_field, get_count, useMembros, get_list, get_linked_ids } from "./data_t"
+import { get_field, get_count, useMembros, get_list, get_linked_ids , useMemMembros} from "./data_t"
 
 // ^^ Imports ^^ //
 
@@ -33,6 +33,13 @@ type Membro = {
     nota120: number,
 }
 
+type MemMembro = {
+  id: string,
+  nome: string,
+  alocacoes: string[],
+  n_aloc: number,
+}
+
 // ^^ Types ^^ //
 
 export function useProjetos():Projeto[] {
@@ -44,7 +51,7 @@ export function useProjetos():Projeto[] {
     id: proj.id,
     nome_p: String(get_field(proj, "Projeto")),
     macro: String(get_field(proj, "Macroetapas")),
-    equipe: get_list(proj, "Alocações"),
+    equipe: get_linked_ids(proj, "Alocações"),
     NPS: get_count(proj, "NPS"),
     QAP: get_count(proj, "QAP"),
     cliente: String(get_field(proj, "Cliente")),
@@ -57,34 +64,39 @@ export function useProjetos():Projeto[] {
 // ^^ funções usadas ^^ //
 
 
-export function get_info_proj(membros: Membro[], projetos: Projeto[]) {
+export function get_info_proj(membros: MemMembro[], projetos: Projeto[]) {
   return membros.map((mem) => {
-    let maem_mexp = 0, mape_mexp = 0, masf_mexp = 0, masm_mexp = 0;
-    let m_nps = 0, m_qap = 0;
-    // let dispon = 0
+    var maem_mexp = 0, mape_mexp = 0, masf_mexp = 0, masm_mexp = 0;
+    var m_nps = 0, m_qap = 0;
+    var dispon = 0
 
     projetos.forEach((exp) => {
-      const status = String(exp.status ?? "").trim().toLowerCase();
-      // const finalizado = status === "finalizado";
 
-      if (exp.equipe.some(equipe => mem.alocacoes.includes(equipe))) {
-        const macro = Array.isArray(exp.macro) ? (exp.macro[0] ?? "") : (exp.macro ?? "");
+
+      const status = String(exp.status ?? "").trim().toLowerCase();
+      const finalizado = status.includes("finaliz");
+
+      if (exp.equipe.some(eq => mem.alocacoes.includes(eq))) {
+        const macro = exp.macro;
 
         if (macro_em.includes(macro)) maem_mexp += 1;
         else if (macro_pe.includes(macro)) mape_mexp += 1;
         else if (macro_sf.includes(macro)) masf_mexp += 1;
         else if (macro_sm.includes(macro)) masm_mexp += 1;
 
-        // if (!finalizado) dispon += 1
+        if (!finalizado) dispon += 1
 
         m_nps += Number(exp.NPS || 0);
         m_qap += Number(exp.QAP || 0);
+        //console.log(m_nps)
       }
     });
 
     const total = maem_mexp + mape_mexp + masf_mexp + masm_mexp;
 
+
     return {
+      m_id: mem.id,
       nome: mem.nome,
       maem_exp: maem_mexp,
       mape_exp: mape_mexp,
@@ -92,7 +104,7 @@ export function get_info_proj(membros: Membro[], projetos: Projeto[]) {
       masm_exp: masm_mexp,
       nps: total > 0 ? (m_nps / total) : 0,
       eficiencia: total > 0 ? (m_qap / total) : 0,
-      // disponibilidade: dispon
+      disponibilidade: dispon,
     };
   });
 }

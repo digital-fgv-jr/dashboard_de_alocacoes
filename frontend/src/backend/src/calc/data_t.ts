@@ -16,6 +16,7 @@ type LinkedRecordCellValue = Array<{ id: string; name?: string }>;
 type Membro = {
     id: string,
     nome: string,
+    id_membro: string,
     setor: string,
     prefere: string[],
     domina: string[],
@@ -24,6 +25,13 @@ type Membro = {
     alocacoes: string[],
     disponibilidade: number,
     nota120: number,
+}
+
+type MemMembro = {
+  id: string,
+  nome: string,
+  alocacoes: string[],
+  n_aloc: number,
 }
 
 // ^^ Types ^^ //
@@ -107,6 +115,7 @@ export function useMembros(): Membro[] {
   const membros = (records || []).map((record) => ({
     id: record.id,
     nome: String(get_field(record, "Membro")),
+    id_membro: String(get_linked_ids(record, "Membro")),
     setor: String(get_field(record, "Setor")),
     prefere: get_list(record, "Qual Prefere") as string[],
     domina: get_list(record, "Qual Domina") as string[],
@@ -118,4 +127,19 @@ export function useMembros(): Membro[] {
   }));
 
   return membros;
+}
+
+export function useMemMembros(): MemMembro[] {
+  const base = useBase();
+  const tabela = base.getTableByName("Membros");
+  const dados = useRecords(tabela);
+
+  const memembros = (dados || []).map(record => ({
+    id: record.id,
+    nome: get_field(record, "Nome"),
+    alocacoes: get_linked_ids(record, "Alocações"),
+    n_aloc: get_count(record, "Alocações")
+  }))
+
+  return memembros;
 }
