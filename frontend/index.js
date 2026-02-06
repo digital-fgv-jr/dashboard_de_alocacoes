@@ -147,6 +147,7 @@ function Dashboard() {
       radar.values.push(v);
     });
 
+
     return {
       ...(de_process || {}),
       id: r.id,
@@ -515,7 +516,7 @@ function Dashboard() {
 
 
     // Usar dados do radar ou dados padrão
-    const totalAllocations = selectedPerson?.alocacoes ?? 0;
+    const totalAllocations = selectedPerson?.disponibilidade ?? 0;
     const availabilityStatus = getAvailabilityStatus(totalAllocations);
     const availabilityScore = getAvailabilityScore(totalAllocations);
 
@@ -636,7 +637,7 @@ function Dashboard() {
                   </div>
                   <div className="meta-item-left">
                     <span className="meta-label-left">ALOCAÇÕES:</span>
-                    <span className="meta-value-left">{selectedPerson.alocacoes || 0}</span>
+                    <span className="meta-value-left">{selectedPerson.disponibilidade || 0}</span>
                   </div>
                 </div>
               </div>
