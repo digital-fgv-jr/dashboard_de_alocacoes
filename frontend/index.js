@@ -7,9 +7,10 @@ import "./style.css";
 import Column from "./src/ui/column";
 import ProjectsPanel from "./src/ui/projectspanel";
 import RadarNotes from "./src/ui/radarnotes";
-import ProjectRankingConfig from "./src/ui/ProjectRankingConfig";
+import ProjectRankingConfig from "./src/ui/weightinput";
 import { score } from "./src/backend/src/calc/processing";
 import { get_field, get_count } from "./src/backend/src/calc/data_t";
+import { useMemo } from "react";
 
 function Dashboard() {
   const base = useBase();
@@ -27,12 +28,14 @@ function Dashboard() {
     return base_projetos.map((records) => ({
       id:records.id,
       nome: get_field(records, "Projeto"),
-      macro: get_field(records, "Macroetapas")
+      macro: get_field(records, "Macroetapas"),
+      equipe: get_count(records, "Alocações")
     }))
   }, [base_projetos]);
 
   const nomes_projetos = React.useMemo (() => {
     return (lista_projetos || [])
+    .filter(projeto => projeto.equipe === 0)
     .map(projeto => projeto.nome)
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b, "pt", {sensitivity: "base"}));
@@ -52,77 +55,94 @@ function Dashboard() {
     return new Set(table.fields.map((f) => f.name));
   }, [table]);
 
+  const scoresArr = React.useMemo(() => {
+    const out = score();
+    if (out instanceof Map) return Array.from(out.values());
+   return Array.isArray(out) ? out : [];
+  }, [records]);
+
+
   const nota_membro = React.useMemo(() => {
     const membro = new Map();
-    (scores || []).forEach(record => {
-      if (record.id) membro.set( record.id, record );
-    })
-    return membro;
-  }, [scores]);
+
+    scoresArr.forEach((rec) => {
+     if (rec && rec.id != null) {
+        membro.set(rec.id, rec);
+      }
+    });
+
+   return membro;
+  }, [scoresArr]);
+
   
   const hasField = React.useCallback((n) => fieldNames.has(n), [fieldNames]);
 
   const radarFields = React.useMemo(() => {
     if (!table || !table.fields) return [];
-    const keywords = ["comunic", "tecni", "proativ", "prazo", "qualidade", "nota", "score", "avalia"];
+    const keywords = ["comunic", "tecni", "proativ", "prazo", "qualidade", "nota", "score", "avalia", "qap"];    
     return table.fields
       .map((f) => f.name)
       .filter((name) => keywords.some((k) => name.toLowerCase().includes(k)))
-      .slice(0, 5);
+      .slice(0, 6);
   }, [table]);
 
   const people = React.useMemo(() => {
-    return (records || []).map((r) => {
-      const get = (n) => (hasField(n) && r.getCellValue ? r.getCellValue(n) : null);
-      const name = (get("Name") || r.name || get("Membro") || "").toString().trim();
-      const role = (get("Função") || get("Cargo") || "").toString() || "";
-      const alocacoes = Number(get("Alocações") || get("Alocacoes") || get("Aloc") || 0) || 0;
-
-      let photoUrl = null;
-      const photoCell = get("Foto") || get("Image");
-      if (Array.isArray(photoCell) && photoCell[0] && photoCell[0].url) {
-        photoUrl = photoCell[0].url;
+  return (records || []).map((r) => {
+    const get = (n) => {
+      if (!r || !r.getCellValue) return null;
+      try {
+        return r.getCellValue(n);
+      } catch (e) {
+        return null;
       }
+    };
 
-      const de_process = nota_membro.get(r.id);
+    const name = String(get("Name") || r.name || get("Membro") || "").trim();
+    const role = String(get("Função") || get("Cargo") || "");
 
-      const description = (get("Descrição") || get("Descricao") || get("Bio") || "") || "";
+    let photoUrl = null;
+    const photoCell = get("Foto") || get("Image");
+    if (Array.isArray(photoCell) && photoCell[0] && photoCell[0].url) {
+      photoUrl = photoCell[0].url;
+    }
 
-      let projectsLinked = [];
-      const projVal = get("Projeto") || get("Projetos");
-      if (projVal) {
-        if (Array.isArray(projVal)) {
-          projectsLinked = projVal.map((x) => (x && x.name ? x.name : String(x)));
-        } else {
-          projectsLinked = [String(projVal)];
-        }
-      }
+    const de_process = nota_membro ? nota_membro.get(r.id) : null;
 
-      const radar = { labels: [], values: [] };
-      radarFields.forEach((f) => {
-        radar.labels.push(f);
-        const raw = (hasField(f) && r.getCellValue) ? r.getCellValue(f) : null;
-        let v = 0;
-        if (typeof raw === "number") v = raw;
-        else if (typeof raw === "string") v = parseFloat(raw.replace(",", ".")) || 0;
-        else if (raw && raw.value !== undefined) v = Number(raw.value) || 0;
-        radar.values.push(v);
-      });
+    const description = String(get("Descrição") || get("Descricao") || get("Bio") || "");
 
-      return {
-        ...(de_process ?? {}),
-        id: r.id,
-        name,
-        role,
-        alocacoes,
-        photoUrl,
-        description,
-        radar,
-        projectsLinked,
-        __rawRecord: r,
-      };
+    let projectsLinked = [];
+    const projVal = get("Projeto") || get("Projetos");
+    if (projVal) {
+      projectsLinked = Array.isArray(projVal)
+        ? projVal.map((x) => (x && x.name ? x.name : String(x)))
+        : [String(projVal)];
+    }
+
+    const radar = { labels: [], values: [] };
+    (radarFields || []).forEach((f) => {
+      radar.labels.push(f);
+      const raw = get(f);
+      let v = 0;
+      if (typeof raw === "number") v = raw;
+      else if (typeof raw === "string") v = parseFloat(raw.replace(",", ".")) || 0;
+      else if (raw && raw.value !== undefined) v = Number(raw.value) || 0;
+      radar.values.push(v);
     });
-  }, [records, hasField, radarFields, nota_membro]);
+
+    return {
+      ...(de_process || {}),
+      id: r.id,
+      name,
+      role,
+      photoUrl,
+      description,
+      radar,
+      projectsLinked,
+      __rawRecord: r,
+    };
+  });
+}, [records, radarFields, nota_membro]);
+
 
   const [selectedProject, setSelectedProject] = React.useState(null);
   const [selectedPerson, setSelectedPerson] = React.useState(null);
@@ -199,8 +219,11 @@ function Dashboard() {
   }, [people, score_array]);
 
   const filteredPeople = React.useMemo(() => {
-    return (fundir_ppl_score || []).filter(pessoa => pessoa.sobrecarga !== true)
-  }, [fundir_ppl_score])
+    return (fundir_ppl_score || []).filter((pessoa) => {
+      if (pessoa.padrinho === true) return true;
+      return pessoa.sobrecarga !== true;
+    });
+  }, [fundir_ppl_score]);
   
   const byScoreThenName = (a, b) => {
     const diferenca = (b.score ?? 0) - (a.score ?? 0);
@@ -227,6 +250,7 @@ function Dashboard() {
   const handleSelectPerson = (p) => {
     if (!p) return;
     setSelectedPerson(p);
+    setSelectedProjects({});
   };
 
   const handleGoBack = () => {
@@ -242,12 +266,13 @@ function Dashboard() {
 
   // Função para obter descrição do critério
   const getCriterionDescription = (name, value) => {
-    if (name && name.includes('NPS')) return 'Satisfação média do cliente';
-    if (name && name.includes('Experiência')) return 'Anos na área relacionada';
-    if (name && name.includes('Avaliação')) return 'Feedback 120° da equipe';
-    if (name && name.includes('Disponibilidade')) return 'Capacidade de dedicação';
-    if (name && name.includes('Preferência')) return 'Afinidade com o projeto';
-    return 'Critério de avaliação';
+    if (name && name.includes('NPS')) return 'Satisfação média do cliente com atendimento';
+    if (name && name.includes('Experiência')) return 'Anos de experiência na área relacionada';
+    if (name && name.includes('Avaliação')) return 'Feedback 120° da equipe interna';
+    if (name && name.includes('Disponibilidade')) return 'Capacidade atual de dedicação ao projeto';
+    if (name && name.includes('Preferência')) return 'Afinidade pessoal com o tipo de projeto';
+    if (name && name.includes('QAP')) return 'Qualidade no Atendimento ao Projeto';
+    return 'Critério de avaliação de desempenho';
   };
 
   // Função para calcular a disponibilidade baseado nas alocações
@@ -305,44 +330,58 @@ function Dashboard() {
 
   // Lista de projetos para sugestão (mesmos da primeira sessão)
   const projectSuggestions = [
-    { id: 1, name: "Projeto 1", status: "Em andamento", client: "Cliente A" },
-    { id: 2, name: "Projeto 2", status: "Planejamento", client: "Cliente B" },
-    { id: 3, name: "Projeto 3", status: "Concluído", client: "Cliente C" },
+    { id: 1, name: "Projeto 1" },
+    { id: 2, name: "Projeto 2" },
+    { id: 3, name: "Projeto 3" },
     ...nomes_projetos
       .filter(p => !["Projeto 1", "Projeto 2", "Projeto 3"].includes(p))
       .map((p, index) => ({ 
         id: index + 4, 
         name: p, 
-        status: "Status", 
-        client: "Cliente" 
       }))
   ];
 
 
-  // Renderizar a sessão 2
   const renderSession2 = () => {
     if (!selectedPerson) return null;
 
-      // Critérios de avaliação
     const criteriaList = [
       { id: 'nps', name: 'NPS do Profissional', color: '#3b82f6' },
       { id: 'experience', name: 'Experiência na Área', color: '#10b981' },
       { id: 'technical', name: 'Avaliação 120°', color: '#f59e0b' },
       { id: 'availability', name: 'Disponibilidade', color: '#8b5cf6' },
       { id: 'cultural', name: 'Preferência', color: '#ef4444' },
-      { id: 'qap', name: "Eficiênia", color:'#FFFFFF',}
+      { id: 'cultural', name: 'Preferência', color: '#ef4444' },
+      { id: 'qap', name: 'QAP', color: '#ec4899' }
     ];
 
     // Usar dados do radar ou dados padrão
+    const totalAllocations = selectedPerson?.alocacoes ?? 0;
+    const availabilityStatus = getAvailabilityStatus(totalAllocations);
+    const availabilityScore = getAvailabilityScore(totalAllocations);
+
     let radarLabels = [];
     let radarValues = [];
 
     if (selectedPerson.radar && selectedPerson.radar.values && selectedPerson.radar.values.length > 0) {
-      radarLabels = selectedPerson.radar.labels;
-      radarValues = selectedPerson.radar.values;
+      radarLabels = selectedPerson.radar.labels.slice(0, 6);
+      radarValues = selectedPerson.radar.values.slice(0, 6);
+      
+      while (radarLabels.length < 6) {
+        radarLabels.push(criteriaList[radarLabels.length]?.name || `Critério ${radarLabels.length + 1}`);
+      }
+      while (radarValues.length < 6) {
+        radarValues.push(7.5);
+      }
     } else {
-      radarLabels = criteriaList.map(c => c.name);
-      radarValues = [8.5, 7.2, 9.0, 8.8, 7.5];
+      radarValues = [8.5, 7.2, 9.0, availabilityScore, 7.5, 8.3];
+    }
+
+    const availabilityIndex = radarLabels.findIndex(label => 
+      label.toLowerCase().includes('disponibilidade')
+    );
+    if (availabilityIndex !== -1) {
+      radarValues[availabilityIndex] = availabilityScore;
     }
 
     // Calcular nota geral
@@ -350,39 +389,11 @@ function Dashboard() {
     if (radarValues.length > 0) {
       const sum = radarValues.reduce((a, b) => a + b, 0);
       overallScore = sum / radarValues.length;
-    }
+    };
 
-    // Obter status de disponibilidade
-    const availabilityStatus = getAvailabilityStatus(selectedPerson.alocacoes || 0);
-    
-    // Calcular pontuação de disponibilidade
-    const availabilityScore = getAvailabilityScore(selectedPerson.alocacoes || 0);
-
-    // Preparar dados para as métricas (substituindo a disponibilidade com o valor calculado)
-    const metricsData = [];
-    for (let i = 0; i < Math.min(radarLabels.length, 5); i++) {
-      let value = radarValues[i] || 0;
-      let name = radarLabels[i] || criteriaList[i]?.name || `Critério ${i + 1}`;
-      
-      // Se for a métrica de disponibilidade, usar o valor calculado
-      if (name.includes('Disponibilidade')) {
-        value = availabilityScore;
-      }
-      
-      const percentage = (value / 10) * 100;
-      metricsData.push({
-        name,
-        value: value.toFixed(1),
-        percentage: percentage.toFixed(0),
-        color: criteriaList[i]?.color || '#3b82f6',
-        description: getCriterionDescription(name, value)
-      });
-    }
-
-    // Determinar o cargo específico
+    // Obter status de disponibilidade    
     const memberRole = getSpecificRole(selectedPerson);
-
-    
+    const currentProjects = selectedPerson.projectsLinked || [];
     
     return (
       <div className="bottom-section">

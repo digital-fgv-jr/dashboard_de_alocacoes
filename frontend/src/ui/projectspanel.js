@@ -8,13 +8,35 @@ export default function ProjectsPanel({
   projectInfo = null,
 }) {
   const [open, setOpen] = useState(false);
-  const [criteria, setCriteria] = useState([
-    { id: 'nps', name: 'NPS do Profissional', weight: 30 },
-    { id: 'experience', name: 'Experiência na Área', weight: 25 },
-    { id: 'technical', name: 'Avaliação 120°', weight: 20 },
-    { id: 'availability', name: 'Disponibilidade', weight: 15 },
-    { id: 'cultural', name: 'Preferência', weight: 10 }
-  ]);
+   // Estado para armazenar pesos por área
+  const [weightsByArea, setWeightsByArea] = useState({
+    consultores: [
+      { id: 'nps', name: 'NPS do Profissional', weight: 25 },
+      { id: 'experience', name: 'Experiência na Área', weight: 20 },
+      { id: 'technical', name: 'Avaliação 120°', weight: 20 },
+      { id: 'availability', name: 'Disponibilidade', weight: 15 },
+      { id: 'cultural', name: 'Preferência', weight: 10 },
+      { id: 'qap', name: 'QAP', weight: 10 }
+    ],
+    gerentes: [
+      { id: 'nps', name: 'NPS do Profissional', weight: 20 },
+      { id: 'experience', name: 'Experiência na Área', weight: 25 },
+      { id: 'technical', name: 'Avaliação 120°', weight: 15 },
+      { id: 'availability', name: 'Disponibilidade', weight: 15 },
+      { id: 'cultural', name: 'Preferência', weight: 15 },
+      { id: 'qap', name: 'QAP', weight: 10 }
+    ],
+    madrinhas: [
+      { id: 'nps', name: 'NPS do Profissional', weight: 15 },
+      { id: 'experience', name: 'Experiência na Área', weight: 15 },
+      { id: 'technical', name: 'Avaliação 120°', weight: 20 },
+      { id: 'availability', name: 'Disponibilidade', weight: 20 },
+      { id: 'cultural', name: 'Preferência', weight: 20 },
+      { id: 'qap', name: 'QAP', weight: 10 }
+    ]
+  });
+  
+  const [selectedArea, setSelectedArea] = useState('consultores');
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [totalWeight, setTotalWeight] = useState(100);
@@ -23,17 +45,22 @@ export default function ProjectsPanel({
   // Combine projetos fictícios com projetos reais
   const allProjects = ["Projeto 1", "Projeto 2", "Projeto 3", ...projects.filter(p => !["Projeto 1", "Projeto 2", "Projeto 3"].includes(p))];
 
+  const currentCriteria = weightsByArea[selectedArea];
+
   // Calcular peso total sempre que criteria mudar
   useEffect(() => {
-    const total = criteria.reduce((sum, criterion) => sum + criterion.weight, 0);
-    setTotalWeight(total);
-  }, [criteria]);
+    const total = currentCriteria.reduce((sum, criterion) => sum + criterion.weight, 0);    setTotalWeight(total);
+  }, [currentCriteria]);
+
 
   const handleWeightChange = (id, newWeight) => {
     const weight = Math.max(0, Math.min(100, parseInt(newWeight) || 0));
-    setCriteria(prev => prev.map(criterion => 
-      criterion.id === id ? { ...criterion, weight } : criterion
-    ));
+     setWeightsByArea(prev => ({
+      ...prev,
+      [selectedArea]: prev[selectedArea].map(criterion => 
+        criterion.id === id ? { ...criterion, weight } : criterion
+      )
+    }));
   };
 
   const handleSliderChange = (id, value) => {
@@ -64,58 +91,110 @@ export default function ProjectsPanel({
   };
 
   const handleResetWeights = () => {
-    setCriteria([
-      { id: 'nps', name: 'NPS do Profissional', weight: 30 },
-      { id: 'experience', name: 'Experiência na Área', weight: 25 },
-      { id: 'technical', name: 'Avaliação 120°', weight: 20 },
-      { id: 'availability', name: 'Disponibilidade', weight: 15 },
-      { id: 'cultural', name: 'Preferência', weight: 10 }
-    ]);
+     const defaultWeights = {
+      consultores: [
+        { id: 'nps', name: 'NPS do Profissional', weight: 25 },
+        { id: 'experience', name: 'Experiência na Área', weight: 20 },
+        { id: 'technical', name: 'Avaliação 120°', weight: 20 },
+        { id: 'availability', name: 'Disponibilidade', weight: 15 },
+        { id: 'cultural', name: 'Preferência', weight: 10 },
+        { id: 'qap', name: 'QAP', weight: 10 }
+      ],
+      gerentes: [
+        { id: 'nps', name: 'NPS do Profissional', weight: 20 },
+        { id: 'experience', name: 'Experiência na Área', weight: 25 },
+        { id: 'technical', name: 'Avaliação 120°', weight: 15 },
+        { id: 'availability', name: 'Disponibilidade', weight: 15 },
+        { id: 'cultural', name: 'Preferência', weight: 15 },
+        { id: 'qap', name: 'QAP', weight: 10 }
+      ],
+      madrinhas: [
+        { id: 'nps', name: 'NPS do Profissional', weight: 15 },
+        { id: 'experience', name: 'Experiência na Área', weight: 15 },
+        { id: 'technical', name: 'Avaliação 120°', weight: 20 },
+        { id: 'availability', name: 'Disponibilidade', weight: 20 },
+        { id: 'cultural', name: 'Preferência', weight: 20 },
+        { id: 'qap', name: 'QAP', weight: 10 }
+      ]
+    };
+    
+    setWeightsByArea(prev => ({
+      ...prev,
+      [selectedArea]: [...defaultWeights[selectedArea]]
+    }));
   };
 
   const handleSaveWeights = () => {
     if (totalWeight === 100) {
-      console.log('Pesos salvos:', criteria);
-      alert(`Pesos salvos para ${selectedProject}! O ranking será recalculado.`);
-      // Aqui você pode adicionar a lógica para recalcular o ranking
+      console.log(`Pesos salvos para ${selectedProject} - ${selectedArea}:`, currentCriteria);
+      alert(`Pesos salvos para ${selectedProject} - ${selectedArea}! O ranking será recalculado.`);
     }
   };
+
+  const renderAreaSelector = () => {
+    const areas = [
+      { id: 'consultores', label: 'Consultores', icon: '👨‍💼' },
+      { id: 'gerentes', label: 'Gerentes', icon: '👔' },
+      { id: 'madrinhas', label: 'Madrinhas', icon: '👩‍💼' }
+    ];
+
+    return (
+      <div className="area-selector-container">
+        <div className="area-selector-header">
+          <div className="selector-title">
+            <span className="selector-icon">🎯</span>
+            <h4>Editar pesos para:</h4>
+          </div>
+        </div>
+        
+        <div className="area-buttons-grid">
+          {areas.map(area => (
+            <button
+              key={area.id}
+              className={`area-button ${selectedArea === area.id ? 'selected' : ''}`}
+              onClick={() => setSelectedArea(area.id)}
+            >
+              <span className="area-button-icon">{area.icon}</span>
+              <span className="area-button-label">{area.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const renderCriteriaControls = () => {
     if (!selectedProject) return null;
 
-    const projectData = selectedProject === "-" 
-      ? { macroetapa: "-", client: "-", members: "-" }
-      :  { status: projectInfo?.status || "Status", client: projectInfo?.client || "Cliente", members: projectInfo?.peopleCount || "membros" };
+    // Macroetapa específica para cada projeto
+    const getMacroEtapaForProject = (projectName) => {
+      switch(projectName) {
+        case "Projeto 1":
+          return "Plano de Negócios";
+        case "Projeto 2":
+          return "Plano Financeiro";
+        case "Projeto 3":
+          return "Pesquisa de Mercado";
+        default:
+          return projectInfo?.macroEtapa || "Avaliação Estratégica";
+      }
+    };
+
+    const macroEtapa = getMacroEtapaForProject(selectedProject);
 
     return (
       <>
         <div className="project-header-info">
           <h2 className="project-title">{selectedProject}</h2>
           
-          <div className="project-meta-creative">
-            <div className="meta-card">
-              <div className="meta-header">
-                <div className="meta-icon">⏳</div>
-                <div className="meta-label">FASE</div>
+          {/* MACROETAPA SIMPLES */}
+          <div className="macroetapa-simple">
+            <div className="macroetapa-header-simple">
+              <div className="macroetapa-icon-simple">📊</div>
+              <div>
+                <div className="macroetapa-label-simple">MACROETAPA</div>
+                <div className="macroetapa-value-simple">{macroEtapa}</div>
               </div>
-              <div className="meta-value">{projectData.status}</div>
-            </div>
-            
-            <div className="meta-card">
-              <div className="meta-header">
-                <div className="meta-icon">🏢</div>
-                <div className="meta-label">PARCEIRO</div>
-              </div>
-              <div className="meta-value">{projectData.client}</div>
-            </div>
-            
-            <div className="meta-card">
-              <div className="meta-header">
-                <div className="meta-icon">👥</div>
-                <div className="meta-label">TIME</div>
-              </div>
-              <div className="meta-value">{projectData.members}</div>
             </div>
           </div>
         </div>
@@ -125,15 +204,33 @@ export default function ProjectsPanel({
             <h3 className="section-title">Critérios de Ranking</h3>
             <p className="section-subtitle">
               Ajuste a importância de cada critério para este projeto específico.
+              Os pesos podem ser diferentes para cada área.
             </p>
           </div>
           
-          <div className="criteria-grid">
-            {criteria.map((criterion) => (
-              <div key={criterion.id} className="criterion-card">
-                <div className="criterion-header">
-                  <h4 className="criterion-name">{criterion.name}</h4>
-                  <div className="weight-control">
+          {/* Seletor de Área */}
+          {renderAreaSelector()}
+          
+          {/* CRITÉRIOS EM COLUNA - UM EMBAIXO DO OUTRO */}
+          <div className="criteria-list-vertical">
+            {currentCriteria.map((criterion, index) => (
+              <div 
+                key={criterion.id} 
+                className="criterion-card-vertical"
+              >
+                <div className="criterion-header-vertical">
+                  <div className="criterion-info-vertical">
+                    <h4 className="criterion-name-vertical">{criterion.name}</h4>
+                    <div className="criterion-description-vertical">
+                      {criterion.id === 'nps' && 'Satisfação média do cliente com atendimento'}
+                      {criterion.id === 'experience' && 'Anos de experiência na área relacionada'}
+                      {criterion.id === 'technical' && 'Feedback 120° da equipe interna'}
+                      {criterion.id === 'availability' && 'Capacidade atual de dedicação ao projeto'}
+                      {criterion.id === 'cultural' && 'Afinidade pessoal com o tipo de projeto'}
+                      {criterion.id === 'qap' && 'Qualidade no Atendimento ao Projeto'}
+                    </div>
+                  </div>
+                  <div className="weight-control-vertical">
                     {editingId === criterion.id ? (
                       <input
                         type="number"
@@ -143,24 +240,24 @@ export default function ProjectsPanel({
                         onChange={handleInputChange}
                         onBlur={handleInputBlur}
                         onKeyDown={handleInputKeyDown}
-                        className="weight-input-editable"
+                        className="weight-input-editable-vertical"
                         autoFocus
                       />
                     ) : (
                       <div 
-                        className="weight-display"
+                        className="weight-display-vertical"
                         onClick={() => handleInputClick(criterion.id, criterion.weight)}
                         title="Clique para editar"
                       >
-                        <span className="weight-value">{criterion.weight}</span>
-                        <span className="weight-unit">%</span>
-                        <span className="edit-icon">✏️</span>
+                        <span className="weight-value-vertical">{criterion.weight}</span>
+                        <span className="weight-unit-vertical">%</span>
+                        <span className="edit-icon-vertical">✏️</span>
                       </div>
                     )}
                   </div>
                 </div>
                 
-                <div className="slider-container">
+                <div className="slider-container-vertical">
                   <input
                     type="range"
                     min="0"
@@ -169,12 +266,10 @@ export default function ProjectsPanel({
                     onChange={(e) => handleSliderChange(criterion.id, e.target.value)}
                     className="weight-slider"
                   />
-                  <div className="slider-scale">
-                    <span>0</span>
-                    <span>25</span>
-                    <span>50</span>
-                    <span>75</span>
-                    <span>100</span>
+                  <div className="slider-labels-vertical">
+                    <span className="slider-label-min">0%</span>
+                    <span className="slider-label-mid">50%</span>
+                    <span className="slider-label-max">100%</span>
                   </div>
                 </div>
               </div>
@@ -206,7 +301,7 @@ export default function ProjectsPanel({
               disabled={totalWeight !== 100}
             >
               <span className="btn-icon">📊</span>
-              Atualizar Ranking
+              Atualizar Ranking para {selectedArea}
             </button>
           </div>
         </div>
@@ -222,11 +317,12 @@ export default function ProjectsPanel({
         <h3>Dashboard de Alocações</h3>
         <p>
           Selecione um projeto para configurar seus critérios de ranking específicos.
-          Cada projeto pode ter pesos diferentes para NPS, Experiência e outras métricas.
+          Cada projeto pode ter pesos diferentes para NPS, Experiência, QAP e outras métricas.
         </p>
         <div className="help-tips">
           <h4>Como configurar:</h4>
           <ul>
+            <li><strong>Selecione a área</strong> (Consultores, Gerentes ou Madrinhas) para editar seus pesos específicos</li>
             <li><strong>Clique nas porcentagens</strong> para editar valores exatos</li>
             <li><strong>Arraste os sliders</strong> para ajustar visualmente</li>
             <li><strong>A soma deve ser 100%</strong> para gerar o ranking</li>
@@ -264,24 +360,42 @@ export default function ProjectsPanel({
             </div>
           </div>
 
-          {allProjects.map((projectName, i) => (
-            <div
-              key={i}
-              className={`project-dropdown-item ${projectName === selectedProject ? "active" : ""}`}
-              onClick={() => { onSelectProject(projectName); setOpen(false); }}
-            >
-              <span className="dropdown-project-icon">📂</span>
-              <div className="dropdown-project-info">
-                <div className="dropdown-project-name">{projectName}</div>
-                <div className="dropdown-project-meta">
-                  {projectName === "Projeto 1" && "Cliente A • Em andamento"}
-                  {projectName === "Projeto 2" && "Cliente B • Planejamento"}
-                  {projectName === "Projeto 3" && "Cliente C • Concluído"}
-                  {!["Projeto 1", "Projeto 2", "Projeto 3"].includes(projectName) && "Cliente • Status"}
+          {allProjects.map((projectName, i) => {
+            // Determinar macroetapa para cada projeto
+            const getProjectMacroEtapa = (name) => {
+              switch(name) {
+                case "Projeto 1":
+                  return "Plano de Negócios";
+                case "Projeto 2":
+                  return "Plano Financeiro";
+                case "Projeto 3":
+                  return "Pesquisa de Mercado";
+                default:
+                  return "Avaliação Estratégica";
+              }
+            };
+
+            const macroEtapa = getProjectMacroEtapa(projectName);
+            
+            return (
+              <div
+                key={i}
+                className={`project-dropdown-item ${projectName === selectedProject ? "active" : ""}`}
+                onClick={() => { onSelectProject(projectName); setOpen(false); }}
+              >
+                <span className="dropdown-project-icon">📂</span>
+                <div className="dropdown-project-info">
+                  <div className="dropdown-project-name">{projectName}</div>
+                  <div className="dropdown-project-meta">
+                    {projectName === "Projeto 1" && `Cliente A • Em andamento • ${macroEtapa}`}
+                    {projectName === "Projeto 2" && `Cliente B • Planejamento • ${macroEtapa}`}
+                    {projectName === "Projeto 3" && `Cliente C • Concluído • ${macroEtapa}`}
+                    {!["Projeto 1", "Projeto 2", "Projeto 3"].includes(projectName) && `Cliente • Status • ${macroEtapa}`}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

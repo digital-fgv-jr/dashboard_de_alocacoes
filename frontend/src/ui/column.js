@@ -13,7 +13,7 @@ export default function Column({ title, items = [], onSelect }) {
 
         {items.map((it, idx) => {
           const name = it.name || `Pessoa ${idx + 1}`;
-          const alocacoes = it.alocacoes ?? 0;
+          const alocacoes = it.disponibilidade ?? 0;
           const badgeText = alocacoes > 0 ? `${alocacoes}` : "Livre";
           const badgeClass = alocacoes > 0 ? "badge-busy" : "badge-free";
 

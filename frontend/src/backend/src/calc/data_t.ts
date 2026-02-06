@@ -14,39 +14,42 @@ type AirtableRecord = {
 
 };
 
-// ^^ Types ^^ //
+type Membro = {
+    id: string,
+    nome: string,
+    setor: string,
+    prefere: string[],
+    domina: string[],
+    dificuldade: string[],
+    extra: boolean,
+    alocacoes: number,
+    nota120: number,
+}
 
+// ^^ Types ^^ //
 
 
 export function get_field(record:AirtableRecord, fieldName:string) {
   const value = record.getCellValue(fieldName);
-  if (
-    typeof value === "string" && value.length === 0
-    ||
-    Array.isArray(value) && value.length === 0
-  ) {
-    return ["—"];
-    } 
-    else if (!value) 
-    {
-        return "—";
-    }
- 
-  // Para múltiplas seleções
-  if (Array.isArray(value)) {
-    return value.map(v => v.name);
+
+  if (typeof value === "boolean") return value;
+
+  if (typeof value === "number") return value;
+
+  if (value == null) return "-";
+
+  if (typeof value === "object" && "name" in value && typeof (value as any).name === "string") {
+    return (value as any).name;
   }
 
-  // Para checkbox
-  if (typeof value === "boolean") {
-    return value ? "Sim" : "Não";
+  if (typeof value === "string") {
+    return value.length === 0 ? "-" : value;
   }
 
-  return value;
+  return "-";
 }
 
 
-// Retorna um número seguro a partir do campo (linked records array, number, string)
 export function get_count(record:AirtableRecord, fieldName:string) {
 
   const val = record.getCellValue(fieldName);
@@ -68,27 +71,46 @@ export function get_count(record:AirtableRecord, fieldName:string) {
 
 }
 
+export function get_list(record: AirtableRecord, fieldName: string): string[] {
+  const value = record.getCellValue(fieldName);
+
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value.map((v:any) => v?.name ?? String(v));
+  }
+
+  // fallback defensivo (não deveria acontecer pelo seu modelo)
+  if (typeof value === "string" && value !== "-") {
+    return [value];
+  }
+
+  return [];
+}
+
+
 
 
 // ^^ funções usadas ^^ //
 
 
-export function get_membros() {
-    const info = useRecords(dados);
 
-    const membro = (info || []).map(record => ({
+export function useMembros(): Membro[] {
+  const base = useBase();
+  const table = base.getTableByName("Dados - Alocação");
+  const records = useRecords(table);
 
-        id: record.id,
-        name: record.name as string,
-        setor: get_field(record, "Setor"),
-        prefere: get_field(record, "Qual Prefere"),
-        domina: get_field(record, "Qual Domina"),
-        dificuldade: get_field(record, "Qual Tem Dificuldade"),
-        extra: get_field(record, "Disposto a fazer mais um"),
-        alocacoes: get_count(record, "Alocações"),
-        nota120: get_count(record, "Av 120") as number,
+  const membros = (records || []).map((record) => ({
+    id: record.id,
+    nome: get_field(record, "Membro"),
+    setor: get_field(record, "Setor") as string,
+    prefere: get_list(record, "Qual Prefere") as string[],
+    domina: get_list(record, "Qual Domina") as string[],
+    dificuldade: get_list(record, "Qual Tem Dificuldade") as string[],
+    extra: get_field(record, "Disposto a fazer mais um") as boolean,
+    alocacoes: get_count(record, "Alocações"),
+    nota120: get_count(record, "Av 120"),
+  }));
 
-    }))
-    return membro;
-
+  return membros;
 }
