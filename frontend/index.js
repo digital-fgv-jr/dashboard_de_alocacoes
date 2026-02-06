@@ -563,12 +563,12 @@ function Dashboard() {
             <div className="card-header-right">
               <h3>Métricas Detalhadas</h3>
               <div className="metrics-count-right">
-                {metricsData.length} critérios
+                {criteriaList.length} critérios
               </div>
               </div>
 
             <div className="metrics-list-right">
-              {metricsData.map((metric, index) => (
+              {criteriaList.map((metric, index) => (
                 <div key={index} className="metric-item-right">
                   <div className="metric-header-right">
                     <div className="metric-title-right">
