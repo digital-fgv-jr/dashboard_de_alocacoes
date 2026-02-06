@@ -8,7 +8,7 @@ import Column from "./src/ui/column";
 import ProjectsPanel from "./src/ui/projectspanel";
 import RadarNotes from "./src/ui/radarnotes";
 import ProjectRankingConfig from "./src/ui/weightinput";
-import { score } from "./src/backend/src/calc/processing";
+import { useScores } from "./src/backend/src/calc/processing";
 import { get_field, get_count } from "./src/backend/src/calc/data_t";
 import { useMemo } from "react";
 
@@ -17,7 +17,7 @@ function Dashboard() {
   const table = base.getTableByName ? base.getTableByName("Dados - Alocação") : null;
   const tabela_proj = base.getTableByName ? base.getTableByName("Zapier - Pipefy - Projetos") : null;
   const records = useRecords(table) || [];
-  const scores = score()
+  const scores = useScores()
   const base_projetos = tabela_proj ? useRecords(tabela_proj) : [];
   const macro_pe = [ "Avaliação Estratégica", "Plano Operacional", "Plano de Negócios", "Sumário Executivo" ]
   const macro_sf = [ "Plano Financeiro", "EVE" ]
@@ -41,7 +41,7 @@ function Dashboard() {
     .sort((a, b) => a.localeCompare(b, "pt", {sensitivity: "base"}));
   }, [lista_projetos]);
 
-  const [pesos , setWeights] = React.useState({
+  const [pesosConsultores, setPesosConsultores] = React.useState({
     nps: 0.30,
     experience: 0.25,
     preferencia: 0.20,
@@ -50,16 +50,34 @@ function Dashboard() {
     qap: 0.05,
   });
 
+  const [pesosGerentes, setPesosGerentes] = React.useState({
+    nps: 0.30,
+    experience: 0.25,
+    preferencia: 0.20,
+    availability: 0.15,
+    av_120: 0.05,
+    qap: 0.05,
+  });
+
+  const [pesosMadrinhas, setPesosMadrinhas] = React.useState({
+    nps: 0.30,
+    experience: 0.25,
+    preferencia: 0.20,
+    availability: 0.15,
+    av_120: 0.05,
+    qap: 0.05,
+  });
+
+
   const fieldNames = React.useMemo(() => {
     if (!table || !table.fields) return new Set();
     return new Set(table.fields.map((f) => f.name));
   }, [table]);
 
   const scoresArr = React.useMemo(() => {
-    const out = score();
-    if (out instanceof Map) return Array.from(out.values());
-   return Array.isArray(out) ? out : [];
-  }, [records]);
+    if (scores instanceof Map) return Array.from(scores.values());
+    return Array.isArray(scores) ? scores : [];
+  }, [scores]);
 
 
   const nota_membro = React.useMemo(() => {
@@ -147,6 +165,14 @@ function Dashboard() {
   const [selectedProject, setSelectedProject] = React.useState(null);
   const [selectedPerson, setSelectedPerson] = React.useState(null);
   const [selectedProjects, setSelectedProjects] = React.useState({});
+  const [selectedArea, setSelectedArea] = React.useState("consultores");
+
+
+  const handleWeightsChange = (area, obj) => {
+    if (area === "consultores") setPesosConsultores(obj);
+    else if (area === "gerentes") setPesosGerentes(obj);
+    else if (area === "madrinhas") setPesosMadrinhas(obj);
+  };
 
   const selectedProjectObj = React.useMemo(() => {
     if (!selectedProject) return null;
@@ -159,7 +185,7 @@ function Dashboard() {
     };
   }, [selectedProject, lista_projetos]);
 
-  const score_recalc = (scores || []).map(membro =>{
+  const score_recalc_consultores = (scores || []).map(membro =>{
     const NPS = membro.nps
     const dispon = membro.disponibilidade
     const macroe = selectedProjectObj?.macro ?? "";
@@ -172,6 +198,8 @@ function Dashboard() {
     const sf_exp = membro.masf_exp
     const sm_exp = membro.masm_exp
     const pe_exp = membro.mape_exp
+
+    let pesos = pesosConsultores
 
     let nota = 0
 
@@ -200,30 +228,151 @@ function Dashboard() {
 
   })
 
-  const score_array = React.useMemo(() => {
+   const score_recalc_gerentes = (scores || []).map(membro =>{
+    const NPS = membro.nps
+    const dispon = membro.disponibilidade
+    const macroe = selectedProjectObj?.macro ?? "";
+    const av_120 = membro.nota_120
+    const prefere = Array.isArray(membro.gosta) ? membro.gosta : [];
+    const bom = Array.isArray(membro.bom) ? membro.bom : [];
+    const ruim = Array.isArray(membro.ruim) ? membro.ruim : [];
+    const eficiencia = membro.eficiencia
+    const em_exp = membro.maem_exp
+    const sf_exp = membro.masf_exp
+    const sm_exp = membro.masm_exp
+    const pe_exp = membro.mape_exp
+
+    let pesos = pesosGerentes
+
+    let nota = 0
+
+    if (dispon === 0) { nota += 3 * (pesos.availability)}
+    else if (dispon === 1) {nota += 2 * (pesos.availability)}
+    else if (dispon === 2) {nota += 1 * (pesos.availability)};
+
+    nota += NPS * (pesos.nps)
+    nota += eficiencia * (pesos.preferencia)
+    nota += av_120 * (pesos.av_120)
+
+    if (prefere.includes(macroe)) nota += 1 * (pesos.preferencia);
+    if (bom.includes(macroe)) nota +=1 * (pesos.preferencia);
+    if (ruim.includes(macroe)) nota -=1 * (pesos.preferencia);
+
+    if (macro_em.includes(macroe)) nota += em_exp * (pesos.experience)
+    else if (macro_pe.includes(macroe)) nota += pe_exp * (pesos.experience)
+    else if (macro_sf.includes(macroe)) nota += sf_exp * (pesos.experience)
+    else if (macro_sm.includes(macroe)) nota += sm_exp * (pesos.experience);
+
+    return {
+      id: membro.id,
+      nome: membro.nome,
+      score: nota
+    }
+
+  })
+
+   const score_recalc_madrinhas = (scores || []).map(membro =>{
+    const NPS = membro.nps
+    const dispon = membro.disponibilidade
+    const macroe = selectedProjectObj?.macro ?? "";
+    const av_120 = membro.nota_120
+    const prefere = Array.isArray(membro.gosta) ? membro.gosta : [];
+    const bom = Array.isArray(membro.bom) ? membro.bom : [];
+    const ruim = Array.isArray(membro.ruim) ? membro.ruim : [];
+    const eficiencia = membro.eficiencia
+    const em_exp = membro.maem_exp
+    const sf_exp = membro.masf_exp
+    const sm_exp = membro.masm_exp
+    const pe_exp = membro.mape_exp
+
+    let pesos = pesosMadrinhas
+
+    let nota = 0
+
+    if (dispon === 0) { nota += 3 * (pesos.availability)}
+    else if (dispon === 1) {nota += 2 * (pesos.availability)}
+    else if (dispon === 2) {nota += 1 * (pesos.availability)};
+
+    nota += NPS * (pesos.nps)
+    nota += eficiencia * (pesos.preferencia)
+    nota += av_120 * (pesos.av_120)
+
+    if (prefere.includes(macroe)) nota += 1 * (pesos.preferencia);
+    if (bom.includes(macroe)) nota +=1 * (pesos.preferencia);
+    if (ruim.includes(macroe)) nota -=1 * (pesos.preferencia);
+
+    if (macro_em.includes(macroe)) nota += em_exp * (pesos.experience)
+    else if (macro_pe.includes(macroe)) nota += pe_exp * (pesos.experience)
+    else if (macro_sf.includes(macroe)) nota += sf_exp * (pesos.experience)
+    else if (macro_sm.includes(macroe)) nota += sm_exp * (pesos.experience);
+
+    return {
+      id: membro.id,
+      nome: membro.nome,
+      score: nota
+    }
+
+  })
+
+  const score_array_consultores = React.useMemo(() => {
     const m = new Map();
-   (score_recalc || []).forEach((r) => {
-     if (r?.id) m.set(r.id, r.score);
-    });
+    (score_recalc_consultores || []).forEach(r => { if (r?.id) m.set(r.id, r.score); });
     return m;
-  }, [score_recalc]);
+  }, [score_recalc_consultores]);
 
-  const fundir_ppl_score = React.useMemo(() => {
-   return (people || []).map((p) => {
-      const newScore = score_array.get(p.id);
-      if (typeof newScore === "number") {
-        return { ...p, score: newScore };
-      }
-      return p;
+  const score_array_gerentes = React.useMemo(() => {
+    const m = new Map();
+    (score_recalc_gerentes || []).forEach(r => { if (r?.id) m.set(r.id, r.score); });
+    return m;
+  }, [score_recalc_gerentes]);
+
+  const score_array_madrinhas = React.useMemo(() => {
+    const m = new Map();
+    (score_recalc_madrinhas || []).forEach(r => { if (r?.id) m.set(r.id, r.score); });
+    return m;
+  }, [score_recalc_madrinhas]);
+
+  const consultores_rank = React.useMemo(() => {
+    return (people || []).map(p => {
+      const s = score_array_consultores.get(p.id);
+      return typeof s === "number" ? { ...p, score: s } : { ...p, score: 0 };
     });
-  }, [people, score_array]);
+  }, [people, score_array_consultores]);
 
-  const filteredPeople = React.useMemo(() => {
-    return (fundir_ppl_score || []).filter((pessoa) => {
-      if (pessoa.padrinho === true) return true;
+  const gerentes_rank = React.useMemo(() => {
+    return (people || []).map(p => {
+      const s = score_array_gerentes.get(p.id);
+      return typeof s === "number" ? { ...p, score: s } : { ...p, score: 0 };
+    });
+  }, [people, score_array_gerentes]);
+
+  const madrinhas_rank = React.useMemo(() => {
+    return (people || []).map(p => {
+      const s = score_array_madrinhas.get(p.id);
+      return typeof s === "number" ? { ...p, score: s } : { ...p, score: 0 };
+    });
+  }, [people, score_array_madrinhas]);
+
+  const filter_ppl_consultores = React.useMemo(() =>{
+    return (consultores_rank || []).filter(pessoa => {
+      if(pessoa.padrinho === true) return true;
       return pessoa.sobrecarga !== true;
-    });
-  }, [fundir_ppl_score]);
+    })
+  }, [consultores_rank])
+
+  const filter_ppl_gerentes = React.useMemo(() => {
+    return (gerentes_rank || []).filter(pessoa => {
+      if(pessoa.padrinho === true) return true;
+      return pessoa.sobrecarga !== true;
+    })
+  })
+
+  const filter_ppl_madrinhas = React.useMemo(() => {
+    return (madrinhas_rank || []).filter(pessoa => {
+      if(pessoa.padrinho === true) return true;
+      return pessoa.sobrecarga !== true;
+    })
+  })
   
   const byScoreThenName = (a, b) => {
     const diferenca = (b.score ?? 0) - (a.score ?? 0);
@@ -231,19 +380,23 @@ function Dashboard() {
     else return a.name.localeCompare(b.name, "pt", { sensitivity: "base"})
   }
   
-  let todos = (filteredPeople || [])
-  .filter((p) => p.padrinho === false )
-  .sort(byScoreThenName);
 
-  let consultants = todos
-  let managers = todos
+  let consultants = (filter_ppl_consultores || [])
+    .filter(p => p.padrinho === false)
+    .filter(p => p.sobrecarga !== true)
+    .sort(byScoreThenName);
+
+  let managers = (filter_ppl_gerentes || [])
+    .filter(p => p.padrinho === false)
+    .filter(p => p.sobrecarga !== true)
+    .sort(byScoreThenName);
   
-  let madrinhas = (filteredPeople || [])
-  .filter((p) => p.padrinho === true ) 
-  .sort(byScoreThenName);
+  let madrinhas = (filter_ppl_madrinhas || [])
+    .filter((p) => p.padrinho === true ) 
+    .sort(byScoreThenName);
 
 
-  if (!filteredPeople?.length) {
+  if (!people?.length) {
     console.warn("Nenhuma pessoa carregada do Airtable");
   }
 
@@ -262,17 +415,6 @@ function Dashboard() {
     return person?.padrinho === true
       ? "Madrinha"
       : "Membro da Equipe";
-  };
-
-  // Função para obter descrição do critério
-  const getCriterionDescription = (name, value) => {
-    if (name && name.includes('NPS')) return 'Satisfação média do cliente com atendimento';
-    if (name && name.includes('Experiência')) return 'Anos de experiência na área relacionada';
-    if (name && name.includes('Avaliação')) return 'Feedback 120° da equipe interna';
-    if (name && name.includes('Disponibilidade')) return 'Capacidade atual de dedicação ao projeto';
-    if (name && name.includes('Preferência')) return 'Afinidade pessoal com o tipo de projeto';
-    if (name && name.includes('QAP')) return 'Qualidade no Atendimento ao Projeto';
-    return 'Critério de avaliação de desempenho';
   };
 
   // Função para calcular a disponibilidade baseado nas alocações
@@ -340,6 +482,21 @@ function Dashboard() {
         name: p, 
       }))
   ];
+
+  const pesosAtuais = selectedArea === "consultores"
+    ? pesosConsultores
+    : selectedArea === "gerentes"
+    ? pesosGerentes
+    : pesosMadrinhas;
+
+  const criteriaForUI = React.useMemo(() => ([
+    { id: "nps", name: "NPS do Profissional", weight: Math.round((pesosAtuais.nps ?? 0) * 100), description: "Satisfação média do cliente" },
+    { id: "experience", name: "Experiência", weight: Math.round((pesosAtuais.experience ?? 0) * 100), description: "Experiência na macroetapa" },
+    { id: "preferencia", name: "Preferência", weight: Math.round((pesosAtuais.preferencia ?? 0) * 100), description: "Afinidade com o tipo de projeto" },
+    { id: "availability", name: "Disponibilidade", weight: Math.round((pesosAtuais.availability ?? 0) * 100), description: "Capacidade de dedicação" },
+    { id: "av_120", name: "Avaliação 120°", weight: Math.round((pesosAtuais.av_120 ?? 0) * 100), description: "Média final da avaliação 120" },
+    { id: "qap", name: "Eficiência", weight: Math.round((pesosAtuais.qap ?? 0) * 100), description: "Média dos QAPs" },
+  ]), [selectedArea, pesosConsultores, pesosGerentes, pesosMadrinhas]);
 
 
   const renderSession2 = () => {
@@ -624,7 +781,7 @@ function Dashboard() {
     );
   };
 
-  return (
+    return (
     <div className="grid-container">
       {/* HEADER APENAS NA PRIMEIRA SESSÃO */}
       {!selectedPerson && (
@@ -634,51 +791,36 @@ function Dashboard() {
       )}
 
       <div className="main-content">
-        {/* SESSÃO 1: Projetos + 3 Colunas */}
+        {/* SESSÃO 1: (some quando seleciona alguém) */}
         {!selectedPerson && (
           <div className="top-section">
-            <ProjectsPanel
-              projects={nomes_projetos}
-              selectedProject={selectedProject}
-              onSelectProject={setSelectedProject}
-              projectInfo={selectedProjectObj}
-            />
-
-           <ProjectRankingConfig
-              projectId={selectedProjectObj?.name ?? ""}
-              onWeightsChange={setWeights}
-             criteria={[
-              { id: "nps", name: "NPS do Profissional", weight: 30, description: "Satisfação média do cliente" },
-              { id: "experience", name: "Experiência", weight: 25, description: "Experiência na macroetapa" },
-              { id: "preferencia", name: "Preferência", weight: 20, description: 'Avaliação técnica específica' },
-              { id: "availability", name: "Disponibilidade", weight: 15, description: "Capacidade de dedicação" },
-              { id: "av_120", name: "Avaliação 120°", weight: 5, description: 'Média final da avaliação 120 rodada'},
-              { id: "qap", name: "Eficiência", weight: 5, description: 'Média dos QAPs dos projetos realizados'}
-              ]}
-            />
-
-            <div className="columns-container">
-              <Column 
-                title="Consultores" 
-                items={consultants} 
-                onSelect={handleSelectPerson} 
+            <div className="left-sidebar">
+              <ProjectsPanel
+                projects={nomes_projetos}
+                selectedProject={selectedProject}
+                onSelectProject={setSelectedProject}
+                projectInfo={selectedProjectObj}
+                selectedArea={selectedArea}
+                onSelectArea={setSelectedArea}
               />
-              <Column 
-                title="Gerentes" 
-                items={managers} 
-                onSelect={handleSelectPerson} 
-              />
-              <Column 
-                title="Madrinhas" 
-                items={madrinhas} 
-                onSelect={handleSelectPerson} 
+
+              <ProjectRankingConfig
+                projectId={selectedProjectObj?.name ?? ""}
+                area={selectedArea}
+                criteria={criteriaForUI}
+                onWeightsChange={handleWeightsChange}
               />
             </div>
-          </div>
 
+            <div className="columns-container">
+              <Column title="Consultores" items={consultants} onSelect={handleSelectPerson} />
+              <Column title="Gerentes" items={managers} onSelect={handleSelectPerson} />
+              <Column title="Madrinhas" items={madrinhas} onSelect={handleSelectPerson} />
+            </div>
+          </div>
         )}
 
-        {/* SESSÃO 2: Detalhes do Membro (apenas quando selecionado) */}
+        {/* SESSÃO 2 */}
         {selectedPerson && renderSession2()}
       </div>
     </div>

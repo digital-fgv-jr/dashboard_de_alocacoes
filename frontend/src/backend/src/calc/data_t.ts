@@ -1,9 +1,6 @@
-import { base } from '@airtable/blocks';
 import { useBase, useRecords } from '@airtable/blocks/ui'
 
 // ^^ Importações ^^ //
-
-const dados = base.getTableByName("Dados - Alocação")
 
 // ^^ constantes usadas ^^ //
 
@@ -14,6 +11,8 @@ type AirtableRecord = {
 
 };
 
+type LinkedRecordCellValue = Array<{ id: string; name?: string }>;
+
 type Membro = {
     id: string,
     nome: string,
@@ -22,7 +21,8 @@ type Membro = {
     domina: string[],
     dificuldade: string[],
     extra: boolean,
-    alocacoes: number,
+    alocacoes: string[],
+    disponibilidade: number,
     nota120: number,
 }
 
@@ -88,7 +88,11 @@ export function get_list(record: AirtableRecord, fieldName: string): string[] {
   return [];
 }
 
-
+export function get_linked_ids(record: AirtableRecord, fieldName: string): string[] {
+  const value = record.getCellValue(fieldName) as LinkedRecordCellValue | null;
+  if (!value) return [];
+  return value.map(v => v.id);
+}
 
 
 // ^^ funções usadas ^^ //
@@ -102,13 +106,14 @@ export function useMembros(): Membro[] {
 
   const membros = (records || []).map((record) => ({
     id: record.id,
-    nome: get_field(record, "Membro"),
-    setor: get_field(record, "Setor") as string,
+    nome: String(get_field(record, "Membro")),
+    setor: String(get_field(record, "Setor")),
     prefere: get_list(record, "Qual Prefere") as string[],
     domina: get_list(record, "Qual Domina") as string[],
     dificuldade: get_list(record, "Qual Tem Dificuldade") as string[],
     extra: get_field(record, "Disposto a fazer mais um") as boolean,
-    alocacoes: get_count(record, "Alocações"),
+    alocacoes: get_list(record, "Alocações"),
+    disponibilidade: get_count(record, "Alocações"),
     nota120: get_count(record, "Av 120"),
   }));
 

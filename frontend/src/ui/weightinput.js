@@ -1,7 +1,6 @@
-// ProjectRankingConfig.js
 import React, { useState, useEffect, useMemo } from "react";
 
-export default function ProjectRankingConfig({ projectId, criteria: initialCriteria, onWeightsChange }) {
+export default function ProjectRankingConfig({ projectId, criteria: initialCriteria, onWeightsChange, area }) {
   // Se não forem fornecidos critérios, usamos exemplos
   const [criteria, setCriteria] = useState(
     initialCriteria || [
@@ -14,6 +13,11 @@ export default function ProjectRankingConfig({ projectId, criteria: initialCrite
 
     ]
   );
+
+  useEffect(() => {
+    if (initialCriteria) setCriteria(initialCriteria);
+  }, [initialCriteria, area, projectId]);
+
 
   const totalWeight = criteria.reduce((sum, criterion) => sum + criterion.weight, 0);
 
@@ -47,7 +51,7 @@ export default function ProjectRankingConfig({ projectId, criteria: initialCrite
         (criteria || []).map(c => [c.id, (Number(c.weight) || 0) / 100])
       );
 
-    onWeightsChange?.(obj);
+    onWeightsChange?.(area, obj);
   };
 
   const handleReset = () => {

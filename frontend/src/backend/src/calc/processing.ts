@@ -9,42 +9,29 @@ const macro_em: string[] = [ "Análise Setorial", "Pesquisa de Mercado", "Client
 
 // ^^ Constantes usadas ^^ //
 
-export function score() {
-    const dado = useMembros()
-    const proj = useProjetos()
-    const proj_dado = get_info_proj(dado, proj)
+export function useScores() {
+  const dado = useMembros();
+  const proj = useProjetos();
+  const proj_dado = get_info_proj(dado, proj);
 
-    const scores = dado.map(record => {
-        let score = 0;
-        let apadrinhar = false;
-        let nem_mostra = false;
+  return dado.map(record => {
+    const apadrinhar = record.setor === "Gestão de Pessoas";
+    const projInfo = proj_dado.find(p => p.nome === record.nome);
+    let sobrecarga = false;
+    if(record.disponibilidade >= 3) {sobrecarga = true}
 
-
-        if (record.setor === "Gestão de Pessoas") { apadrinhar = true };
-
-        if (record.extra === true) {score += 1};
-        if (record.alocacoes === 0) {score += 3}
-        else if (record.alocacoes === 1) {score += 2} 
-        else if (record.alocacoes === 2) {score += 1} 
-        else if (record.alocacoes >= 3) {nem_mostra = true};
-
-        const proj = proj_dado.find(param => param.nome === record.nome)
-
-
-        return {
-            ...(proj ?? {}),
-            disponibilidade: record.alocacoes,
-            id: record.id,
-            padrinho: apadrinhar,
-            sobrecarga: nem_mostra,
-            bom: record.domina as string[],
-            ruim: record.dificuldade as string[],
-            gosta: record.prefere as string[],
-            nota_120: record.nota120             
-        }
-
-    })  
-
-    return scores;
+    return {
+      ...(projInfo ?? {}),
+      id: record.id,
+      padrinho: apadrinhar,
+      sobrecarga: sobrecarga,
+      bom: record.domina,
+      ruim: record.dificuldade,
+      gosta: record.prefere,
+      nota_120: record.nota120,
+      disponibilidade: record.disponibilidade
+    };
+  });
 }
+
 

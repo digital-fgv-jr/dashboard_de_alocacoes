@@ -74,17 +74,27 @@ body {
   padding-right: 4px;
 }
 
-/* ===== SESSÃO 1: PROJETOS + 3 COLUNAS ===== */
+/* ===== SESSÃO 1: ESQUERDA (PROJETO + PESOS) + DIREITA (COLUNAS) ===== */
+/* ===== SESSÃO 1: ESQUERDA (PROJETO + PESOS) + DIREITA (COLUNAS) ===== */
 .top-section {
-  display: flex;
+  display: grid;
+  grid-template-columns: 380px 1fr;
   gap: 20px;
   height: 100%;
+  min-height: 0;
+  align-items: start;
+}
+
+/* ===== COLUNA ESQUERDA: ProjectsPanel + ProjectRankingConfig ===== */
+.left-sidebar {
+  display: grid;
+  gap: 12px;
   min-height: 0;
 }
 
 /* ===== PAINEL DE PROJETOS ===== */
 .projects-panel {
-  flex: 0 0 380px;
+  width: 380px;
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
@@ -92,6 +102,17 @@ body {
   flex-direction: column;
   overflow: hidden;
   border: 1px solid #e5e7eb;
+}
+
+.project-ranking-config {
+  width: 380px; /* igual ao ProjectsPanel */
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  padding: 18px;
+  overflow: auto;
+  min-height: 0;
 }
 
 .projects-header {

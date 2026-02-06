@@ -1,8 +1,5 @@
-import {base} from "@airtable/blocks"
 import { useBase, useRecords } from "@airtable/blocks/ui"
-import { get_field, get_count, useMembros, get_list } from "./data_t"
-
-
+import { get_field, get_count, useMembros, get_list, get_linked_ids } from "./data_t"
 
 // ^^ Imports ^^ //
 
@@ -15,6 +12,7 @@ const macro_em: string[] = [ "Análise Setorial", "Pesquisa de Mercado", "Client
 
 type Projeto = {
     id: string,
+    nome_p: string,
     macro: string,
     equipe: string[],
     NPS: number,
@@ -31,7 +29,7 @@ type Membro = {
     domina: string[],
     dificuldade: string[],
     extra: boolean,
-    alocacoes: number,
+    alocacoes: string[],
     nota120: number,
 }
 
@@ -44,13 +42,13 @@ export function useProjetos():Projeto[] {
 
   return (records || []).map((proj) => ({
     id: proj.id,
-    nome_p: get_field(proj, "Projeto"),
-    macro: get_field(proj, "Macroetapas"),
+    nome_p: String(get_field(proj, "Projeto")),
+    macro: String(get_field(proj, "Macroetapas")),
     equipe: get_list(proj, "Alocações"),
     NPS: get_count(proj, "NPS"),
     QAP: get_count(proj, "QAP"),
-    cliente: get_field(proj, "Cliente"),
-    status: get_field(proj, "Status"),
+    cliente: String(get_field(proj, "Cliente")),
+    status: String(get_field(proj, "Status")),
   }));
 }
 
@@ -63,11 +61,13 @@ export function get_info_proj(membros: Membro[], projetos: Projeto[]) {
   return membros.map((mem) => {
     let maem_mexp = 0, mape_mexp = 0, masf_mexp = 0, masm_mexp = 0;
     let m_nps = 0, m_qap = 0;
-    let dispon = 0
+    // let dispon = 0
 
     projetos.forEach((exp) => {
-      const equipe = Array.isArray(exp.equipe) ? exp.equipe : [];
-      if (equipe.includes(mem.nome)) {
+      const status = String(exp.status ?? "").trim().toLowerCase();
+      // const finalizado = status === "finalizado";
+
+      if (exp.equipe.some(equipe => mem.alocacoes.includes(equipe))) {
         const macro = Array.isArray(exp.macro) ? (exp.macro[0] ?? "") : (exp.macro ?? "");
 
         if (macro_em.includes(macro)) maem_mexp += 1;
@@ -75,7 +75,7 @@ export function get_info_proj(membros: Membro[], projetos: Projeto[]) {
         else if (macro_sf.includes(macro)) masf_mexp += 1;
         else if (macro_sm.includes(macro)) masm_mexp += 1;
 
-        if (exp.status !== "Finalizado") dispon += 1
+        // if (!finalizado) dispon += 1
 
         m_nps += Number(exp.NPS || 0);
         m_qap += Number(exp.QAP || 0);
@@ -92,7 +92,7 @@ export function get_info_proj(membros: Membro[], projetos: Projeto[]) {
       masm_exp: masm_mexp,
       nps: total > 0 ? (m_nps / total) : 0,
       eficiencia: total > 0 ? (m_qap / total) : 0,
-      //disponibilidade: dispon
+      // disponibilidade: dispon
     };
   });
 }
