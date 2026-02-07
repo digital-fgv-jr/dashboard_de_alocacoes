@@ -7,44 +7,11 @@ export default function ProjectsPanel({
   onSelectProject = () => {},
   projects = [],
   projectInfo = null,
-  selectedArea = "consultores",
-  onSelectArea = () => {},
 }) {
   const [open, setOpen] = useState(false);
 
   const allProjects = [ ...projects.filter(p => !["Projeto 1", "Projeto 2", "Projeto 3"].includes(p))];
 
-  const renderAreaSelector = () => {
-    const areas = [
-      { id: 'consultores', label: 'Consultores', icon: '👨‍💼' },
-      { id: 'gerentes', label: 'Gerentes', icon: '👔' },
-      { id: 'madrinhas', label: 'Madrinhas', icon: '👩‍💼' }
-    ];
-
-    return (
-      <div className="area-selector-container">
-        <div className="area-selector-header">
-          <div className="selector-title">
-            <span className="selector-icon">🎯</span>
-            <h4>Editar pesos para:</h4>
-          </div>
-        </div>
-        
-        <div className="area-buttons-grid">
-          {areas.map(area => (
-            <button
-              key={area.id}
-              className={`area-button ${selectedArea === area.id ? 'selected' : ''}`}
-              onClick={() => onSelectArea(area.id)}
-            >
-              <span className="area-button-icon">{area.icon}</span>
-              <span className="area-button-label">{area.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="projects-panel">
@@ -115,17 +82,62 @@ export default function ProjectsPanel({
       <div className="project-info">
         {selectedProject ? (
           <>
-            {renderAreaSelector()}
             <div className="project-big-box">
             <h3>{selectedProject}</h3>
-              <p>Selecione a área acima para editar os pesos no painel ao lado.</p>
+              <p>Ajuste os sliders abaixo para editar os pesos do painel ao lado.</p>
             </div>
           </>
         ) : (
-          <div className="project-big-box">
+          <div className="project-big-box project-big-box--empty">
+            <div className="empty-icon">📊</div>
+
             <h3>Dashboard de Alocações</h3>
-            <p>Selecione um projeto para começar.</p>
-            {renderAreaSelector()}
+
+            <p className="empty-text">
+              Selecione um projeto para configurar seus critérios de ranking específicos.
+              Cada projeto pode ter pesos diferentes para NPS, Experiência, QAP e outras métricas.
+            </p>
+
+            <div className="help-tips">
+              <h4>⚙️ Como configurar:</h4>
+
+              <ul className="help-list">
+                <li>
+                  <span className="help-dot">•</span>
+                  <span>
+                    <strong>Selecione a área</strong> (Consultores, Gerentes ou Madrinhas) para editar seus pesos específicos
+                  </span>
+                </li>
+
+                <li>
+                  <span className="help-dot">•</span>
+                  <span>
+                    <strong>Clique nas porcentagens</strong> para editar valores exatos
+                  </span>
+                </li>
+
+                <li>
+                  <span className="help-dot">•</span>
+                  <span>
+                    <strong>Arraste os sliders</strong> para ajustar visualmente
+                  </span>
+                </li>
+
+                <li>
+                  <span className="help-dot">•</span>
+                  <span className="help-blue">
+                    <strong>A soma deve ser 100%</strong> para gerar o ranking
+                  </span>
+                </li>
+
+                <li>
+                  <span className="help-dot">•</span>
+                  <span>
+                    <strong>Clique em</strong> "Atualizar Ranking" <strong>para recalcular</strong>
+                  </span>
+                </li>
+              </ul>
+            </div>
           </div>
         )}
       </div>

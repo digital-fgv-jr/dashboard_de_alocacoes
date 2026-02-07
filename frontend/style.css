@@ -1,4 +1,3 @@
-/* ===== VARIÁVEIS GERAIS ===== */
 :root {
   --dark-blue: #0f3550;
   --card-bg: #ffffff;
@@ -8,7 +7,6 @@
   --free-color: #10b981;
 }
 
-/* ===== RESET E BASE ===== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -26,7 +24,6 @@ body {
   height: 100vh;
 }
 
-/* ===== LAYOUT PRINCIPAL COMPACTO ===== */
 .grid-container {
   display: grid;
   grid-template-columns: 1fr;
@@ -40,7 +37,6 @@ body {
   overflow: hidden;
 }
 
-/* ===== HEADER (APENAS PRIMEIRA SESSÃO) ===== */
 .header-with-logo {
   grid-column: 1 / -1;
   display: flex;
@@ -63,7 +59,6 @@ body {
   text-align: center;
 }
 
-/* ===== CONTEÚDO PRINCIPAL ===== */
 .main-content {
   grid-column: 1 / -1;
   display: flex;
@@ -74,25 +69,23 @@ body {
   padding-right: 4px;
 }
 
-/* ===== SESSÃO 1: ESQUERDA (PROJETO + PESOS) + DIREITA (COLUNAS) ===== */
-/* ===== SESSÃO 1: ESQUERDA (PROJETO + PESOS) + DIREITA (COLUNAS) ===== */
 .top-section {
   display: grid;
   grid-template-columns: 380px 1fr;
   gap: 20px;
-  height: 100%;
+  height: calc(100vh - 140px);
   min-height: 0;
-  align-items: start;
+  align-items: stretch;
 }
 
-/* ===== COLUNA ESQUERDA: ProjectsPanel + ProjectRankingConfig ===== */
 .left-sidebar {
   display: grid;
+  grid-template-rows: auto 1fr;
   gap: 12px;
+  height: 100%;
   min-height: 0;
 }
 
-/* ===== PAINEL DE PROJETOS ===== */
 .projects-panel {
   width: 380px;
   background: #fff;
@@ -114,6 +107,43 @@ body {
   overflow: auto;
   min-height: 0;
 }
+
+.ranking-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ranking-project-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f3550;
+}
+
+.ranking-project-macro {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.ranking-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f3550;
+  margin: 0 0 6px 0;
+}
+
+.ranking-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0 0 14px 0;
+}
+
 
 .projects-header {
   background: #0b2540;
@@ -228,8 +258,8 @@ body {
 }
 
 .project-big-box h3 {
-  margin: 20px 0 10px 0;
-  font-size: 15px;
+  margin: 10px 0 10px 0;
+  font-size: 16px;
   font-weight: 700;
   color: #93c5fd;
 }
@@ -240,6 +270,13 @@ body {
   font-size: 14px;
   color: #dbeafe;
   margin: 0;
+}
+
+.project-big-box .empty-icon {
+  font-size: 38px;
+  line-height: 1;
+  margin-bottom: 6px;
+  opacity: 0.95;
 }
 
 .help-tips {
@@ -1864,5 +1901,119 @@ body {
   
   .project-suggestions-always {
     height: 140px;
+  }
+}
+
+/* ===== Seletor de Área (botões bonitos) ===== */
+.area-selector-container {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 14px 0 18px 0;
+}
+
+.area-selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.selector-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.selector-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(59, 130, 246, 0.25);
+}
+
+.selector-text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f3550;
+}
+
+/* Grid dos botões */
+.area-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+/* Botão padrão */
+.area-button {
+  appearance: none;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px 10px;
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  min-height: 88px;
+}
+
+.area-button:hover {
+  transform: translateY(-1px);
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.10);
+}
+
+.area-button:active {
+  transform: translateY(0px);
+}
+
+/* Ícone grande */
+.area-button-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* Label */
+.area-button-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f3550;
+}
+
+/* Selecionado (azul) */
+.area-button.selected {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border-color: #2563eb;
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.25);
+}
+
+.area-button.selected .area-button-label {
+  color: #ffffff;
+}
+
+.area-button.selected .area-button-icon {
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
+}
+
+/* Responsivo: 2 colunas se ficar apertado */
+@media (max-width: 420px) {
+  .area-buttons-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

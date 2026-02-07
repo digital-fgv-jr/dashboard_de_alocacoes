@@ -1,4 +1,3 @@
-// frontend/index.js - Dashboard de Alocações FGV Jr. (Botão Voltar ao lado do avatar)
 import React from "react";
 import { initializeBlock, useBase, useRecords } from "@airtable/blocks/ui";
 
@@ -835,16 +834,20 @@ function Dashboard() {
                 selectedProject={selectedProject}
                 onSelectProject={setSelectedProject}
                 projectInfo={selectedProjectObj}
-                selectedArea={selectedArea}
-                onSelectArea={setSelectedArea}
               />
 
-              <ProjectRankingConfig
-                projectId={selectedProjectObj?.name ?? ""}
-                area={selectedArea}
-                criteria={criteriaForUI}
-                onWeightsChange={handleWeightsChange}
-              />
+              {selectedProject &&(
+
+                <ProjectRankingConfig
+                  projectId={selectedProjectObj?.name ?? ""}
+                  macro={selectedProjectObj?.macro ?? "-"}
+                  area={selectedArea}
+                  onAreaChange={setSelectedArea}
+                  criteria={criteriaForUI}
+                  onWeightsChange={handleWeightsChange}
+                />
+
+              )}
             </div>
 
             <div className="columns-container">

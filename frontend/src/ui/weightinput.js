@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
 
-export default function ProjectRankingConfig({ projectId, criteria: initialCriteria, onWeightsChange, area }) {
+export default function ProjectRankingConfig({
+  projectId,
+  macro,
+  criteria: initialCriteria,
+  onWeightsChange,
+  area,
+  onAreaChange,
+  }) {
+
   // Se não forem fornecidos critérios, usamos exemplos
   const [criteria, setCriteria] = useState(
     initialCriteria || [
@@ -71,10 +79,57 @@ export default function ProjectRankingConfig({ projectId, criteria: initialCrite
 
   return (
     <div className="project-ranking-config">
-      <h3>Configurar Critérios de Ranking para o Projeto</h3>
-      <p className="config-description">
-        Ajuste a importância de cada critério para este projeto específico. Os pesos serão usados pelo backend para calcular o ranking.
+      <div className="ranking-header">
+        <div className="ranking-project">
+          <div className="ranking-project-name">{projectId}</div>
+          <div className="ranking-project-macro">MACROETAPA • {macro || "-"}</div>
+        </div>
+      </div>
+
+      <h3 className="ranking-title">Critérios de Ranking</h3>
+      <p className="ranking-subtitle">
+        Ajuste a importância de cada critério para este projeto específico. Os pesos podem ser diferentes para cada área.
       </p>
+
+      <div className="area-selector-container">
+        <div className="area-selector-header">
+          <div className="selector-title">
+            <span className="selector-icon">🎯</span>
+            <h4 className="selector-text"><strong>Editar pesos para:</strong></h4>
+          </div>
+        </div>
+
+        <div className="area-buttons-grid">
+          <button
+            type="button"
+            className={`area-button ${area === "consultores" ? "selected" : ""}`}
+            onClick={() => onAreaChange?.("consultores")}
+          >
+            <span className="area-button-icon">🧑‍💼</span>
+            <span className="area-button-label">Consultores</span>
+          </button>
+
+          <button
+            type="button"
+            className={`area-button ${area === "gerentes" ? "selected" : ""}`}
+            onClick={() => onAreaChange?.("gerentes")}
+          >
+            <span className="area-button-icon">👔</span>
+            <span className="area-button-label">Gerentes</span>
+          </button>
+
+          <button
+            type="button"
+            className={`area-button ${area === "madrinhas" ? "selected" : ""}`}
+            onClick={() => onAreaChange?.("madrinhas")}
+          >
+            <span className="area-button-icon">👩‍💼</span>
+            <span className="area-button-label">Madrinhas</span>
+          </button>
+        </div>
+      </div>
+
+
 
       <div className="criteria-list">
         {criteria.map(criterion => (
@@ -100,22 +155,40 @@ export default function ProjectRankingConfig({ projectId, criteria: initialCrite
         ))}
       </div>
 
-      <div className="total-panel">
-        <span>Soma dos pesos:</span>
-        <span className={`total-weight ${totalWeight === 100 ? 'valid' : 'invalid'}`}>
-          {totalWeight}%
-        </span>
-        <span className="total-status">
-          {totalWeight === 100 ? '✅ Distribuição válida' : `⚠️ A soma deve ser 100% (faltam ${100 - totalWeight}%)`}
-        </span>
+      {/* ✅ Painel de soma (igual ao mock) */}
+      <div className={`total-panel ${totalWeight === 100 ? "valid" : "invalid"}`}>
+        <div className="total-info">
+          <div className="total-label">Soma total dos pesos:</div>
+          <div className="total-value">{totalWeight}%</div>
+              </div>
+
+        <div className={`total-status ${totalWeight === 100 ? "status-valid" : "status-invalid"}`}>
+          <span className="total-status-icon">{totalWeight === 100 ? "✅" : "⚠️"}</span>
+          <span>
+            {totalWeight === 100
+              ? "Pronto para calcular ranking"
+              : `A soma deve ser 100% (faltam ${100 - totalWeight}%)`}
+          </span>
+        </div>
       </div>
 
-      <div className="config-actions">
-        <button className="btn-reset" onClick={handleReset}>Restaurar Padrões</button>
-        <button className="btn-save" onClick={handleSave} disabled={totalWeight !== 100}>
-          Salvar Pesos para Este Projeto
+      {/* ✅ Botões (igual ao mock) */}
+      <div className="action-buttons">
+        <button type="button" className="btn-secondary" onClick={handleReset}>
+          <span className="btn-icon">↺</span>
+          Restaurar Padrões
+        </button>
+
+        <button
+          type="button"
+          className={`btn-primary ${totalWeight !== 100 ? "disabled" : ""}`}
+          onClick={handleSave}
+          disabled={totalWeight !== 100}
+        >
+          <span className="btn-icon">📊</span>
+          Atualizar Ranking
         </button>
       </div>
     </div>
-  );
+  )
 }
