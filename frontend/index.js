@@ -164,6 +164,7 @@ function Dashboard() {
 
   const [selectedProject, setSelectedProject] = React.useState(null);
   const [selectedPerson, setSelectedPerson] = React.useState(null);
+  const [colunaOrigem, setColunaOrigem] = React.useState(null);
   const [selectedProjects, setSelectedProjects] = React.useState({});
   const [selectedArea, setSelectedArea] = React.useState("consultores");
 
@@ -292,6 +293,9 @@ function Dashboard() {
     const sf_exp = membro.masf_exp;
     const sm_exp = membro.masm_exp;
     const pe_exp = membro.mape_exp;
+    //console.log(membro.nome)
+    //console.log(dispon)
+    //console.log(membro.disponibilidade)
 
     let pesos = pesosMadrinhas
 
@@ -506,7 +510,15 @@ function Dashboard() {
 
 
     // Usar dados do radar ou dados padrão
-    const totalAllocations = selectedPerson?.disponibilidade ?? 0;
+    const Allocations = selectedPerson?.disponibilidade ?? 0;
+    const Aloc_Madrinha = selectedPerson.disp_madrinha ?? 0;
+    var totalAllocations = "-"
+    if(colunaOrigem === "Madrinhas") 
+      {totalAllocations = Aloc_Madrinha} 
+    else if(colunaOrigem === "Consultores" || colunaOrigem === "Gerentes") 
+      {totalAllocations = Allocations}
+    else {totalAllocations = 0};
+
     const availabilityStatus = getAvailabilityStatus(totalAllocations);
     const availabilityScore = getAvailabilityScore(totalAllocations);
 
@@ -838,9 +850,20 @@ function Dashboard() {
             </div>
 
             <div className="columns-container">
-              <Column title="Consultores" items={consultants} onSelect={handleSelectPerson} />
-              <Column title="Gerentes" items={managers} onSelect={handleSelectPerson} />
-              <Column title="Madrinhas" items={madrinhas} onSelect={handleSelectPerson} />
+              <Column title = "Consultores" 
+              items = {consultants} 
+              col_papel={"Consultores"}
+              onSelect = {(p) => {handleSelectPerson(p); setColunaOrigem("Consultores")}} />
+
+              <Column title = "Gerentes" 
+              items = {managers} 
+              col_papel={"Gerentes"}
+              onSelect = {(p) => {handleSelectPerson(p); setColunaOrigem("Gerentes")}} />
+
+              <Column title="Madrinhas"
+              items = {madrinhas} 
+              col_papel={"Madrinhas"}
+              onSelect = {(p) => {handleSelectPerson(p); setColunaOrigem("Madrinhas")}} />
             </div>
           </div>
         )}

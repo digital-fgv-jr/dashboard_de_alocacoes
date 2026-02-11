@@ -1,7 +1,7 @@
 import "../../style.css";
 import React from "react";
 
-export default function Column({ title, items = [], onSelect }) {
+export default function Column({ title, items = [], onSelect, col_papel }) {
 
   
   return (
@@ -14,11 +14,27 @@ export default function Column({ title, items = [], onSelect }) {
         {items.map((it, idx) => {
           const name = it.name || `Pessoa ${idx + 1}`;
           const alocacoes = it.disponibilidade ?? 0;
-          const badgeText = alocacoes > 0 ? `${alocacoes}` : "Livre";
-          var badgeClass = 0
-          if(alocacoes === 0){badgeClass = "badge-free"} else 
-          if(alocacoes === 1){badgeClass = "badge-semifree"} else
-          if(alocacoes === 2){badgeClass = "badge-busy"};
+          const m_alocacoes = it.disp_madrinha ?? 0;
+          var badgeClass = "badge-free"
+          var badgeText = alocacoes > 0 ? `${alocacoes}` : "Livre";
+
+          if (col_papel === "Madrinhas") {
+            badgeText = m_alocacoes > 0 ? `${m_alocacoes}` : "Livre";
+            badgeClass = "badge-free"
+            if(m_alocacoes === 0){badgeClass = "badge-free"} else 
+            if(m_alocacoes === 1){badgeClass = "badge-semifree"} else
+            if(m_alocacoes === 2){badgeClass = "badge-busy"};
+          } else
+          if (col_papel !== "Madrinhas") {
+            badgeText = alocacoes > 0 ? `${alocacoes}` : "Livre";
+            badgeClass = "badge-free"
+            if(alocacoes === 0){badgeClass = "badge-free"} else 
+            if(alocacoes === 1){badgeClass = "badge-semifree"} else
+            if(alocacoes === 2){badgeClass = "badge-busy"};
+          } else {
+            badgeText = "Livre";
+            badgeClass = "badge-free"
+          }
 
           return (
             <div
