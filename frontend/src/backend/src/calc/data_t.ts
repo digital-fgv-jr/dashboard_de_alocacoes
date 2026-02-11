@@ -34,6 +34,12 @@ type MemMembro = {
   n_aloc: number,
 }
 
+type Alocacao ={
+  id: string,
+  nome: string[],
+  papel: string,
+}
+
 // ^^ Types ^^ //
 
 
@@ -142,4 +148,18 @@ export function useMemMembros(): MemMembro[] {
   }))
 
   return memembros;
+}
+
+export function useAloc(): Alocacao[] {
+  const base = useBase();
+  const tabela_aloc = base.getTableByName("Forms - Alocações")
+  const dados_aloc = useRecords(tabela_aloc)
+
+  const alocacoes_g = (dados_aloc || []).map(record => ({
+    id: record.id,
+    nome: get_linked_ids(record, "Membro"),
+    papel: get_field(record, "Papel"),
+  }))
+
+  return alocacoes_g;
 }

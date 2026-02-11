@@ -40,6 +40,12 @@ type MemMembro = {
   n_aloc: number,
 }
 
+type Alocacao ={
+  id: string,
+  nome: string[],
+  papel: string,
+}
+
 // ^^ Types ^^ //
 
 export function useProjetos():Projeto[] {
@@ -64,11 +70,12 @@ export function useProjetos():Projeto[] {
 // ^^ funções usadas ^^ //
 
 
-export function get_info_proj(membros: MemMembro[], projetos: Projeto[]) {
+export function get_info_proj(membros: MemMembro[], projetos: Projeto[], aloca: Alocacao[]) {
   return membros.map((mem) => {
     var maem_mexp = 0, mape_mexp = 0, masf_mexp = 0, masm_mexp = 0;
     var m_nps = 0, m_qap = 0;
     var dispon = 0
+    var dipon_mad = 0
 
     projetos.forEach((exp) => {
 
@@ -84,11 +91,14 @@ export function get_info_proj(membros: MemMembro[], projetos: Projeto[]) {
         else if (macro_sf.includes(macro)) masf_mexp += 1;
         else if (macro_sm.includes(macro)) masm_mexp += 1;
 
-        if (!finalizado) dispon += 1
+        
+        const papel = aloca.find(p => p.nome[0] === mem.id)
+        if (!finalizado && papel?.papel !== "Padrinho") dispon += 1
+        if (papel?.papel === "Padrinho") dipon_mad += 1
 
         m_nps += Number(exp.NPS || 0);
         m_qap += Number(exp.QAP || 0);
-        //console.log(m_nps)
+
       }
     });
 
@@ -105,6 +115,7 @@ export function get_info_proj(membros: MemMembro[], projetos: Projeto[]) {
       nps: total > 0 ? (m_nps / total) : 0,
       eficiencia: total > 0 ? (m_qap / total) : 0,
       disponibilidade: dispon,
+      disp_madrinha: dipon_mad,
     };
   });
 }

@@ -41,30 +41,30 @@ function Dashboard() {
   }, [lista_projetos]);
 
   const [pesosConsultores, setPesosConsultores] = React.useState({
-    nps: 0.30,
-    experience: 0.25,
-    preferencia: 0.20,
-    availability: 0.15,
-    av_120: 0.05,
-    qap: 0.05,
+    nps: 0.17,
+    experience: 0.17,
+    preferencia: 0.17,
+    availability: 0.17,
+    av_120: 0.16,
+    qap: 0.16,
   });
 
   const [pesosGerentes, setPesosGerentes] = React.useState({
-    nps: 0.30,
-    experience: 0.25,
-    preferencia: 0.20,
-    availability: 0.15,
-    av_120: 0.05,
-    qap: 0.05,
+    nps: 0.17,
+    experience: 0.17,
+    preferencia: 0.17,
+    availability: 0.17,
+    av_120: 0.16,
+    qap: 0.16,
   });
 
   const [pesosMadrinhas, setPesosMadrinhas] = React.useState({
-    nps: 0.30,
-    experience: 0.25,
-    preferencia: 0.20,
-    availability: 0.15,
-    av_120: 0.05,
-    qap: 0.05,
+    nps: 0.17,
+    experience: 0.17,
+    preferencia: 0.17,
+    availability: 0.17,
+    av_120: 0.16,
+    qap: 0.16,
   });
 
 
@@ -280,18 +280,18 @@ function Dashboard() {
   })
 
    const score_recalc_madrinhas = (scores || []).map(membro =>{
-    const NPS = membro.nps
-    const dispon = membro.disponibilidade
+    const NPS = membro.nps;
+    const dispon = membro.disp_madrinha;
     const macroe = selectedProjectObj?.macro ?? "";
-    const av_120 = membro.nota_120
+    const av_120 = membro.nota_120;
     const prefere = Array.isArray(membro.gosta) ? membro.gosta : [];
     const bom = Array.isArray(membro.bom) ? membro.bom : [];
     const ruim = Array.isArray(membro.ruim) ? membro.ruim : [];
-    const eficiencia = membro.eficiencia
-    const em_exp = membro.maem_exp
-    const sf_exp = membro.masf_exp
-    const sm_exp = membro.masm_exp
-    const pe_exp = membro.mape_exp
+    const eficiencia = membro.eficiencia;
+    const em_exp = membro.maem_exp;
+    const sf_exp = membro.masf_exp;
+    const sm_exp = membro.masm_exp;
+    const pe_exp = membro.mape_exp;
 
     let pesos = pesosMadrinhas
 
@@ -382,7 +382,6 @@ function Dashboard() {
   const filter_ppl_madrinhas = React.useMemo(() => {
     return (madrinhas_rank || []).filter(pessoa => {
       if(pessoa.padrinho === true) return true;
-      return pessoa.sobrecarga !== true;
     })
   })
   
@@ -394,12 +393,10 @@ function Dashboard() {
   
 
   let consultants = (filter_ppl_consultores || [])
-    .filter(p => p.padrinho === false)
     .filter(p => p.sobrecarga !== true)
     .sort(byScoreThenName);
 
   let managers = (filter_ppl_gerentes || [])
-    .filter(p => p.padrinho === false)
     .filter(p => p.sobrecarga !== true)
     .sort(byScoreThenName);
   
