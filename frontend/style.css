@@ -457,6 +457,10 @@ body {
   background: #10b981;
 }
 
+.badge-semifree{
+  background: #fdca40;
+}
+
 .badge-busy {
   background: #ef4444;
 }

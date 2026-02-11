@@ -15,7 +15,10 @@ export default function Column({ title, items = [], onSelect }) {
           const name = it.name || `Pessoa ${idx + 1}`;
           const alocacoes = it.disponibilidade ?? 0;
           const badgeText = alocacoes > 0 ? `${alocacoes}` : "Livre";
-          const badgeClass = alocacoes > 0 ? "badge-busy" : "badge-free";
+          var badgeClass = 0
+          if(alocacoes === 0){badgeClass = "badge-free"} else 
+          if(alocacoes === 1){badgeClass = "badge-semifree"} else
+          if(alocacoes === 2){badgeClass = "badge-busy"};
 
           return (
             <div

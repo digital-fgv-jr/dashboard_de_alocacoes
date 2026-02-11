@@ -53,7 +53,7 @@ export default function ProjectRankingConfig({
   };
 
   const handleSave = () => {
-    if (totalWeight !== 100) return;
+    if (!totalWeight) return;
 
       const obj = Object.fromEntries(
         (criteria || []).map(c => [c.id, (Number(c.weight) || 0) / 100])
@@ -155,23 +155,6 @@ export default function ProjectRankingConfig({
         ))}
       </div>
 
-      {/* ✅ Painel de soma (igual ao mock) */}
-      <div className={`total-panel ${totalWeight === 100 ? "valid" : "invalid"}`}>
-        <div className="total-info">
-          <div className="total-label">Soma total dos pesos:</div>
-          <div className="total-value">{totalWeight}%</div>
-              </div>
-
-        <div className={`total-status ${totalWeight === 100 ? "status-valid" : "status-invalid"}`}>
-          <span className="total-status-icon">{totalWeight === 100 ? "✅" : "⚠️"}</span>
-          <span>
-            {totalWeight === 100
-              ? "Pronto para calcular ranking"
-              : `A soma deve ser 100% (faltam ${100 - totalWeight}%)`}
-          </span>
-        </div>
-      </div>
-
       {/* ✅ Botões (igual ao mock) */}
       <div className="action-buttons">
         <button type="button" className="btn-secondary" onClick={handleReset}>
@@ -181,9 +164,8 @@ export default function ProjectRankingConfig({
 
         <button
           type="button"
-          className={`btn-primary ${totalWeight !== 100 ? "disabled" : ""}`}
+          className={`btn-primary`}
           onClick={handleSave}
-          disabled={totalWeight !== 100}
         >
           <span className="btn-icon">📊</span>
           Atualizar Ranking

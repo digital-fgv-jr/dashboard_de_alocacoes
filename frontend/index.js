@@ -423,12 +423,6 @@ function Dashboard() {
     setSelectedProjects({});
   };
 
-  const getSpecificRole = (person) => {
-    return person?.padrinho === true
-      ? "Madrinha"
-      : "Membro da Equipe";
-  };
-
   // Função para calcular a disponibilidade baseado nas alocações
   const getAvailabilityScore = (alocacoes) => {
     // Se não está alocado em nenhum projeto: disponibilidade 10/10
@@ -583,7 +577,6 @@ function Dashboard() {
         : 0;
 
     // Obter status de disponibilidade    
-    const memberRole = getSpecificRole(selectedPerson);
     const currentProjects = selectedPerson.projectsLinked || [];
     
     return (
@@ -628,11 +621,8 @@ function Dashboard() {
               </div>
               <div className="profile-info-left">
                 <h3 className="member-name-left">{selectedPerson.name}</h3>
-                <div className="member-role-badge-left">{memberRole}</div>
                 <div className="member-meta-left">
                   <div className="meta-item-left">
-                    <span className="meta-label-left">ID:</span>
-                    <span className="meta-value-left">{selectedPerson.id || 'N/A'}</span>
                   </div>
                   <div className="meta-item-left">
                     <span className="meta-label-left">ALOCAÇÕES:</span>
