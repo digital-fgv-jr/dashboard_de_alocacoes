@@ -28,13 +28,14 @@ function Dashboard() {
       id:records.id,
       nome: get_field(records, "Projeto"),
       macro: get_field(records, "Macroetapas"),
-      equipe: get_count(records, "Alocações")
+      equipe: get_count(records, "Alocações"),
+      kickoff: records.getCellValue("Acompanhamento dos Projetos 4")
     }))
   }, [base_projetos]);
 
   const nomes_projetos = React.useMemo (() => {
     return (lista_projetos || [])
-    .filter(projeto => projeto.equipe === 0)
+    .filter(projeto => !projeto.kickoff)
     .map(projeto => projeto.nome)
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b, "pt", {sensitivity: "base"}));
@@ -59,12 +60,12 @@ function Dashboard() {
   });
 
   const [pesosMadrinhas, setPesosMadrinhas] = React.useState({
-    nps: 0.17,
-    experience: 0.17,
-    preferencia: 0.17,
-    availability: 0.17,
-    av_120: 0.16,
-    qap: 0.16,
+    nps: 0,
+    experience: 0,
+    preferencia: 0,
+    availability: 1,
+    av_120: 0,
+    qap: 0,
   });
 
 
@@ -426,9 +427,7 @@ function Dashboard() {
 
   // Função para calcular a disponibilidade baseado nas alocações
   const getAvailabilityScore = (alocacoes) => {
-    // Se não está alocado em nenhum projeto: disponibilidade 10/10
     if (alocacoes === 0) return 10;
-    // Se está em 1 projeto: 6.67/10 (3 projetos seria 0, então linearmente: 10 - (alocações * 3.33))
     if (alocacoes === 1) return 6.67;
     if (alocacoes === 2) return 3.33;
     if (alocacoes >= 3) return 0;
@@ -548,7 +547,7 @@ function Dashboard() {
         if (ruim.includes(macro)) s -= 5;
 
   return clamp10(s);
-})();
+      })();
 
 
       const radarLabels = [
@@ -581,9 +580,16 @@ function Dashboard() {
         percentage: Math.round((m.value / 10) * 100),
       }));
 
+      var peso = 0
+      if (colunaOrigem === "Consultores"){peso = pesosConsultores} else
+      if (colunaOrigem === "Gerentes"){peso = pesosGerentes} else
+      if (colunaOrigem === "Madrinhas"){peso = pesosMadrinhas};
+
       const overallScore = radarValues.length
         ? radarValues.reduce((a, b) => a + b, 0) / radarValues.length
         : 0;
+
+      console.log(selectedPerson)
 
     // Obter status de disponibilidade    
     const currentProjects = selectedPerson.projectsLinked || [];
@@ -630,23 +636,7 @@ function Dashboard() {
               </div>
               <div className="profile-info-left">
                 <h3 className="member-name-left">{selectedPerson.name}</h3>
-                <div className="member-meta-left">
-                  <div className="meta-item-left">
-                  </div>
-                  <div className="meta-item-left">
-                    <span className="meta-label-left">ALOCAÇÕES:</span>
-                    <span className="meta-value-left">{selectedPerson.disponibilidade || 0}</span>
-                  </div>
-                </div>
               </div>
-            </div>
-            {/* Descrição */}
-            <div className="profile-description-left">
-              <h4 className="description-title-left">Sobre</h4>
-              <p className="description-content-left">
-                {selectedPerson.description || 
-                  "Membro da equipe FGV Jr. Sem descrição adicional disponível."}
-              </p>
             </div>
 
           {/* Status de Disponibilidade */}
@@ -853,17 +843,23 @@ function Dashboard() {
               <Column title = "Consultores" 
               items = {consultants} 
               col_papel={"Consultores"}
-              onSelect = {(p) => {handleSelectPerson(p); setColunaOrigem("Consultores")}} />
+              onSelect = {(p) => {handleSelectPerson(p); setColunaOrigem("Consultores")}} 
+              scores = {score_recalc_consultores}
+              />
 
               <Column title = "Gerentes" 
               items = {managers} 
               col_papel={"Gerentes"}
-              onSelect = {(p) => {handleSelectPerson(p); setColunaOrigem("Gerentes")}} />
+              onSelect = {(p) => {handleSelectPerson(p); setColunaOrigem("Gerentes")}}
+              scores = {score_recalc_gerentes}
+              />
 
-              <Column title="Madrinhas"
+              <Column title = "Madrinhas"
               items = {madrinhas} 
               col_papel={"Madrinhas"}
-              onSelect = {(p) => {handleSelectPerson(p); setColunaOrigem("Madrinhas")}} />
+              onSelect = {(p) => {handleSelectPerson(p); setColunaOrigem("Madrinhas")}}
+              scores = {score_recalc_madrinhas}
+              />
             </div>
           </div>
         )}

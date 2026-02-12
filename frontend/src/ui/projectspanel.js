@@ -10,15 +10,15 @@ export default function ProjectsPanel({
 }) {
   const [open, setOpen] = useState(false);
 
-  const allProjects = [ ...projects.filter(p => !["Projeto 1", "Projeto 2", "Projeto 3"].includes(p))];
-
+  var indicador = ""
+  if(projects.length === 0){indicador = "Sem Projetos Para Alocar"} else {indicador = "Todos os Projetos"}
 
   return (
     <div className="projects-panel">
       <div className="projects-header" onClick={() => setOpen((s) => !s)}>
         <div className="projects-header-title">
           <span className="project-icon">📁</span>
-          {selectedProject || "Todos os Projetos"}
+          {selectedProject || indicador}
         </div>
         <button className="projects-toggle">
           {open ? "▲" : "▼"}
@@ -33,25 +33,18 @@ export default function ProjectsPanel({
           >
             <span className="dropdown-project-icon">📂</span>
             <div className="dropdown-project-info">
-              <div className="dropdown-project-name">Todos os projetos</div>
+              <div className="dropdown-project-name">Todos os projeto</div>
               <div className="dropdown-project-meta">
-                Visualização geral • {allProjects.length} projetos
+                Visualização geral • {projects.length} projetos
               </div>
             </div>
           </div>
 
-          {allProjects.map((projectName, i) => {
-            // Determinar macroetapa para cada projeto
+          {projects.map((projectName, i) => {
             const getProjectMacroEtapa = (name) => {
               switch(name) {
-                case "Projeto 1":
-                  return "Plano de Negócios";
-                case "Projeto 2":
-                  return "Plano Financeiro";
-                case "Projeto 3":
-                  return "Pesquisa de Mercado";
                 default:
-                  return "Avaliação Estratégica";
+                  return "Conferir";
               }
             };
 
@@ -66,12 +59,6 @@ export default function ProjectsPanel({
                 <span className="dropdown-project-icon">📂</span>
                 <div className="dropdown-project-info">
                   <div className="dropdown-project-name">{projectName}</div>
-                  <div className="dropdown-project-meta">
-                    {projectName === "Projeto 1" && `Cliente A • Em andamento • ${macroEtapa}`}
-                    {projectName === "Projeto 2" && `Cliente B • Planejamento • ${macroEtapa}`}
-                    {projectName === "Projeto 3" && `Cliente C • Concluído • ${macroEtapa}`}
-                    {!["Projeto 1", "Projeto 2", "Projeto 3"].includes(projectName) && `Cliente • Status • ${macroEtapa}`}
-                  </div>
                 </div>
               </div>
             );

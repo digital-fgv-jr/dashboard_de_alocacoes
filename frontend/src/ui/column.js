@@ -1,7 +1,13 @@
 import "../../style.css";
 import React from "react";
 
-export default function Column({ title, items = [], onSelect, col_papel }) {
+export default function Column({ 
+  title, 
+  items = [], 
+  onSelect, 
+  col_papel,
+  scores = null,
+  }) {
 
   
   return (
@@ -15,23 +21,32 @@ export default function Column({ title, items = [], onSelect, col_papel }) {
           const name = it.name || `Pessoa ${idx + 1}`;
           const alocacoes = it.disponibilidade ?? 0;
           const m_alocacoes = it.disp_madrinha ?? 0;
+          const score_pessoas = scores.find(p => p.nome === it.name)
+          const score_total_quebrado = score_pessoas?.score
+          const score_total = Math.round(score_total_quebrado*100)/100
+          console.log(score_pessoas)
+          console.log(score_total)
           var badgeClass = "badge-free"
-          var badgeText = alocacoes > 0 ? `${alocacoes}` : "Livre";
+          var badgeText = score_total ? String(score_total) : 0;
 
           if (col_papel === "Madrinhas") {
-            badgeText = m_alocacoes > 0 ? `${m_alocacoes}` : "Livre";
             badgeClass = "badge-free"
             if(m_alocacoes === 0){badgeClass = "badge-free"} else 
             if(m_alocacoes === 1){badgeClass = "badge-semifree"} else
             if(m_alocacoes === 2){badgeClass = "badge-busy"};
           } else
-          if (col_papel !== "Madrinhas") {
-            badgeText = alocacoes > 0 ? `${alocacoes}` : "Livre";
+          if (col_papel === "Gerentes") {
             badgeClass = "badge-free"
             if(alocacoes === 0){badgeClass = "badge-free"} else 
             if(alocacoes === 1){badgeClass = "badge-semifree"} else
             if(alocacoes === 2){badgeClass = "badge-busy"};
-          } else {
+          } else 
+          if (col_papel === "Consultores"){
+            badgeClass = "badge-free"
+            if(alocacoes === 0){badgeClass = "badge-free"} else 
+            if(alocacoes === 1){badgeClass = "badge-semifree"} else
+            if(alocacoes === 2){badgeClass = "badge-busy"};
+          }else {
             badgeText = "Livre";
             badgeClass = "badge-free"
           }
