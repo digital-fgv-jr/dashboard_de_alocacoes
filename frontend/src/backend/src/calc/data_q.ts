@@ -38,6 +38,7 @@ type MemMembro = {
   nome: string,
   alocacoes: string[],
   n_aloc: number,
+  status: string,
 }
 
 type Alocacao ={
@@ -76,6 +77,7 @@ export function get_info_proj(membros: MemMembro[], projetos: Projeto[], aloca: 
     var m_nps = 0, m_qap = 0;
     var dispon = 0
     var dipon_mad = 0
+    const status = mem.status
 
     projetos.forEach((exp) => {
 
@@ -103,7 +105,9 @@ export function get_info_proj(membros: MemMembro[], projetos: Projeto[], aloca: 
     });
 
     const total = maem_mexp + mape_mexp + masf_mexp + masm_mexp;
-
+    console.log(mem.nome)
+    console.log(dispon)
+    console.log(dipon_mad)
 
     return {
       m_id: mem.id,
@@ -116,6 +120,7 @@ export function get_info_proj(membros: MemMembro[], projetos: Projeto[], aloca: 
       eficiencia: total > 0 ? (m_qap / total) : 0,
       disponibilidade: dispon,
       disp_madrinha: dipon_mad,
+      status: status,
     };
   });
 }

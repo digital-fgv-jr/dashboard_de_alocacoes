@@ -372,14 +372,12 @@ function Dashboard() {
 
   const filter_ppl_consultores = React.useMemo(() =>{
     return (consultores_rank || []).filter(pessoa => {
-      if(pessoa.padrinho === true) return true;
       return pessoa.sobrecarga !== true;
     })
   }, [consultores_rank])
 
   const filter_ppl_gerentes = React.useMemo(() => {
     return (gerentes_rank || []).filter(pessoa => {
-      if(pessoa.padrinho === true) return true;
       return pessoa.sobrecarga !== true;
     })
   })
@@ -397,16 +395,19 @@ function Dashboard() {
   }
   
 
-  let consultants = (filter_ppl_consultores || [])
+  let consultants = (consultores_rank || [])
     .filter(p => p.sobrecarga !== true)
+    .filter(p => p.status !== "Ex-membro")
     .sort(byScoreThenName);
 
-  let managers = (filter_ppl_gerentes || [])
+  let managers = (gerentes_rank|| [])
     .filter(p => p.sobrecarga !== true)
+    .filter(p => p.status !== "Ex-membro")
     .sort(byScoreThenName);
   
-  let madrinhas = (filter_ppl_madrinhas || [])
-    .filter((p) => p.padrinho === true ) 
+  let madrinhas = (madrinhas_rank || [])
+    .filter((p) => p.padrinho === true )
+    .filter(p => p.status !== "Ex-membro")
     .sort(byScoreThenName);
 
 

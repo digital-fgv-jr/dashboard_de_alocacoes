@@ -7,7 +7,7 @@ export default function ProjectsPanel({
   onSelectProject = () => {},
   projects = [],
   projectInfo = null,
-}) {
+  }) {
   const [open, setOpen] = useState(false);
 
   var indicador = ""

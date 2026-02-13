@@ -117,15 +117,6 @@ export default function ProjectRankingConfig({
             <span className="area-button-icon">👔</span>
             <span className="area-button-label">Gerentes</span>
           </button>
-
-          <button
-            type="button"
-            className={`area-button ${area === "madrinhas" ? "selected" : ""}`}
-            onClick={() => onAreaChange?.("madrinhas")}
-          >
-            <span className="area-button-icon">👩‍💼</span>
-            <span className="area-button-label">Madrinhas</span>
-          </button>
         </div>
       </div>
 

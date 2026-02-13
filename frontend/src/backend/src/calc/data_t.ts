@@ -32,6 +32,7 @@ type MemMembro = {
   nome: string,
   alocacoes: string[],
   n_aloc: number,
+  status: string,
 }
 
 type Alocacao ={
@@ -144,7 +145,8 @@ export function useMemMembros(): MemMembro[] {
     id: record.id,
     nome: get_field(record, "Nome"),
     alocacoes: get_linked_ids(record, "Alocações"),
-    n_aloc: get_count(record, "Alocações")
+    n_aloc: get_count(record, "Alocações"),
+    status: get_field(record, "Status")
   }))
 
   return memembros;
