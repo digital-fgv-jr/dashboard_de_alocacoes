@@ -21,7 +21,6 @@ export function useScores() {
     const projInfo = proj_dado.find(p => p.m_id === record.id_membro);
     let sobrecarga = false;
     if(record.disponibilidade >= 3) {sobrecarga = true}
-    // console.log(projInfo?.disponibilidade)
 
     return {
       ...(projInfo ?? {}),

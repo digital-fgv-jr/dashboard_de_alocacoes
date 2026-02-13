@@ -24,8 +24,6 @@ export default function Column({
           const score_pessoas = scores.find(p => p.nome === it.name)
           const score_total_quebrado = score_pessoas?.score
           const score_total = Math.round(score_total_quebrado*100)/100
-          console.log(score_pessoas)
-          console.log(score_total)
           var badgeClass = "badge-free"
           var badgeText = score_total ? String(score_total) : 0;
 

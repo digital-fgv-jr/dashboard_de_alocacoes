@@ -589,8 +589,6 @@ function Dashboard() {
         ? radarValues.reduce((a, b) => a + b, 0) / radarValues.length
         : 0;
 
-      console.log(selectedPerson)
-
     // Obter status de disponibilidade    
     const currentProjects = selectedPerson.projectsLinked || [];
     
