@@ -98,8 +98,8 @@ export function get_info_proj(membros: MemMembro[], projetos: Projeto[], aloca: 
         if (!finalizado && papel?.papel !== "Padrinho") dispon += 1
         if (papel?.papel === "Padrinho") dipon_mad += 1
 
-        m_nps += Number(exp.NPS || 0);
-        m_qap += Number(exp.QAP || 0);
+        if (papel?.papel !== "Padrinho") m_nps += Number(exp.NPS || 0);
+        if (papel?.papel !== "Padrinho") m_qap += Number(exp.QAP || 0);
 
       }
     });
