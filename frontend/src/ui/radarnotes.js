@@ -1,16 +1,8 @@
-import "../../style/columns.css"
-import "../../style/base.css"
-import "../../style/layout.css"
-import "../../style/projects_panel.css"
-import "../../style/responsive.css"
-import "../../style/scroll.css"
-import "../../style/session2.css"
-import "../../style/weights.css"
 import React from "react";
 
 export default function RadarNotes({ values = [], labels = [] }) {
   const N = values.length;
-  if (N === 0) return <div className="radar-empty">Sem métricas</div>;
+  if (N === 0) return <div>Sem métricas</div>;
 
   const cx = 100, cy = 100, radius = 70;
   const angle = (i) => -Math.PI / 2 + (i * (2 * Math.PI)) / N;
@@ -40,20 +32,37 @@ export default function RadarNotes({ values = [], labels = [] }) {
   });
 
   return (
-    <svg className="radar-svg" viewBox="0 0 200 200" width="100%" height="180" role="img" aria-label="Radar de competências">
+    <svg
+      viewBox="0 0 200 200"
+      width="100%"
+      height="180"
+      role="img"
+      aria-label="Radar de competências"
+    >
       {gridLines.map((pts, i) => (
         <polygon key={i} points={pts} fill="none" stroke="#ddd" strokeWidth="0.8" />
       ))}
 
       <polygon points={outer.join(" ")} fill="none" stroke="#ccc" strokeWidth="1" />
-      <polygon points={inner.join(" ")} fill="#60a5fa" fillOpacity="0.35" stroke="#3b82f6" strokeWidth="1.5" />
+      <polygon
+        points={inner.join(" ")}
+        fill="#60a5fa"
+        fillOpacity="0.35"
+        stroke="#3b82f6"
+        strokeWidth="1.5"
+      />
 
       {labels.map((lab, i) => {
         const a = angle(i);
         const lx = cx + (radius + 18) * Math.cos(a);
         const ly = cy + (radius + 18) * Math.sin(a);
-        const anchor = Math.abs(Math.cos(a)) < 0.2 ? "middle" : (Math.cos(a) > 0 ? "start" : "end");
-        return <text key={i} x={lx} y={ly} fontSize="10" textAnchor={anchor}>{lab}</text>;
+        const anchor =
+          Math.abs(Math.cos(a)) < 0.2 ? "middle" : Math.cos(a) > 0 ? "start" : "end";
+        return (
+          <text key={i} x={lx} y={ly} fontSize="10" textAnchor={anchor}>
+            {lab}
+          </text>
+        );
       })}
     </svg>
   );

@@ -6,11 +6,6 @@ import "./style/base.css"
 import "./style/layout.css"
 import "./style/scroll.css"
 
-import "./style/columns.css"
-import "./style/projects_panel.css"
-import "./style/weights.css"
-import "./style/session2.css"
-
 import "./style/responsive.css"
 
 import Column from "./src/ui/column";
@@ -509,7 +504,7 @@ function Dashboard() {
         if (bom.includes(macro)) s += 3;
         if (ruim.includes(macro)) s -= 5;
 
-  return clamp10(s);
+        return clamp10(s);
       })();
 
 
@@ -554,256 +549,354 @@ function Dashboard() {
 
     // Obter status de disponibilidade    
     const currentProjects = selectedPerson.projectsLinked || [];
-    
-    return (
-      <div className="bottom-section">
-         {/* Novo cabeçalho para a segunda sessão - SEM O HEADER ORIGINAL */}
-        <div className="profile-section-header">
-          <div className="profile-header-content">
-            <button className="profile-back-button" onClick={handleGoBack}>
-              <span className="back-icon">←</span>
-              <span className="back-label">Voltar para Alocações</span>
-            </button>
-            <div className="profile-header-info">
-              <h1 className="profile-main-title">Perfil do Membro</h1>
-              <p className="profile-subtitle">Detalhes e métricas de avaliação</p>
-            </div>
-          </div>
-        </div>
 
-          {/* Grid Principal com 3 colunas */}
-        <div className="member-detail-grid-three">
-          
-          {/* Coluna 1: Perfil */}
-          <div className="profile-left-card">
-            <div className="profile-header-left">
-              <div className="avatar-container-left">
-                {selectedPerson.photoUrl ? (
-                  <img src={selectedPerson.photoUrl} alt={selectedPerson.name} className="profile-image-left" />
-                ) : (
-                  <div className="avatar-initial-left">
-                    {selectedPerson.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="availability-indicator-left" 
-                     style={{ 
-                       backgroundColor: availabilityStatus.color,
-                       boxShadow: `0 0 0 3px ${availabilityStatus.color}20`
-                     }}>
-                  {availabilityStatus.text.includes('Livre') ? '🟢' : 
-                   availabilityStatus.text.includes('1') ? '🟡' : 
-                   availabilityStatus.text.includes('2') ? '🟠' : '🔴'}
-                </div>
-              </div>
-              <div className="profile-info-left">
-                <h3 className="member-name-left">{selectedPerson.name}</h3>
-              </div>
-            </div>
+		return (
+		  <div className="w-full">
+		    {/* Novo cabeçalho para a segunda sessão - SEM O HEADER ORIGINAL */}
+		    <div className="col-span-full bg-white rounded-xl px-6 py-5 mb-6 border border-[var(--border,#e5e7eb)] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+		      <div className="flex items-center gap-6 max-[1200px]:flex-col max-[1200px]:items-start max-[1200px]:gap-4">
+		        <button
+		          className="bg-white border border-[var(--border-2,#d1d5db)] text-[14px] font-medium cursor-pointer px-[18px] py-[10px] rounded-lg flex items-center gap-2 h-[44px] shrink-0 transition-all duration-200 text-[var(--muted-3,#4b5563)] hover:bg-[#f3f4f6] hover:border-[var(--muted-2,#9ca3af)] hover:-translate-y-[1px] hover:shadow-[0_2px_6px_rgba(0,0,0,0.05)] max-[1200px]:self-start"
+		          onClick={handleGoBack}
+		        >
+		          <span className="text-[18px]">←</span>
+		          <span className="whitespace-nowrap">Voltar para Alocações</span>
+		        </button>
 
-          {/* Status de Disponibilidade */}
-            <div className="availability-status-left">
-              <div className="status-header-left">
-                <h4>Status de Disponibilidade</h4>
-              </div>
-              <div className="status-content-left">
-                <div className="status-indicator-left" style={{ color: availabilityStatus.color }}>
-                  {availabilityStatus.text}
-                </div>
-                <div className="status-score-left">
-                  <span className="score-label-left">Pontuação:</span>
-                  <span className="score-value-left">{availabilityScore.toFixed(1)}/10</span>
-                </div>
-                <p className="status-description-left">{availabilityStatus.description}</p>
-              </div>
-            </div>
+		        <div className="flex-1 flex flex-col gap-[6px]">
+		          <h1 className="text-[28px] font-extrabold m-0 leading-[1.2] text-[var(--brand-dark,#0f3550)]">
+		            Perfil do Membro
+		          </h1>
+		          <p className="text-[15px] m-0 font-medium text-[var(--muted,#6b7280)]">
+		            Detalhes e métricas de avaliação
+		          </p>
+		        </div>
+		      </div>
+		    </div>
 
-        {/* Nota Geral */}
-            <div className="overall-score-left">
-              <div className="score-header-left">
-                <h4>Nota Geral</h4>
-              </div>
-              <div className="score-content-left">
-                <div className="score-value-left-large">{overallScore.toFixed(1)}<span className="score-max-left">/10</span></div>
-                <div className="score-rating-left">
-                  {overallScore >= 8 ? '⭐ Excelente' : 
-                   overallScore >= 6 ? '👍 Bom' : 
-                   overallScore >= 4 ? '👌 Regular' : '📝 A Melhorar'}
-                </div>
-              </div>
-            </div>
-          </div>
+		    {/* Grid Principal com 3 colunas */}
+		    <div className="col-span-full grid gap-5 grid-cols-[320px_1fr_380px] h-[calc(100vh-240px)] min-h-[600px] max-[1200px]:grid-cols-1 max-[1200px]:h-auto max-[1200px]:gap-4">
+		      {/* Coluna 1: Perfil */}
+		      <div className="bg-white rounded-xl p-6 border border-[var(--border,#e5e7eb)] flex flex-col gap-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+		        <div className="flex flex-col items-center text-center gap-4 pb-5 border-b border-[var(--border,#e5e7eb)]">
+		          <div className="relative w-[100px] h-[100px]">
+		            {selectedPerson.photoUrl ? (
+		              <img
+		                src={selectedPerson.photoUrl}
+		                alt={selectedPerson.name}
+		                className="w-full h-full rounded-full object-cover border-4 border-[var(--card-bg,#ffffff)] shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+		              />
+		            ) : (
+		              <div className="w-full h-full rounded-full flex items-center justify-center text-[36px] font-bold text-white bg-[linear-gradient(135deg,var(--brand-dark,#0f3550),var(--brand-mid,#1e4a6e))] border-4 border-[var(--card-bg,#ffffff)] shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+		                {selectedPerson.name.charAt(0).toUpperCase()}
+		              </div>
+		            )}
 
-          {/* Coluna 2: Radar + Sugestões de Alocação */}
-          <div className="radar-middle-card">
-            <div className="card-header-middle">
-              <h3>Perfil de Habilidades</h3>
-              <div className="score-badge-middle">
-                <span className="score-icon-middle">★</span>
-                <span className="score-text-middle">{overallScore.toFixed(1)}</span>
-              </div>
-            </div>
-            
-            {radarValues.length > 0 ? (
-              <div className="radar-container-middle">
-                <div className="radar-wrapper-middle">
-                  <RadarNotes 
-                    values={radarValues} 
-                    labels={radarLabels} 
-                  />
-                </div>
-                <div className="radar-legend-middle">
-                  <div className="legend-item-middle">
-                    <div className="legend-dot-middle" style={{ backgroundColor: '#3b82f6' }}></div>
-                    <span>Avaliação do Membro</span>
-                  </div>
-                  <div className="legend-item-middle">
-                    <div className="legend-dot-middle" style={{ backgroundColor: '#e2e8f0' }}></div>
-                    <span>Escala de Referência</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="radar-placeholder-middle">
-                <div className="placeholder-icon-middle">📊</div>
-                <div className="placeholder-title-middle">Sem dados de habilidades</div>
-                <p className="placeholder-text-middle">
-                  Adicione métricas de avaliação para visualizar o perfil gráfico.
-                </p>
-              </div>
-            )}
-            </div>
-          </div>
+		            <div
+		              className="absolute bottom-0 right-0 w-7 h-7 rounded-full flex items-center justify-center text-[14px] border-[3px] border-[var(--card-bg,#ffffff)]"
+		              style={{
+		                backgroundColor: availabilityStatus.color,
+		                boxShadow: `0 0 0 3px ${availabilityStatus.color}20`,
+		              }}
+		            >
+		              {availabilityStatus.text.includes("Livre")
+		                ? "🟢"
+		                : availabilityStatus.text.includes("1")
+		                ? "🟡"
+		                : availabilityStatus.text.includes("2")
+		                ? "🟠"
+		                : "🔴"}
+		            </div>
+		          </div>
 
-          {/* Coluna 3: Métricas Detalhadas */}
-          <div className="metrics-right-card">
-            <div className="card-header-right">
-              <h3>Métricas Detalhadas</h3>
-              <div className="metrics-count-right">
-                {criteriaList.length} critérios
-              </div>
-              </div>
+		          <div className="w-full">
+		            <h3 className="text-[20px] font-bold m-0 mb-2 text-[var(--brand-dark,#0f3550)]">
+		              {selectedPerson.name}
+		            </h3>
+		          </div>
+		        </div>
 
-            <div className="metrics-list-right">
-              {criteriaList.map((metric, index) => (
-                <div key={index} className="metric-item-right">
-                  <div className="metric-header-right">
-                    <div className="metric-title-right">
-                      <span className="metric-number-right">0{index + 1}</span>
-                      <span className="metric-name-right">{metric.name}</span>
-                    </div>
-                    <div className="metric-score-right">
-                      <span className="score-value-right">{metric.value}</span>
-                      <span className="score-max-right">/10</span>
-                    </div>
-                  </div>
-                  
-                  <div className="metric-description-right">{metric.description}</div>
-                  
-                  <div className="progress-container-right">
-                    <div className="progress-bar-right">
-                      <div 
-                        className="progress-fill-right" 
-                        style={{ 
-                          width: `${metric.percentage}%`,
-                          background: metric.color
-                        }}
-                      ></div>
-                    </div>
-                    <div className="progress-labels-right">
-                      <span className="progress-percentage-right">{metric.percentage}%</span>
-                      <span className={`progress-status-right ${
-                        parseFloat(metric.value) >= 8 ? 'status-excellent' :
-                        parseFloat(metric.value) >= 6 ? 'status-good' :
-                        parseFloat(metric.value) >= 4 ? 'status-regular' : 'status-needs-improvement'
-                      }`}>
-                        {parseFloat(metric.value) >= 8 ? 'Excelente' : 
-                         parseFloat(metric.value) >= 6 ? 'Bom' : 
-                         parseFloat(metric.value) >= 4 ? 'Regular' : 'A Melhorar'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+		        {/* Status de Disponibilidade */}
+		        <div className="bg-white rounded-[10px] p-4 border border-[var(--border,#e5e7eb)] flex flex-col gap-3">
+		          <div>
+		            <h4 className="text-[15px] font-semibold m-0 text-[var(--brand-dark,#0f3550)]">
+		              Status de Disponibilidade
+		            </h4>
+		          </div>
 
-            {/* Nota Explicativa */}
-            <div className="metrics-note-right">
-              <p>
-                <strong>Disponibilidade:</strong> Calculada baseada no número de projetos atuais.
-                <br />
-                0 projetos = 10/10 • 1 projeto = 6.7/10 • 2 projetos = 3.3/10 • 3+ projetos = 0/10
-              </p>
-            </div>
-          </div>
-        </div>
-    );
-  };
+		          <div className="flex flex-col gap-2">
+		            <div
+		              className="text-[16px] font-bold flex items-center gap-2"
+		              style={{ color: availabilityStatus.color }}
+		            >
+		              {availabilityStatus.text}
+		            </div>
 
-    return (
-    <div className="grid-container">
-      {/* HEADER APENAS NA PRIMEIRA SESSÃO */}
-      {!selectedPerson && (
-        <header className="header-with-logo">
-          <h1 className="app-title">FGV Jr. — Dashboard de Alocações</h1>
-        </header>
-      )}
+		            <div className="flex items-center justify-between py-2 border-y border-[var(--border,#e5e7eb)]">
+		              <span className="text-[13px] font-semibold text-[var(--muted,#6b7280)]">
+		                Pontuação:
+		              </span>
+		              <span className="text-[16px] font-bold text-[var(--text-strong,#1f2937)]">
+		                {availabilityScore.toFixed(1)}/10
+		              </span>
+		            </div>
 
-      <div className="main-content">
-        {/* SESSÃO 1: (some quando seleciona alguém) */}
-        {!selectedPerson && (
-          <div className="top-section">
-            <div className="left-sidebar">
-              <ProjectsPanel
-                projects={nomes_projetos}
-                selectedProject={selectedProject}
-                onSelectProject={setSelectedProject}
-                projectInfo={selectedProjectObj}
-              />
+		            <p className="text-[13px] m-0 leading-[1.4] text-[var(--muted,#6b7280)]">
+		              {availabilityStatus.description}
+		            </p>
+		          </div>
+		        </div>
 
-              {selectedProject &&(
+		        {/* Nota Geral */}
+		        <div className="rounded-[10px] p-[18px] border border-[var(--primary-soft-border,#dbeafe)] text-center bg-[linear-gradient(135deg,var(--surface,#f8fafc),var(--surface-2,#e2e8f0))]">
+		          <div>
+		            <h4 className="text-[15px] font-semibold m-0 mb-3 text-[var(--brand-dark,#0f3550)]">
+		              Nota Geral
+		            </h4>
+		          </div>
 
-                <ProjectRankingConfig
-                  projectId={selectedProjectObj?.name ?? ""}
-                  macro={selectedProjectObj?.macro ?? "-"}
-                  area={selectedArea}
-                  onAreaChange={setSelectedArea}
-                  criteria={criteriaForUI}
-                  onWeightsChange={handleWeightsChange}
-                />
+		          <div className="flex flex-col gap-2">
+		            <div className="text-[32px] font-extrabold leading-none text-[var(--brand-dark,#0f3550)]">
+		              {overallScore.toFixed(1)}
+		              <span className="text-[18px] font-semibold ml-1 text-[var(--muted,#6b7280)]">
+		                /10
+		              </span>
+		            </div>
 
-              )}
-            </div>
+		            <div className="inline-block text-[14px] font-semibold px-3 py-[6px] rounded-full text-[var(--primary,#3b82f6)] bg-[color-mix(in_srgb,var(--primary,#3b82f6)_12%,transparent)]">
+		              {overallScore >= 8
+		                ? "⭐ Excelente"
+		                : overallScore >= 6
+		                ? "👍 Bom"
+		                : overallScore >= 4
+		                ? "👌 Regular"
+		                : "📝 A Melhorar"}
+		            </div>
+		          </div>
+		        </div>
+		      </div>
 
-            <div className="columns-container">
-              <Column title = "Consultores" 
-              items = {consultants} 
-              col_papel={"Consultores"}
-              onSelect = {(p) => {handleSelectPerson(p); setColunaOrigem("Consultores")}} 
-              scores = {score_recalc_consultores}
-              />
+		      {/* Coluna 2: Radar + Sugestões de Alocação */}
+		      <div className="bg-white rounded-xl p-6 border border-[var(--border,#e5e7eb)] flex flex-col gap-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+		        <div className="flex items-center justify-between pb-4 border-b border-[var(--border,#e5e7eb)]">
+		          <h3 className="text-[18px] font-bold m-0 text-[var(--brand-dark,#0f3550)]">
+		            Perfil de Habilidades
+		          </h3>
 
-              <Column title = "Gerentes" 
-              items = {managers} 
-              col_papel={"Gerentes"}
-              onSelect = {(p) => {handleSelectPerson(p); setColunaOrigem("Gerentes")}}
-              scores = {score_recalc_gerentes}
-              />
+		          <div className="text-white px-[14px] py-[6px] rounded-full font-bold text-[15px] flex items-center gap-[6px] bg-[linear-gradient(135deg,var(--primary,#3b82f6),var(--primary-dark,#1d4ed8))]">
+		            <span className="text-[14px]">★</span>
+		            <span>{overallScore.toFixed(1)}</span>
+		          </div>
+		        </div>
 
-              <Column title = "Madrinhas"
-              items = {madrinhas} 
-              col_papel={"Madrinhas"}
-              onSelect = {(p) => {handleSelectPerson(p); setColunaOrigem("Madrinhas")}}
-              scores = {score_recalc_madrinhas}
-              />
-            </div>
-          </div>
-        )}
+		        {radarValues.length > 0 ? (
+		          <div className="flex flex-col items-center justify-center rounded-[10px] border border-[var(--surface-border,#e2e8f0)] p-[10px] bg-[var(--surface,#f8fafc)] h-[340px] mb-[10px]">
+		            <div className="w-full flex items-center justify-center h-[300px]">
+		              <RadarNotes values={radarValues} labels={radarLabels} />
+		            </div>
 
-        {/* SESSÃO 2 */}
-        {selectedPerson && renderSession2()}
-      </div>
-    </div>
-  );
+		            <div className="flex justify-center gap-5 mt-[15px] pt-[15px] border-t border-[var(--border,#e5e7eb)] w-full">
+		              <div className="flex items-center gap-2 text-[12px] text-[var(--muted,#6b7280)]">
+		                <div className="w-[10px] h-[10px] rounded-full bg-[#3b82f6]" />
+		                <span>Avaliação do Membro</span>
+		              </div>
+		              <div className="flex items-center gap-2 text-[12px] text-[var(--muted,#6b7280)]">
+		                <div className="w-[10px] h-[10px] rounded-full bg-[#e2e8f0]" />
+		                <span>Escala de Referência</span>
+		              </div>
+		            </div>
+		          </div>
+		        ) : (
+		          <div className="flex flex-col items-center justify-center gap-3 rounded-[10px] p-[30px] border-2 border-dashed w-full bg-[var(--surface,#f8fafc)] border-[var(--border-2,#d1d5db)] h-[340px]">
+		            <div className="text-[40px] opacity-40 mb-[10px]">📊</div>
+		            <div className="text-[16px] font-semibold text-center text-[var(--muted-3,#4b5563)]">
+		              Sem dados de habilidades
+		            </div>
+		            <p className="text-[14px] text-center m-0 leading-[1.4] max-w-[80%] text-[var(--muted-2,#9ca3af)]">
+		              Adicione métricas de avaliação para visualizar o perfil gráfico.
+		            </p>
+		          </div>
+		        )}
+		      </div>
+
+		      {/* Coluna 3: Métricas Detalhadas */}
+		      <div className="bg-white rounded-xl p-6 border border-[var(--border,#e5e7eb)] flex flex-col gap-6 overflow-y-auto shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+		        <div className="flex items-center justify-between pb-4 border-b border-[var(--border,#e5e7eb)]">
+		          <h3 className="text-[18px] font-bold m-0 text-[var(--brand-dark,#0f3550)]">
+		            Métricas Detalhadas
+		          </h3>
+
+		          <div className="px-3 py-1 rounded-xl text-[13px] font-semibold bg-[var(--chip-bg,#f3f4f6)] text-[var(--muted,#6b7280)]">
+		            {criteriaList.length} critérios
+		          </div>
+		        </div>
+
+		        <div className="flex flex-col gap-5">
+		          {criteriaList.map((metric, index) => {
+		            const v = parseFloat(metric.value);
+
+		            const statusClass =
+		              v >= 8
+		                ? "bg-[#d1fae5] text-[#065f46]"
+		                : v >= 6
+		                ? "bg-[#fef3c7] text-[#92400e]"
+		                : v >= 4
+		                ? "bg-[#dbeafe] text-[#1e40af]"
+		                : "bg-[#fee2e2] text-[#991b1b]";
+
+		            const statusText =
+		              v >= 8 ? "Excelente" : v >= 6 ? "Bom" : v >= 4 ? "Regular" : "A Melhorar";
+
+		            return (
+		              <div
+		                key={index}
+		                className="rounded-[10px] p-[18px] border border-[var(--surface-border,#e2e8f0)] bg-[var(--surface,#f8fafc)]"
+		              >
+		                <div className="flex items-center justify-between mb-[10px]">
+		                  <div className="flex items-center gap-[10px]">
+		                    <span className="text-[12px] font-bold w-6 h-6 rounded-[6px] flex items-center justify-center border border-[var(--primary-soft-border,#dbeafe)] text-[var(--primary,#3b82f6)] bg-[var(--card-bg,#ffffff)]">
+		                      0{index + 1}
+		                    </span>
+		                    <span className="text-[15px] font-semibold text-[var(--text-strong,#1f2937)]">
+		                      {metric.name}
+		                    </span>
+		                  </div>
+
+		                  <div className="flex items-baseline gap-[2px]">
+		                    <span className="text-[20px] font-bold text-[var(--brand-dark,#0f3550)]">
+		                      {metric.value}
+		                    </span>
+		                    <span className="text-[14px] text-[var(--muted-2,#9ca3af)]">
+		                      /10
+		                    </span>
+		                  </div>
+		                </div>
+
+		                <div className="text-[13px] mb-3 leading-[1.4] text-[var(--muted,#6b7280)]">
+		                  {metric.description}
+		                </div>
+
+		                <div className="mt-3">
+		                  <div className="h-2 rounded overflow-hidden mb-2 bg-[var(--border,#e5e7eb)]">
+		                    <div
+		                      className="h-full rounded transition-[width] duration-[700ms] ease-out"
+		                      style={{
+		                        width: `${metric.percentage}%`,
+		                        background: metric.color,
+		                      }}
+		                    />
+		                  </div>
+
+		                  <div className="flex items-center justify-between">
+		                    <span className="text-[12px] font-semibold text-[var(--muted,#6b7280)]">
+		                      {metric.percentage}%
+		                    </span>
+
+		                    <span className={`text-[11px] font-bold px-[10px] py-1 rounded-xl uppercase ${statusClass}`}>
+		                      {statusText}
+		                    </span>
+		                  </div>
+		                </div>
+		              </div>
+		            );
+		          })}
+		        </div>
+
+		        {/* Nota Explicativa */}
+		        <div className="rounded-lg p-[14px] text-[12px] leading-[1.4] mt-[10px] bg-[var(--note-bg,#f0f9ff)] text-[var(--muted-3,#4b5563)] border-l-4 border-l-[var(--primary,#3b82f6)]">
+		          <p className="m-0">
+		            <strong className="text-[var(--text-strong,#1f2937)]">Disponibilidade:</strong>{" "}
+		            Calculada baseada no número de projetos atuais.
+		            <br />
+		            0 projetos = 10/10 • 1 projeto = 6.7/10 • 2 projetos = 3.3/10 • 3+ projetos = 0/10
+		          </p>
+		        </div>
+		      </div>
+		    </div>
+		  </div>
+		);
+		};
+
+		return (
+		<div className="grid grid-cols-1 grid-rows-[auto_1fr] gap-4 max-w-[1400px] mx-auto h-screen p-4 overflow-hidden box-border max-[1200px]:p-3 max-[1200px]:h-auto max-[1200px]:min-h-screen max-[768px]:p-[10px] max-[768px]:gap-3">
+		  {/* HEADER APENAS NA PRIMEIRA SESSÃO */}
+		  {!selectedPerson && (
+		    <header className="col-span-full flex items-center justify-center px-4 py-3 bg-white border-b border-b-[rgba(0,0,0,0.05)] h-[60px] rounded-[10px] shadow-[0_2px_6px_rgba(0,0,0,0.04)] max-[768px]:p-[10px] max-[768px]:h-[52px]">
+		      <h1 className="text-[20px] font-bold text-[var(--brand)] tracking-[0.2px] m-0 text-center max-[768px]:text-[17px] max-[480px]:text-[15px]">
+		        FGV Jr. — Dashboard de Alocações
+		      </h1>
+		    </header>
+		  )}
+
+		  <div className="col-span-full flex flex-col gap-4 overflow-y-auto pr-1 h-[calc(100vh-92px)] max-[1200px]:h-auto max-[1200px]:flex-col">
+		    {/* SESSÃO 1: (some quando seleciona alguém) */}
+		    {!selectedPerson && (
+		      <div className="grid gap-5 min-h-0 items-stretch grid-cols-[380px_1fr] h-[calc(100vh-140px)] max-[1200px]:flex max-[1200px]:flex-col max-[1200px]:h-auto">
+		        <div className="grid gap-3 h-full min-h-0 grid-rows-[auto_1fr] max-[1200px]:w-full max-[1200px]:flex-[0_0_auto] max-[1200px]:min-h-[320px]">
+		          <ProjectsPanel
+		            projects={nomes_projetos}
+		            selectedProject={selectedProject}
+		            onSelectProject={setSelectedProject}
+		            projectInfo={selectedProjectObj}
+		          />
+
+		          {selectedProject && (
+		            <ProjectRankingConfig
+		              projectId={selectedProjectObj?.name ?? ""}
+		              macro={selectedProjectObj?.macro ?? "-"}
+		              area={selectedArea}
+		              onAreaChange={setSelectedArea}
+		              criteria={criteriaForUI}
+		              onWeightsChange={handleWeightsChange}
+		            />
+		          )}
+		        </div>
+
+		        <div className="min-h-0 w-full overflow-hidden max-[1200px]:w-full">
+		          <div className="flex flex-1 gap-3 min-w-0 min-h-0 overflow-x-auto pb-2">
+		            <Column
+		              title="Consultores"
+		              items={consultants}
+		              col_papel={"Consultores"}
+		              onSelect={(p) => {
+		                handleSelectPerson(p);
+		                setColunaOrigem("Consultores");
+		              }}
+		              scores={score_recalc_consultores}
+		            />
+
+		            <Column
+		              title="Gerentes"
+		              items={managers}
+		              col_papel={"Gerentes"}
+		              onSelect={(p) => {
+		                handleSelectPerson(p);
+		                setColunaOrigem("Gerentes");
+		              }}
+		              scores={score_recalc_gerentes}
+		            />
+
+		            <Column
+		              title="Madrinhas"
+		              items={madrinhas}
+		              col_papel={"Madrinhas"}
+		              onSelect={(p) => {
+		                handleSelectPerson(p);
+		                setColunaOrigem("Madrinhas");
+		              }}
+		              scores={score_recalc_madrinhas}
+		            />
+		          </div>
+		        </div>
+		      </div>
+		    )}
+
+		    {/* SESSÃO 2 */}
+		    {selectedPerson ? renderSession2() : null}
+		  </div>
+		</div>
+		);
+
 }
 
 function CssLoading() {
