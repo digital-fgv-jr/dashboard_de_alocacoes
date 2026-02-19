@@ -1,0 +1,83 @@
+@layer components {
+  .columns-container {
+    @apply flex flex-1 gap-3 min-w-0 min-h-0 overflow-x-auto pb-2;
+  }
+
+  .col-card {
+    @apply flex flex-col min-h-0 overflow-hidden border;
+    background: var(--card-bg, #fff);
+    border-color: var(--border, #e5e7eb);
+    border-radius: 10px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+
+    /* mantém seu sizing original */
+    flex: 0 0 180px;
+    min-width: 263px;
+  }
+
+  .col-header {
+    @apply text-white text-center font-bold text-[14px] px-3;
+    background: var(--brand, #0b2540);
+    border-radius: 10px 10px 0 0;
+    height: 44px;
+
+    /* pra centralizar verticalmente sem mexer no HTML */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .col-list {
+    @apply p-[14px] flex-1 min-h-0 overflow-y-auto flex flex-col gap-2;
+    min-height: 300px;
+    max-height: calc(100vh - 160px);
+  }
+
+  .col-empty {
+    @apply text-center italic text-[12px] px-[15px] py-[25px];
+    color: var(--muted-2, #9ca3af);
+  }
+
+  .col-item {
+    @apply flex items-center gap-[10px] p-[9px] rounded-[7px] border cursor-pointer
+           transition-all duration-200 flex-shrink-0;
+    background: var(--item-bg, #fbfdff);
+    border-color: var(--border, #e5e7eb);
+  }
+
+  .col-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-soft-border, #dbeafe);
+    background: var(--card-bg, #ffffff);
+  }
+
+  .col-rank {
+    @apply w-8 h-8 text-white font-bold flex items-center justify-center
+           rounded-[6px] flex-shrink-0 text-[12px];
+    background: var(--brand, #0b2540);
+  }
+
+  .col-item-body {
+    @apply flex-1 min-w-0 overflow-hidden flex flex-col gap-[2px];
+  }
+
+  .col-item-name {
+    @apply text-[12px] font-medium whitespace-nowrap overflow-hidden text-ellipsis;
+    color: var(--text-strong, #1f2937);
+  }
+
+  .col-item-role {
+    @apply text-[10px] whitespace-nowrap overflow-hidden text-ellipsis;
+    color: var(--muted, #6b7280);
+  }
+
+  .badge {
+    @apply px-[9px] py-1 rounded-full font-bold text-white whitespace-nowrap
+           text-[10px] min-w-[50px] text-center flex-shrink-0;
+  }
+
+  .badge-free { background: var(--free-color, #10b981); }
+  .badge-semifree { background: var(--semibusy-color, #fdca40); }
+  .badge-busy { background: var(--busy-color, #ef4444); }
+}

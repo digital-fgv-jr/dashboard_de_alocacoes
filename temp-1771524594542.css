@@ -1,0 +1,78 @@
+@layer components {
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1rem;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    height: 100vh;
+    padding: 1rem;
+    overflow: hidden;
+
+    grid-template-rows: auto 1fr;
+  }
+
+  .header-with-logo {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    background: #ffffff;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    height: 60px;
+
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  }
+
+  .app-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--brand);
+    letter-spacing: 0.2px;
+    margin: 0;
+    text-align: center;
+  }
+
+  .main-content {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+
+    height: calc(100vh - 92px);
+  }
+
+  .top-section {
+    display: grid;
+    gap: 1.25rem;
+    min-height: 0;
+    align-items: stretch;
+
+    grid-template-columns: 380px 1fr;
+    height: calc(100vh - 140px);
+  }
+
+  .left-sidebar {
+    display: grid;
+    gap: 0.75rem;
+    height: 100%;
+    min-height: 0;
+
+    grid-template-rows: auto 1fr;
+  }
+
+  /* container das 3 colunas */
+  .columns-container {
+    min-height: 0;
+    width: 100%;
+    overflow: hidden;
+  }
+}

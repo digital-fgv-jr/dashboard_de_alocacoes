@@ -1,0 +1,93 @@
+@layer utilities {
+
+/* ===== DESKTOP SMALL (1200px) ===== */
+@media (max-width:1200px){
+
+  /* Grid geral */
+  .grid-container{
+    @apply p-3;
+    height:auto;
+    min-height:100vh;
+  }
+
+  .main-content{
+    height:auto;
+    flex-direction:column;
+  }
+
+  .top-section{
+    flex-direction:column;
+    height:auto;
+  }
+
+  .projects-panel{
+    @apply w-full;
+    flex:0 0 auto;
+    min-height:320px;
+  }
+
+  .columns-container{
+    @apply w-full;
+  }
+
+  .member-detail-grid-three{
+    grid-template-columns:1fr;
+    height:auto;
+    gap:16px;
+  }
+
+  .profile-header-content{
+    @apply flex-col items-start gap-4;
+  }
+
+  .profile-back-button{
+    align-self:flex-start;
+  }
+
+}
+
+/* ===== TABLET (768px) ===== */
+@media (max-width:768px){
+
+  .grid-container{
+    @apply p-[10px] gap-3;
+  }
+
+  .header-with-logo{
+    @apply p-[10px];
+    height:52px;
+  }
+
+  .app-title{
+    font-size:17px;
+  }
+
+  .col-card{
+    flex:0 0 240px;
+    min-width:240px;
+  }
+
+  .project-meta-creative{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+
+}
+
+/* ===== MOBILE (480px) ===== */
+@media (max-width:480px){
+
+  .app-title{ font-size:15px; }
+
+  .projects-header{
+    @apply px-3 py-[10px] text-[13px];
+    height:42px;
+  }
+
+  .col-header{
+    @apply px-[10px] py-[10px] text-[13px];
+    height:40px;
+  }
+
+}
+}

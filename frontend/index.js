@@ -1,7 +1,17 @@
 import React from "react";
 import { initializeBlock, useBase, useRecords } from "@airtable/blocks/ui";
 
-import "./style.css";
+
+import "./style/base.css"
+import "./style/layout.css"
+import "./style/scroll.css"
+
+import "./style/columns.css"
+import "./style/projects_panel.css"
+import "./style/weights.css"
+import "./style/session2.css"
+
+import "./style/responsive.css"
 
 import Column from "./src/ui/column";
 import ProjectsPanel from "./src/ui/projectspanel";
@@ -10,6 +20,7 @@ import ProjectRankingConfig from "./src/ui/weightinput";
 import { useScores } from "./src/backend/src/calc/processing";
 import { get_field, get_count } from "./src/backend/src/calc/data_t";
 import { useMemo } from "react";
+import { useTailwindReady } from "../tailwind-cdn";
 
 function Dashboard() {
   const base = useBase();
@@ -284,44 +295,14 @@ function Dashboard() {
    const score_recalc_madrinhas = (scores || []).map(membro =>{
     const NPS = membro.nps;
     const dispon = membro.disp_madrinha;
-    const macroe = selectedProjectObj?.macro ?? "";
-    const av_120 = membro.nota_120;
-    const prefere = Array.isArray(membro.gosta) ? membro.gosta : [];
-    const bom = Array.isArray(membro.bom) ? membro.bom : [];
-    const ruim = Array.isArray(membro.ruim) ? membro.ruim : [];
-    const eficiencia = membro.eficiencia;
-    const em_exp = membro.maem_exp;
-    const sf_exp = membro.masf_exp;
-    const sm_exp = membro.masm_exp;
-    const pe_exp = membro.mape_exp;
-    //console.log(membro.nome)
-    //console.log(dispon)
-    //console.log(membro.disponibilidade)
 
     let pesos = pesosMadrinhas
 
     let nota = 0
 
-    if (dispon === 0) { nota += 3 * (pesos.availability)}
-    else if (dispon === 1) {nota += 2 * (pesos.availability)}
-    else if (dispon === 2) {nota += 1 * (pesos.availability)};
-
-    nota += NPS * (pesos.nps)
-    nota += eficiencia * (pesos.preferencia)
-    nota += av_120 * (pesos.av_120)
-
-    let pref = 5
-
-    if (prefere.includes(macroe)) pref += 2;
-    if (bom.includes(macroe)) pref += 3;
-    if (ruim.includes(macroe)) pref -= 5;
-    
-    nota += pref * (pesos.preferencia)
-
-    if (macro_em.includes(macroe)) nota += em_exp * (pesos.experience)
-    else if (macro_pe.includes(macroe)) nota += pe_exp * (pesos.experience)
-    else if (macro_sf.includes(macroe)) nota += sf_exp * (pesos.experience)
-    else if (macro_sm.includes(macroe)) nota += sm_exp * (pesos.experience);
+    if (dispon === 0) { nota += 10 * (pesos.availability)}
+    else if (dispon === 1) {nota += 6.66 * (pesos.availability)}
+    else if (dispon === 2) {nota += 3.33 * (pesos.availability)};
 
     return {
       id: membro.id,
@@ -369,31 +350,12 @@ function Dashboard() {
       return typeof s === "number" ? { ...p, score: s } : { ...p, score: 0 };
     });
   }, [people, score_array_madrinhas]);
-
-  const filter_ppl_consultores = React.useMemo(() =>{
-    return (consultores_rank || []).filter(pessoa => {
-      return pessoa.sobrecarga !== true;
-    })
-  }, [consultores_rank])
-
-  const filter_ppl_gerentes = React.useMemo(() => {
-    return (gerentes_rank || []).filter(pessoa => {
-      return pessoa.sobrecarga !== true;
-    })
-  })
-
-  const filter_ppl_madrinhas = React.useMemo(() => {
-    return (madrinhas_rank || []).filter(pessoa => {
-      if(pessoa.padrinho === true) return true;
-    })
-  })
   
   const byScoreThenName = (a, b) => {
     const diferenca = (b.score ?? 0) - (a.score ?? 0);
     if (diferenca != 0 ) return diferenca;
     else return a.name.localeCompare(b.name, "pt", { sensitivity: "base"})
   }
-  
 
   let consultants = (consultores_rank || [])
     .filter(p => p.sobrecarga !== true)
@@ -709,31 +671,6 @@ function Dashboard() {
                 </p>
               </div>
             )}
-
-            {/* Sugestões de Alocação (sempre visível) */}
-            <div className="project-suggestions-always">
-              <div className="suggestions-header-always">
-                <h4>Sugerir Alocação para:</h4>
-              </div>
-              <div className="suggestions-list-always">
-                {projectSuggestions.slice(0, 3).map((project) => (
-                  <div key={project.id} className="project-suggestion-item-always">
-                    <div className="project-info-always">
-                      <div className="project-name-always">{project.name}</div>
-                      <div className="project-details-always">
-                        <span className="project-client-always">{project.client}</span>
-                        <span className="project-status-always">{project.status}</span>
-                      </div>
-                    </div>
-                    <button 
-                      className={`select-project-btn-always ${selectedProjects[project.id] ? 'selected' : ''}`}
-                      onClick={() => toggleProjectSelection(project.id)}
-                    >
-                      {selectedProjects[project.id] ? '✓ Selecionado' : 'Selecionar'}
-                    </button>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
 
@@ -799,7 +736,6 @@ function Dashboard() {
             </div>
           </div>
         </div>
-      </div>
     );
   };
 
@@ -870,4 +806,23 @@ function Dashboard() {
   );
 }
 
-initializeBlock(() => <Dashboard />);
+function CssLoading() {
+  return (
+    <div style={{ padding: 16, fontFamily: "sans-serif" }}>
+      Carregando estilos...
+    </div>
+  );
+}
+
+
+function AppBoot() {
+  const twReady = useTailwindReady();
+
+  if(!twReady){
+
+    return(<CssLoading />)
+  }
+  return <Dashboard/>
+}
+
+initializeBlock(() => <AppBoot />);

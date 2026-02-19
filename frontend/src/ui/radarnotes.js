@@ -1,4 +1,11 @@
-import "../../style.css";
+import "../../style/columns.css"
+import "../../style/base.css"
+import "../../style/layout.css"
+import "../../style/projects_panel.css"
+import "../../style/responsive.css"
+import "../../style/scroll.css"
+import "../../style/session2.css"
+import "../../style/weights.css"
 import React from "react";
 
 export default function RadarNotes({ values = [], labels = [] }) {
