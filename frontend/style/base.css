@@ -1,4 +1,4 @@
-@layer base {
+
   :root {
     /* Primário */
     --brand: #0b2540;
@@ -87,4 +87,3 @@
   button, input, select, textarea { 
     font: inherit; 
   }
-}

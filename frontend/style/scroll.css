@@ -1,4 +1,3 @@
-@layer components {
   /* tokens (pode ir pro base.css se preferir) */
   :root{
     --scrollbar-size: 6px;
@@ -67,4 +66,3 @@
   .columns-container::-webkit-scrollbar {
     height: var(--scrollbar-size);
   }
-}
