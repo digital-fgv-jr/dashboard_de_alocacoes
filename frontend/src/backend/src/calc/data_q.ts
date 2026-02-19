@@ -88,13 +88,13 @@ export function get_info_proj(membros: MemMembro[], projetos: Projeto[], aloca: 
       if (exp.equipe.some(eq => mem.alocacoes.includes(eq))) {
         const macro = exp.macro;
 
-        if (macro_em.includes(macro)) maem_mexp += 1;
-        else if (macro_pe.includes(macro)) mape_mexp += 1;
-        else if (macro_sf.includes(macro)) masf_mexp += 1;
-        else if (macro_sm.includes(macro)) masm_mexp += 1;
-
-        
         const papel = aloca.find(p => p.nome[0] === mem.id)
+
+        if (macro_em.includes(macro) && papel?.papel !== "Padrinho") maem_mexp += 1;
+        else if (macro_pe.includes(macro) && papel?.papel !== "Padrinho") mape_mexp += 1;
+        else if (macro_sf.includes(macro) && papel?.papel !== "Padrinho") masf_mexp += 1;
+        else if (macro_sm.includes(macro) && papel?.papel !== "Padrinho") masm_mexp += 1;
+
         if (!finalizado && papel?.papel !== "Padrinho") dispon += 1
         if (papel?.papel === "Padrinho") dipon_mad += 1
 
