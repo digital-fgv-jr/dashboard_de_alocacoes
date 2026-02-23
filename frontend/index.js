@@ -860,6 +860,7 @@ function Dashboard() {
 		  <div className="col-span-full flex flex-col gap-4 overflow-y-auto pr-1 h-[calc(100vh-92px)] max-[1200px]:h-auto max-[1200px]:flex-col">
 		    {/* SESSÃO 1: (some quando seleciona alguém) */}
 		    {!selectedPerson && (
+          selectedProject ? (
 		      <div className="grid gap-5 min-h-0 items-stretch grid-cols-[380px_1fr] h-[calc(100vh-140px)] max-[1200px]:flex max-[1200px]:flex-col max-[1200px]:h-auto">
 		        <div className="grid gap-3 h-full min-h-0 grid-rows-[auto_1fr] max-[1200px]:w-full max-[1200px]:flex-[0_0_auto] max-[1200px]:min-h-[320px]">
 		          <ProjectsPanel
@@ -921,6 +922,18 @@ function Dashboard() {
 		          </div>
 		        </div>
 		      </div>
+          ) : (
+            <div className="h-[calc(100vh-140px)] flex justify-center pt-10">
+              <div className="flex flex-col items-center">
+                <ProjectsPanel
+                  projects={nomes_projetos}
+                  selectedProject={selectedProject}
+                  onSelectProject={setSelectedProject}
+                  projectInfo={selectedProjectObj}
+                  />
+                </div>
+              </div>
+          )
 		    )}
 
 		    {/* SESSÃO 2 */}

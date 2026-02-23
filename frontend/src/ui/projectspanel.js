@@ -15,7 +15,7 @@ export default function ProjectsPanel({
   return (
     <div
       className={[
-        "w-[380px] bg-white flex flex-col overflow-hidden",
+        "w-[380px] bg-white flex flex-col overflow-visible",
         "border border-[#e5e7eb]",
         "rounded-[10px]",
         "shadow-[0_3px_12px_rgba(0,0,0,0.08)]",
