@@ -194,18 +194,24 @@ function Dashboard() {
   }, [selectedProject, lista_projetos]);
 
   const score_recalc_consultores = (scores || []).map(membro =>{
-    const NPS = membro.nps
     const dispon = membro.disponibilidade
     const macroe = selectedProjectObj?.macro ?? "";
     const av_120 = membro.nota_120
     const prefere = Array.isArray(membro.gosta) ? membro.gosta : [];
     const bom = Array.isArray(membro.bom) ? membro.bom : [];
     const ruim = Array.isArray(membro.ruim) ? membro.ruim : [];
-    const eficiencia = membro.eficiencia
     const em_exp = membro.maem_exp
     const sf_exp = membro.masf_exp
     const sm_exp = membro.masm_exp
     const pe_exp = membro.mape_exp
+    const em_nps = membro.maem_nps
+    const sf_nps = membro.masf_nps
+    const sm_nps = membro.masm_nps
+    const pe_nps = membro.mape_nps
+    const em_qap = membro.maem_ef
+    const sf_qap = membro.masf_ef
+    const sm_qap = membro.masm_ef
+    const pe_qap = membro.mape_ef
 
     let pesos = pesosConsultores
 
@@ -215,8 +221,6 @@ function Dashboard() {
     else if (dispon === 1) {nota += 2 * (pesos.availability)}
     else if (dispon === 2) {nota += 1 * (pesos.availability)};
 
-    nota += NPS * (pesos.nps)
-    nota += eficiencia * (pesos.preferencia)
     nota += av_120 * (pesos.av_120)
 
     let pref = 5
@@ -231,6 +235,16 @@ function Dashboard() {
     else if (macro_pe.includes(macroe)) nota += pe_exp * (pesos.experience)
     else if (macro_sf.includes(macroe)) nota += sf_exp * (pesos.experience)
     else if (macro_sm.includes(macroe)) nota += sm_exp * (pesos.experience);
+
+    if (macro_em.includes(macroe)) nota += em_nps * (pesos.nps)
+    else if (macro_pe.includes(macroe)) nota += pe_nps * (pesos.nps)
+    else if (macro_sf.includes(macroe)) nota += sf_nps * (pesos.nps)
+    else if (macro_sm.includes(macroe)) nota += sm_nps * (pesos.nps);
+
+    if (macro_em.includes(macroe)) nota += em_qap * (pesos.qap)
+    else if (macro_pe.includes(macroe)) nota += pe_qap * (pesos.qap)
+    else if (macro_sf.includes(macroe)) nota += sf_qap * (pesos.qap)
+    else if (macro_sm.includes(macroe)) nota += sm_qap * (pesos.qap);
 
     return {
       id: membro.id,
@@ -253,6 +267,14 @@ function Dashboard() {
     const sf_exp = membro.masf_exp
     const sm_exp = membro.masm_exp
     const pe_exp = membro.mape_exp
+    const em_nps = membro.maem_nps
+    const sf_nps = membro.masf_nps
+    const sm_nps = membro.masm_nps
+    const pe_nps = membro.mape_nps
+    const em_qap = membro.maem_ef
+    const sf_qap = membro.masf_ef
+    const sm_qap = membro.masm_ef
+    const pe_qap = membro.mape_ef
 
     let pesos = pesosGerentes
 
@@ -262,8 +284,6 @@ function Dashboard() {
     else if (dispon === 1) {nota += 2 * (pesos.availability)}
     else if (dispon === 2) {nota += 1 * (pesos.availability)};
 
-    nota += NPS * (pesos.nps)
-    nota += eficiencia * (pesos.preferencia)
     nota += av_120 * (pesos.av_120)
 
     let pref = 5
@@ -279,6 +299,16 @@ function Dashboard() {
     else if (macro_sf.includes(macroe)) nota += sf_exp * (pesos.experience)
     else if (macro_sm.includes(macroe)) nota += sm_exp * (pesos.experience);
 
+    if (macro_em.includes(macroe)) nota += em_nps * (pesos.nps)
+    else if (macro_pe.includes(macroe)) nota += pe_nps * (pesos.nps)
+    else if (macro_sf.includes(macroe)) nota += sf_nps * (pesos.nps)
+    else if (macro_sm.includes(macroe)) nota += sm_nps * (pesos.nps);
+
+    if (macro_em.includes(macroe)) nota += em_qap * (pesos.qap)
+    else if (macro_pe.includes(macroe)) nota += pe_qap * (pesos.qap)
+    else if (macro_sf.includes(macroe)) nota += sf_qap * (pesos.qap)
+    else if (macro_sm.includes(macroe)) nota += sm_qap * (pesos.qap);
+
     return {
       id: membro.id,
       nome: membro.nome,
@@ -288,7 +318,6 @@ function Dashboard() {
   })
 
    const score_recalc_madrinhas = (scores || []).map(membro =>{
-    const NPS = membro.nps;
     const dispon = membro.disp_madrinha;
 
     let pesos = pesosMadrinhas
@@ -854,7 +883,7 @@ function Dashboard() {
 
 		        <div className="min-h-0 w-full overflow-hidden max-[1200px]:w-full">
 		          <div className="flex flex-1 gap-3 min-w-0 min-h-0 overflow-x-auto pb-2">
-		            <Column
+		            {selectedProject &&  <Column
 		              title="Consultores"
 		              items={consultants}
 		              col_papel={"Consultores"}
@@ -863,9 +892,10 @@ function Dashboard() {
 		                setColunaOrigem("Consultores");
 		              }}
 		              scores={score_recalc_consultores}
-		            />
+		              />
+                }
 
-		            <Column
+		            {selectedProject && <Column
 		              title="Gerentes"
 		              items={managers}
 		              col_papel={"Gerentes"}
@@ -874,9 +904,10 @@ function Dashboard() {
 		                setColunaOrigem("Gerentes");
 		              }}
 		              scores={score_recalc_gerentes}
-		            />
+		              />
+                  }
 
-		            <Column
+		            {selectedProject && <Column
 		              title="Madrinhas"
 		              items={madrinhas}
 		              col_papel={"Madrinhas"}
@@ -886,6 +917,7 @@ function Dashboard() {
 		              }}
 		              scores={score_recalc_madrinhas}
 		            />
+                }
 		          </div>
 		        </div>
 		      </div>

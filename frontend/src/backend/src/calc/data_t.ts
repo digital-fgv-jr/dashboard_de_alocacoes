@@ -38,6 +38,7 @@ type MemMembro = {
 type Alocacao ={
   id: string,
   nome: string[],
+  proj: string[],
   papel: string,
 }
 
@@ -156,10 +157,12 @@ export function useAloc(): Alocacao[] {
   const base = useBase();
   const tabela_aloc = base.getTableByName("Forms - Alocações")
   const dados_aloc = useRecords(tabela_aloc)
+  
 
   const alocacoes_g = (dados_aloc || []).map(record => ({
     id: record.id,
     nome: get_linked_ids(record, "Membro"),
+    proj: get_linked_ids(record, "Projeto"),
     papel: get_field(record, "Papel"),
   }))
 

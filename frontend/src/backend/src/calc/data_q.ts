@@ -44,6 +44,7 @@ type MemMembro = {
 type Alocacao ={
   id: string,
   nome: string[],
+  proj: string[],
   papel: string,
 }
 
@@ -74,7 +75,9 @@ export function useProjetos():Projeto[] {
 export function get_info_proj(membros: MemMembro[], projetos: Projeto[], aloca: Alocacao[]) {
   return membros.map((mem) => {
     var maem_mexp = 0, mape_mexp = 0, masf_mexp = 0, masm_mexp = 0;
-    var m_nps = 0, m_qap = 0;
+    var maem_mnps = 0, mape_mnps = 0, masf_mnps = 0, masm_mnps = 0;
+    var maem_mqap = 0, mape_mqap = 0, masf_mqap = 0, masm_mqap = 0;
+
     var dispon = 0
     var dipon_mad = 0
     const status = mem.status
@@ -88,26 +91,34 @@ export function get_info_proj(membros: MemMembro[], projetos: Projeto[], aloca: 
       if (exp.equipe.some(eq => mem.alocacoes.includes(eq))) {
         const macro = exp.macro;
 
-        const papel = aloca.find(p => p.nome[0] === mem.id)
+        let grupo = aloca.filter(p => mem.id === p.nome[0])
+        let papel = grupo.find(p => exp.id === p.proj[0])
 
         if (macro_em.includes(macro) && papel?.papel !== "Padrinho") maem_mexp += 1;
         else if (macro_pe.includes(macro) && papel?.papel !== "Padrinho") mape_mexp += 1;
         else if (macro_sf.includes(macro) && papel?.papel !== "Padrinho") masf_mexp += 1;
         else if (macro_sm.includes(macro) && papel?.papel !== "Padrinho") masm_mexp += 1;
 
-        if (!finalizado && papel?.papel !== "Padrinho") dispon += 1
-        if (papel?.papel === "Padrinho") dipon_mad += 1
+        if (macro_em.includes(macro) && papel?.papel !== "Padrinho") maem_mnps += exp.NPS;
+        else if (macro_pe.includes(macro) && papel?.papel !== "Padrinho") mape_mnps += exp.NPS;
+        else if (macro_sf.includes(macro) && papel?.papel !== "Padrinho") masf_mnps += exp.NPS;
+        else if (macro_sm.includes(macro) && papel?.papel !== "Padrinho") masm_mnps += exp.NPS;
 
-        if (papel?.papel !== "Padrinho") m_nps += Number(exp.NPS || 0);
-        if (papel?.papel !== "Padrinho") m_qap += Number(exp.QAP || 0);
+        if (macro_em.includes(macro) && papel?.papel !== "Padrinho") maem_mqap += exp.QAP;
+        else if (macro_pe.includes(macro) && papel?.papel !== "Padrinho") mape_mqap += exp.QAP;
+        else if (macro_sf.includes(macro) && papel?.papel !== "Padrinho") masf_mqap += exp.QAP;
+        else if (macro_sm.includes(macro) && papel?.papel !== "Padrinho") masm_mqap += exp.QAP;
+
+        if (!finalizado && papel?.papel !== "Padrinho") dispon += 1
+        if (!finalizado && papel?.papel === "Padrinho") dipon_mad += 1
+
+        console.log(mem.nome)
+        console.log(dispon)
+        console.log(dipon_mad)
+        console.log(papel?.papel)
 
       }
     });
-
-    const total = maem_mexp + mape_mexp + masf_mexp + masm_mexp;
-    console.log(mem.nome)
-    console.log(dispon)
-    console.log(dipon_mad)
 
     return {
       m_id: mem.id,
@@ -116,8 +127,14 @@ export function get_info_proj(membros: MemMembro[], projetos: Projeto[], aloca: 
       mape_exp: mape_mexp,
       masf_exp: masf_mexp,
       masm_exp: masm_mexp,
-      nps: total > 0 ? (m_nps / total) : 0,
-      eficiencia: total > 0 ? (m_qap / total) : 0,
+      maem_nps: maem_mexp > 0 ? maem_mnps/maem_mexp : 0,
+      masf_nps: masf_mexp > 0 ? masf_mnps/masf_mexp : 0,
+      masm_nps: masm_mexp > 0 ? masm_mnps/masm_mexp : 0,
+      mape_nps: mape_mexp > 0 ? mape_mnps/mape_mexp : 0,
+      maem_ef: maem_mexp > 0 ? maem_mqap/maem_mexp : 0,
+      masf_ef: masf_mexp > 0 ? masf_mexp/masf_mexp : 0,
+      mape_ef: mape_mexp > 0 ? mape_mqap/mape_mexp : 0,
+      masm_ef: masm_mexp > 0 ? masm_mqap/masm_mexp : 0,
       disponibilidade: dispon,
       disp_madrinha: dipon_mad,
       status: status,
