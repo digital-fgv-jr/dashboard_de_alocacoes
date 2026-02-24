@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Folder, BarChart3, ArrowUp, ArrowDown, Settings} from "lucide-react";
 
 export default function ProjectsPanel({
   selectedProject,
@@ -38,7 +39,9 @@ export default function ProjectsPanel({
         onClick={() => setOpen((s) => !s)}
       >
         <div className="flex-1 text-center font-bold">
-          <span className="project-icon">📁</span>
+          <span className="flex items-center gap-1">
+            <Folder size={14} classname="shrink-0" />
+          </span>
           {selectedProject || indicador}
         </div>
 
@@ -53,7 +56,15 @@ export default function ProjectsPanel({
             "hover:bg-[rgba(255,255,255,0.2)]",
           ].join(" ")}
         >
-          {open ? "▲" : "▼"}
+          {open ? (
+            <span className="flex items-center gap-1">
+              <ArrowUp size={14} className="shrink-0" />
+            </span>
+          ) : (
+            <span className="flex items-center gap-1">
+              <ArrowDown size={14} className="shrink-0" />
+            </span>
+          )}
         </button>
       </div>
 
@@ -86,11 +97,13 @@ export default function ProjectsPanel({
               setOpen(false);
             }}
           >
-            <span className="dropdown-project-icon">📂</span>
-
             <div className="flex flex-col">
+              {selectedProject || indicador}
               <div className="font-semibold text-[14px] text-[#1f2937]">
-                Todos os projeto
+                <span className="flex items-center gap-1">
+                  <Folder size={14} classname="shrink-0" />
+                </span>
+                Todos os Projetos
               </div>
               <div className="text-[11px] text-[#9ca3af] mt-[0.125rem]">
                 Visualização geral • {projects.length} projetos
@@ -128,7 +141,9 @@ export default function ProjectsPanel({
                   setOpen(false);
                 }}
               >
-                <span className="dropdown-project-icon">📂</span>
+                <span className="flex items-center gap-1">
+                  <Folder size={14} classname="shrink-0" />
+                </span>
 
                 <div className="flex flex-col">
                   <div className="font-semibold text-[14px] text-[#1f2937]">
@@ -193,7 +208,9 @@ export default function ProjectsPanel({
             ].join(" ")}
           >
             <div className="text-[38px] leading-none mb-[6px] opacity-[0.95]">
-              📊
+              <span className="flex items-center gap-1">
+                <BarChart3 size={32} className="shrink-0" />
+              </span>
             </div>
 
             <h3 className="my-[10px] text-[16px] font-bold text-[#93c5fd]">
@@ -201,8 +218,9 @@ export default function ProjectsPanel({
             </h3>
 
             <p className="max-w-[90%] leading-[1.4] text-[14px] text-[#dbeafe] m-0">
-              Selecione um projeto para configurar seus critérios de ranking específicos.
-              Cada projeto pode ter pesos diferentes para NPS, Experiência, QAP e outras métricas.
+              Selecione um projeto para configurar seus critérios de ranking
+              específicos. Cada projeto pode ter pesos diferentes para NPS,
+              Experiência, QAP e outras métricas.
             </p>
 
             <div
@@ -215,7 +233,9 @@ export default function ProjectsPanel({
               ].join(" ")}
             >
               <h4 className="text-[#93c5fd] mb-3 text-[15px]">
-                ⚙️ Como configurar:
+                <span className="flex items-center gap-1">
+                  <Settings size={14} className="shrink-0"/>
+                </span> Como configurar:
               </h4>
 
               <ul className="list-none p-0 m-0">
@@ -223,14 +243,17 @@ export default function ProjectsPanel({
                   <span className="help-dot">•</span>{" "}
                   <span>
                     <strong className="text-[#bfdbfe]">Selecione a área</strong>{" "}
-                    (Consultores, Gerentes ou Madrinhas) para editar seus pesos específicos
+                    (Consultores, Gerentes ou Madrinhas) para editar seus pesos
+                    específicos
                   </span>
                 </li>
 
                 <li className="mb-2 text-[13px] leading-[1.4] text-[#dbeafe]">
                   <span className="help-dot">•</span>{" "}
                   <span>
-                    <strong className="text-[#bfdbfe]">Clique nas porcentagens</strong>{" "}
+                    <strong className="text-[#bfdbfe]">
+                      Clique nas porcentagens
+                    </strong>{" "}
                     para editar valores exatos
                   </span>
                 </li>
@@ -238,7 +261,9 @@ export default function ProjectsPanel({
                 <li className="mb-2 text-[13px] leading-[1.4] text-[#dbeafe]">
                   <span className="help-dot">•</span>{" "}
                   <span>
-                    <strong className="text-[#bfdbfe]">Arraste os sliders</strong>{" "}
+                    <strong className="text-[#bfdbfe]">
+                      Arraste os sliders
+                    </strong>{" "}
                     para ajustar visualmente
                   </span>
                 </li>
@@ -246,7 +271,9 @@ export default function ProjectsPanel({
                 <li className="mb-2 text-[13px] leading-[1.4] text-[#dbeafe]">
                   <span className="help-dot">•</span>{" "}
                   <span className="help-blue">
-                    <strong className="text-[#bfdbfe]">A soma deve ser 100%</strong>{" "}
+                    <strong className="text-[#bfdbfe]">
+                      A soma deve ser 100%
+                    </strong>{" "}
                     para gerar o ranking
                   </span>
                 </li>

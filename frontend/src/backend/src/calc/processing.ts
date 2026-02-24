@@ -20,7 +20,6 @@ export function useScores() {
     const apadrinhar = record.setor === "Gestão de Pessoas";
     const projInfo = proj_dado.find(p => p.m_id === record.id_membro);
     let sobrecarga = false;
-    //if(record.disponibilidade >= 3) {sobrecarga = true}
     let dis_nor = projInfo?.disponibilidade ?? 0
     if(dis_nor >= 3) {sobrecarga = true}
     
