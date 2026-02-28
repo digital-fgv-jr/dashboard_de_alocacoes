@@ -12,11 +12,8 @@ import {
   ClipboardEdit,
   ArrowLeft,
   CheckCircle,
-  AlertCircle,
-  Circle,
-  Folder,
   BarChart3,
-  Users,
+  ThumbsUp,
 } from "lucide-react";
 
 import Column from "./src/ui/column";
@@ -283,6 +280,8 @@ function Dashboard() {
     else if (macro_sf.includes(macroe)) nota += sf_qap * pesos.qap;
     else if (macro_sm.includes(macroe)) nota += sm_qap * pesos.qap;
 
+    if (dispon >= 3) nota = 0
+
     return {
       id: membro.id,
       nome: membro.nome,
@@ -291,14 +290,13 @@ function Dashboard() {
   });
 
   const score_recalc_gerentes = (scores || []).map((membro) => {
-    const NPS = membro.nps;
+    const extra = membro.extra;
     const dispon = membro.disponibilidade;
     const macroe = selectedProjectObj?.macro ?? "";
     const av_120 = membro.nota_120;
     const prefere = Array.isArray(membro.gosta) ? membro.gosta : [];
     const bom = Array.isArray(membro.bom) ? membro.bom : [];
     const ruim = Array.isArray(membro.ruim) ? membro.ruim : [];
-    const eficiencia = membro.eficiencia;
     const em_exp = membro.maem_exp;
     const sf_exp = membro.masf_exp;
     const sm_exp = membro.masm_exp;
@@ -329,8 +327,9 @@ function Dashboard() {
     let pref = 5;
 
     if (prefere.includes(macroe)) pref += 2;
-    if (bom.includes(macroe)) pref += 3;
+    if (bom.includes(macroe)) pref += 2;
     if (ruim.includes(macroe)) pref -= 5;
+    if (extra) pref += 1;
 
     nota += pref * pesos.preferencia;
 
@@ -348,6 +347,8 @@ function Dashboard() {
     else if (macro_pe.includes(macroe)) nota += pe_qap * pesos.qap;
     else if (macro_sf.includes(macroe)) nota += sf_qap * pesos.qap;
     else if (macro_sm.includes(macroe)) nota += sm_qap * pesos.qap;
+
+    if (dispon >= 3) nota = 0
 
     return {
       id: membro.id,
@@ -430,12 +431,12 @@ function Dashboard() {
   };
 
   let consultants = (consultores_rank || [])
-    .filter((p) => p.sobrecarga !== true)
+    //.filter((p) => p.sobrecarga !== true)
     .filter((p) => p.status !== "Ex-membro")
     .sort(byScoreThenName);
 
   let managers = (gerentes_rank || [])
-    .filter((p) => p.sobrecarga !== true)
+    //.filter((p) => p.sobrecarga !== true)
     .filter((p) => p.status !== "Ex-membro")
     .sort(byScoreThenName);
 
@@ -472,34 +473,34 @@ function Dashboard() {
   const getAvailabilityStatus = (alocacoes) => {
     if (alocacoes === 0)
       return {
-        text: "🟢 Livre",
+        text: "Livre",
         color: "#10b981",
         description: "Disponível para novos projetos",
         score: 10,
       };
     if (alocacoes === 1)
       return {
-        text: "🟡 1 projeto",
+        text: "1 projeto",
         color: "#f59e0b",
         description: "Alocado em 1 projeto",
         score: 6.67,
       };
     if (alocacoes === 2)
       return {
-        text: "🟠 2 projetos",
+        text: "2 projetos",
         color: "#f97316",
         description: "Alocado em 2 projetos",
         score: 3.33,
       };
     if (alocacoes >= 3)
       return {
-        text: "🔴 3+ projetos",
+        text: "3+ projetos",
         color: "#ef4444",
         description: "Máximo de alocações atingido",
         score: 0,
       };
     return {
-      text: "🔴 Ocupado",
+      text: "Ocupado",
       color: "#ef4444",
       description: "Com múltiplas alocações",
       score: 0,
@@ -538,36 +539,42 @@ function Dashboard() {
         name: "NPS do Profissional",
         weight: Math.round((pesosAtuais.nps ?? 0) * 100),
         description: "Satisfação média do cliente",
+        cor: "#7B4DE2",
       },
       {
         id: "experience",
         name: "Experiência",
         weight: Math.round((pesosAtuais.experience ?? 0) * 100),
         description: "Experiência na macroetapa",
+        cor: "#64C273",
       },
       {
         id: "preferencia",
         name: "Preferência",
         weight: Math.round((pesosAtuais.preferencia ?? 0) * 100),
         description: "Afinidade com o tipo de projeto",
+        cor: "#F5C247"
       },
       {
         id: "availability",
         name: "Disponibilidade",
         weight: Math.round((pesosAtuais.availability ?? 0) * 100),
         description: "Capacidade de dedicação",
+        cor: "#F4431E"
       },
       {
         id: "av_120",
         name: "Avaliação 120°",
         weight: Math.round((pesosAtuais.av_120 ?? 0) * 100),
         description: "Média final da avaliação 120",
+        cor: "#E641A9",
       },
       {
         id: "qap",
         name: "Eficiência",
         weight: Math.round((pesosAtuais.qap ?? 0) * 100),
         description: "Média dos QAPs",
+        cor: "#4AA3DF",
       },
     ],
     [selectedArea, pesosConsultores, pesosGerentes, pesosMadrinhas]
@@ -617,11 +624,12 @@ function Dashboard() {
       const ruim = Array.isArray(selectedPerson?.ruim)
         ? selectedPerson.ruim
         : [];
-
+      const extra = selectedPerson.extra
       let s = 5;
       if (gosta.includes(macro)) s += 2;
-      if (bom.includes(macro)) s += 3;
+      if (bom.includes(macro)) s += 2;
       if (ruim.includes(macro)) s -= 5;
+      if (extra) s += 1;
 
       return clamp10(s);
     })();
@@ -752,8 +760,7 @@ function Dashboard() {
                     backgroundColor: availabilityStatus.color,
                     boxShadow: `0 0 0 3px ${availabilityStatus.color}20`,
                   }}
-                >
-                </div>
+                ></div>
               </div>
 
               <div className="w-full">
@@ -776,7 +783,16 @@ function Dashboard() {
                   className="text-[16px] font-bold flex items-center gap-2"
                   style={{ color: availabilityStatus.color }}
                 >
-                  {availabilityStatus.text}
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-[14px] border-[3px] border-[var(--card-bg,#ffffff)]"
+                    style={{
+                      backgroundColor: availabilityStatus.color,
+                      boxShadow: `0 0 0 3px ${availabilityStatus.color}20`,
+                    }}
+                  ></div>
+                  <span className="ml-1">
+                    {availabilityStatus.text}
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-between py-2 border-y border-[var(--border,#e5e7eb)]">
@@ -821,7 +837,7 @@ function Dashboard() {
                     </span>
                   ) : overallScore >= 4 ? (
                     <span className="flex items-center gap-1">
-                      <CircleCheck size={14} className="shrink-0" /> Regular
+                      <CheckCircle size={14} className="shrink-0" /> Regular
                     </span>
                   ) : (
                     <span className="flex items-center gap-1">
@@ -844,7 +860,7 @@ function Dashboard() {
 
             <div className="text-white px-[14px] py-[6px] rounded-full font-bold text-[15px] flex items-center gap-[6px] bg-[linear-gradient(135deg,var(--primary,#3b82f6),var(--primary-dark,#1d4ed8))]">
               <span className="flex items-center gap-1">
-                  <Star size={14} className="shrink-0" />
+                <Star size={14} className="shrink-0" />
               </span>
               <span>{overallScore.toFixed(1)}</span>
             </div>
@@ -869,7 +885,11 @@ function Dashboard() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center gap-3 rounded-[10px] p-[30px] border-2 border-dashed w-full bg-[var(--surface,#f8fafc)] border-[var(--border-2,#d1d5db)] h-[340px]">
-              <div className="text-[40px] opacity-40 mb-[10px]">📊</div>
+              <div className="text-[40px] opacity-40 mb-[10px]">
+                <span className="flex items-center gap-1">
+                  <BarChart3 size={14} className="shrink-0" />
+                </span>
+              </div>
               <div className="text-[16px] font-semibold text-center text-[var(--muted-3,#4b5563)]">
                 Sem dados de habilidades
               </div>

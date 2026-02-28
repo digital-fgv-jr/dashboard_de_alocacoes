@@ -94,10 +94,10 @@ export function get_info_proj(membros: MemMembro[], projetos: Projeto[], aloca: 
         let grupo = aloca.filter(p => mem.id === p.nome[0])
         let papel = grupo.find(p => exp.id === p.proj[0])
 
-        if (macro_em.includes(macro) && papel?.papel !== "Padrinho") maem_mexp += 1;
-        else if (macro_pe.includes(macro) && papel?.papel !== "Padrinho") mape_mexp += 1;
-        else if (macro_sf.includes(macro) && papel?.papel !== "Padrinho") masf_mexp += 1;
-        else if (macro_sm.includes(macro) && papel?.papel !== "Padrinho") masm_mexp += 1;
+        if (macro_em.includes(macro) && papel?.papel !== "Padrinho" && finalizado) maem_mexp++ ;
+        else if (macro_pe.includes(macro) && papel?.papel !== "Padrinho" && finalizado) mape_mexp++ ;
+        else if (macro_sf.includes(macro) && papel?.papel !== "Padrinho" && finalizado) masf_mexp++ ;
+        else if (macro_sm.includes(macro) && papel?.papel !== "Padrinho" && finalizado) masm_mexp++ ;
 
         if (macro_em.includes(macro) && papel?.papel !== "Padrinho") maem_mnps += exp.NPS;
         else if (macro_pe.includes(macro) && papel?.papel !== "Padrinho") mape_mnps += exp.NPS;

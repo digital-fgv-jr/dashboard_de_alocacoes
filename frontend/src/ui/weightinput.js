@@ -1,4 +1,55 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
+import { RefreshCcw, BarChart3, User, UserCog, WeightIcon } from "lucide-react";
+//import { backgroundColor, height} from "@airtable/blocks/dist/types/src/ui/system";
+
+function trava_100(valor, minimo, maximo) {
+  return Math.max(minimo, Math.min(maximo, valor));
+}
+
+function handle_mannager(pesos, altura) {
+  let acc = 0;
+  const handles = [];
+
+  for (let i = 0; i < pesos.length - 1; i++) {
+    acc += (pesos[i].weight / 100) * altura;
+    handles.push(acc);
+  }
+  return handles;
+}
+
+function montar_percentual(handles, altura, n) {
+  const pontos = [0, ...handles, altura];
+
+  const tamanho = [];
+
+  for (let i = 0; i < n; i++) {
+    tamanho.push(pontos[i + 1] - pontos[i]);
+  }
+
+  const total = tamanho.reduce((a, b) => a + b, 0) || 1;
+
+  let percentual = tamanho.map((px) => Math.round((px / total) * 100));
+
+  const eh_100 = percentual.reduce((a, b) => a + b, 0);
+  percentual[percentual.length - 1] += 100 - eh_100;
+
+  return percentual;
+}
+
+function nao_sobrepor(handles, idx, altura_mudada, altura, espacamento) {
+  const antigo = idx === 0 ? 0 : handles[idx - 1];
+  const novo = idx === handles.length - 1 ? altura : handles[idx + 1];
+
+  const miny = antigo + espacamento;
+  const maxy = novo - espacamento;
+
+  return trava_100(altura_mudada, miny, maxy);
+}
+
+function getlocaly(e, barra) {
+  const rect = barra.getBoundingClientRect();
+  return e.clientY - rect.top;
+}
 
 export default function ProjectRankingConfig({
   projectId,
@@ -10,12 +61,48 @@ export default function ProjectRankingConfig({
 }) {
   const [criteria, setCriteria] = useState(
     initialCriteria || [
-      { id: "nps", name: "NPS do Consultor", weight: 30, description: "Satisfação média dos clientes anteriores" },
-      { id: "experience", name: "Experiência na Área", weight: 25, description: "Número de projetos completos no setor do projeto" },
-      { id: "preferencia", name: "Preferência", weight: 20, description: "Avaliação técnica específica" },
-      { id: "availability", name: "Disponibilidade", weight: 15, description: "Capacidade de dedicação ao projeto" },
-      { id: "av_120", name: "Avaliação 120°", weight: 5, description: "Média final da avaliação 120 rodada" },
-      { id: "qap", name: "Eficiência", weight: 5, description: "Média dos QAPs dos projetos realizados" },
+      {
+        id: "nps",
+        name: "NPS do Consultor",
+        weight: 30,
+        description: "Satisfação média dos clientes anteriores",
+        cor: "#7B4DE2",
+      },
+      {
+        id: "experience",
+        name: "Experiência na Área",
+        weight: 25,
+        description: "Número de projetos completos no setor do projeto",
+        cor: "#64C273",
+      },
+      {
+        id: "preferencia",
+        name: "Preferência",
+        weight: 20,
+        description: "Avaliação técnica específica",
+        cor: "#F5C247",
+      },
+      {
+        id: "availability",
+        name: "Disponibilidade",
+        weight: 15,
+        description: "Capacidade de dedicação ao projeto",
+        cor: "#F4431E",
+      },
+      {
+        id: "av_120",
+        name: "Avaliação 120°",
+        weight: 5,
+        description: "Média final da avaliação 120 rodada",
+        cor: "#E641A9",
+      },
+      {
+        id: "qap",
+        name: "Eficiência",
+        weight: 5,
+        description: "Média dos QAPs dos projetos realizados",
+        cor: "#4AA3DF",
+      },
     ]
   );
 
@@ -23,22 +110,41 @@ export default function ProjectRankingConfig({
     if (initialCriteria) setCriteria(initialCriteria);
   }, [initialCriteria, area, projectId]);
 
-  const totalWeight = criteria.reduce((sum, criterion) => sum + criterion.weight, 0);
+  const totalWeight = criteria.reduce(
+    (sum, criterion) => sum + criterion.weight,
+    0
+  );
+  const barRef = useRef(null);
+  const draggingIndexRef = useRef(null);
 
-  const map_pesos = useMemo(() => {
-    const total = criteria.reduce((s, c) => s + (Number(c.weight) || 0), 0) || 1;
-    const peso = {};
-    for (const c of criteria) peso[c.id] = (Number(c.weight) || 0) / total;
-    return peso;
-  }, [criteria]);
+  const altura = 360;
+  const minPct = 3;
+  const espacamento = (minPct / 100) * altura;
 
-  const handleWeightChange = (id, newWeight) => {
-    setCriteria((prev) =>
-      prev.map((criterion) =>
-        criterion.id === id ? { ...criterion, weight: newWeight } : criterion
-      )
+  const n = criteria.length;
+
+  const initialHandles = useMemo(() => {
+    const src = initialCriteria ?? criteria;
+    return handle_mannager(src, altura);
+  }, [initialCriteria, altura, criteria]);
+
+  const [handles, setHandles] = useState(initialHandles);
+
+  function emitChange(nova_posicao) {
+    const pct = montar_percentual(nova_posicao, altura, n);
+
+    setCriteria((antes) =>
+      antes.map((c, i) => ({
+        ...c,
+        weight: pct[i],
+      }))
     );
-  };
+  }
+
+  useEffect(() => {
+    setHandles(handle_mannager(initialCriteria ?? criteria, altura));
+    draggingIndexRef.current = null;
+  }, [initialCriteria, area, projectId, altura]);
 
   const handleSave = () => {
     if (!totalWeight) return;
@@ -55,14 +161,82 @@ export default function ProjectRankingConfig({
       setCriteria(initialCriteria);
     } else {
       setCriteria([
-        { id: "nps", name: "NPS do Consultor", weight: 30, description: "Satisfação média dos clientes anteriores" },
-        { id: "experience", name: "Experiência na Área", weight: 25, description: "Anos de experiência no setor do projeto" },
-        { id: "skill_match", name: "Habilidade Técnica", weight: 20, description: "Avaliação técnica específica" },
-        { id: "availability", name: "Disponibilidade", weight: 15, description: "Capacidade de dedicação ao projeto" },
-        { id: "cultural_fit", name: "Fit Cultural", weight: 10, description: "Adequação à cultura do cliente" },
+        {
+          id: "nps",
+          name: "NPS do Consultor",
+          weight: 30,
+          description: "Satisfação média dos clientes anteriores",
+        },
+        {
+          id: "experience",
+          name: "Experiência na Área",
+          weight: 25,
+          description: "Anos de experiência no setor do projeto",
+        },
+        {
+          id: "skill_match",
+          name: "Habilidade Técnica",
+          weight: 20,
+          description: "Avaliação técnica específica",
+        },
+        {
+          id: "availability",
+          name: "Disponibilidade",
+          weight: 15,
+          description: "Capacidade de dedicação ao projeto",
+        },
+        {
+          id: "cultural_fit",
+          name: "Fit Cultural",
+          weight: 10,
+          description: "Adequação à cultura do cliente",
+        },
       ]);
     }
   };
+
+  function onPointerDownHandle(idx, e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    draggingIndexRef.current = idx;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  }
+
+  function onPointerMove(e) {
+    const idx = draggingIndexRef.current;
+    if (idx == null) return;
+
+    const bar = barRef.current;
+    if (!bar) return;
+
+    const ymouse = getlocaly(e, bar);
+    const ysafe = nao_sobrepor(handles, idx, ymouse, altura, espacamento);
+
+    setHandles((anterior) => {
+      const copia = [...anterior];
+      copia[idx] = ysafe;
+
+      emitChange(copia);
+
+      return copia;
+    });
+  }
+
+  function onpointerup() {
+    if (draggingIndexRef.current == null) return;
+    draggingIndexRef.current = null;
+  }
+
+  const segmentacao = useMemo(() => {
+    const pontos = [0, ...handles, altura];
+    const segmentos = [];
+
+    for (let i = 0; i < n; i++) {
+      segmentos.push(pontos[i + 1] - pontos[i]);
+    }
+    return segmentos;
+  }, [handles, altura, n]);
 
   return (
     <div className="project-ranking-config">
@@ -119,30 +293,33 @@ export default function ProjectRankingConfig({
       </div>
 
       <div className="bg-white border border-[var(--border,#e5e7eb)] rounded-b-[10px] shadow-[0_3px_12px_rgba(0,0,0,0.08)] p-[18px]">
-        {/* Title (idêntico ao project-title com “after”) */}
         <div className="relative m-0 mb-4 pb-3 border-b-2 border-b-[var(--border,#e5e7eb)]">
           <h3 className="m-0 text-[20px] font-bold text-[var(--brand-dark,#0f3550)]">
             Critérios de Ranking
           </h3>
-          {/* substitui o :after de forma idêntica */}
           <span className="absolute left-0 -bottom-[2px] w-[50px] h-[2px] bg-gradient-to-r from-[var(--primary,#3b82f6)] to-[var(--accent,#8b5cf6)]" />
         </div>
-
         <p className="m-0 text-[14px] leading-[1.5] text-[var(--muted,#6b7280)]">
-          Ajuste a importância de cada critério para este projeto específico. Os pesos podem ser diferentes para cada área.
+          Ajuste a importância de cada critério para este projeto específico. Os
+          pesos podem ser diferentes para cada área.
         </p>
-
         {/* Área selector */}
-        <div className="rounded-xl p-[14px] border my-[14px] mb-[18px]
-                        bg-[var(--surface,#f8fafc)] border-[var(--surface-border,#e2e8f0)]">
+        <div
+          className="rounded-xl p-[14px] border my-[14px] mb-[18px]
+                        bg-[var(--surface,#f8fafc)] border-[var(--surface-border,#e2e8f0)]"
+        >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-[10px]">
-              <span className="w-[34px] h-[34px] rounded-[10px]
+              <span
+                className="w-[34px] h-[34px] rounded-[10px]
                                inline-flex items-center justify-center
                                text-[16px] text-white
                                bg-gradient-to-br from-[var(--primary,#3b82f6)] to-[var(--primary-dark,#1d4ed8)]
-                               shadow-[0_6px_14px_rgba(59,130,246,0.25)]">
-                🎯
+                               shadow-[0_6px_14px_rgba(59,130,246,0.25)]"
+              >
+                <span className="flex items-center gap-1">
+                  <WeightIcon size={14} className="shrink-0" />
+                </span>
               </span>
               <h4 className="m-0 text-[14px] font-extrabold text-[var(--brand-dark,#0f3550)]">
                 <strong>Editar pesos para:</strong>
@@ -165,10 +342,26 @@ export default function ProjectRankingConfig({
               ].join(" ")}
               onClick={() => onAreaChange?.("consultores")}
             >
-              <span className={["text-[24px] leading-none", area === "consultores" ? "drop-shadow-[0_6px_10px_rgba(0,0,0,0.18)]" : ""].join(" ")}>
-                🧑‍💼
+              <span
+                className={[
+                  "text-[24px] leading-none",
+                  area === "consultores"
+                    ? "drop-shadow-[0_6px_10px_rgba(0,0,0,0.18)]"
+                    : "",
+                ].join(" ")}
+              >
+                <span className="flex items-center gap-1">
+                  <User size={32} className="shrink-0" />
+                </span>
               </span>
-              <span className={["text-[13px] font-bold", area === "consultores" ? "text-white" : "text-[var(--brand-dark,#0f3550)]"].join(" ")}>
+              <span
+                className={[
+                  "text-[13px] font-bold",
+                  area === "consultores"
+                    ? "text-white"
+                    : "text-[var(--brand-dark,#0f3550)]",
+                ].join(" ")}
+              >
                 Consultores
               </span>
             </button>
@@ -187,69 +380,93 @@ export default function ProjectRankingConfig({
               ].join(" ")}
               onClick={() => onAreaChange?.("gerentes")}
             >
-              <span className={["text-[24px] leading-none", area === "gerentes" ? "drop-shadow-[0_6px_10px_rgba(0,0,0,0.18)]" : ""].join(" ")}>
-                👔
+              <span
+                className={[
+                  "text-[24px] leading-none",
+                  area === "gerentes"
+                    ? "drop-shadow-[0_6px_10px_rgba(0,0,0,0.18)]"
+                    : "",
+                ].join(" ")}
+              >
+                <span className="flex items-center gap-1">
+                  <UserCog size={32} className="shrink-0" />
+                </span>
               </span>
-              <span className={["text-[13px] font-bold", area === "gerentes" ? "text-white" : "text-[var(--brand-dark,#0f3550)]"].join(" ")}>
+              <span
+                className={[
+                  "text-[13px] font-bold",
+                  area === "gerentes"
+                    ? "text-white"
+                    : "text-[var(--brand-dark,#0f3550)]",
+                ].join(" ")}
+              >
                 Gerentes
               </span>
             </button>
           </div>
         </div>
-
-        {/* Criteria list */}
-        <div className="criteria-list flex flex-col gap-5">
-          {criteria.map((criterion) => (
+        <div className="flex gap-6 items-start">
+          <div className="relative" style={{ width: 120 }}>
             <div
-              key={criterion.id}
-              className="criterion-item bg-white rounded-xl p-5 border border-[var(--border,#e5e7eb)]
-                         transition-all duration-200 ease-in-out
-                         shadow-[0_1px_3px_rgba(0,0,0,0.05)]
-                         hover:border-[var(--primary-soft-border,#dbeafe)]
-                         hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]
-                         hover:-translate-y-[1px]"
+              ref={barRef}
+              className="relative rounded-[12px] overflow-hidden border border-gray-300 select-none touch-none"
+              style={{ width: 42, height: altura }}
+              onPointerMove={onPointerMove}
+              onPointerUp={onpointerup}
+              onPointerCancel={onpointerup}
+              onPointerLeave={onpointerup}
             >
-              <div className="criterion-header flex items-center justify-between mb-4">
-                <span className="criterion-name text-[16px] font-semibold text-[var(--text-strong,#1f2937)]">
-                  {criterion.name}
-                </span>
-
-                {/* Badge do % (idêntico) */}
-                <div className="weight-display flex items-center justify-center gap-1
-                                px-3 py-2 rounded-[10px] border-2 min-w-[80px]
-                                bg-[var(--info-bg,#f0f9ff)] border-[var(--primary-soft-border,#dbeafe)]">
-                  <span className="weight-value text-[18px] font-bold text-[var(--brand-dark,#0f3550)]">
-                    {criterion.weight}
-                  </span>
-                  <span className="weight-unit text-[14px] font-semibold text-[var(--primary,#3b82f6)]">
-                    %
-                  </span>
-                </div>
-              </div>
-
-              <div className="slider-container mt-5 mb-4">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={criterion.weight}
-                  onChange={(e) => {
-                    const valor = Number(e.target.value);
-                    handleWeightChange(criterion.id, Number.isFinite(valor) ? valor : 0);
-                  }}
-                  className="tw-weight-slider w-full h-2 rounded outline-none"
+              {segmentacao.map((h, i) => (
+                <div
+                  key={criteria[i]?.id ?? i}
                   style={{
-                    background:
-                      "linear-gradient(90deg, var(--primary-soft-border,#dbeafe) 0%, var(--primary,#3b82f6) 50%, var(--primary-soft-border,#dbeafe) 100%)",
+                    height: h,
+                    backgroundColor: criteria[i]?.cor ?? "#FFFFFF",
                   }}
                 />
-              </div>
-
-              <div className="criterion-description text-[13px] leading-[1.4] text-[var(--muted,#6b7280)]">
-                {criterion.description}
-              </div>
+              ))}
             </div>
-          ))}
+
+            {handles.map((y, i) => (
+              <div
+                key={i}
+                className="absolute left-[42px]"
+                style={{ top: y - 16 }}
+              >
+                <div className="flex items-center">
+                  <div className="h-[3px] w-[28px] bg-gray-500" />
+                  <div
+                    className="w-8 h-8 rounded-full border-[3px] border-gray-500 bg-white cursor-grab active:cursor-grabbing select-none"
+                    onPointerDown={(e) => onPointerDownHandle(i, e)}
+                    title="Arraste para ajustar"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-6 w-full" style={{ paddingTop: 6 }}>
+            {criteria.map((criterion, i) => (
+              <div
+                key={criterion.id}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-5 h-5 rounded-full"
+                    style={{ backgroundColor: criterion.cor ?? "#FFFFFF" }}
+                  />
+                  <span className="text-[16px] text-gray-700">
+                    {criterion.name}
+                  </span>
+                </div>
+
+                <div className="px-3 py-1 rounded-md border-2 border-gray-400 text-[14px] font-semibold min-w-[64px] text-center">
+                  {criterion.weight}%
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Buttons */}
@@ -260,12 +477,16 @@ export default function ProjectRankingConfig({
                        px-6 py-[14px] rounded-[10px] text-[14px] font-semibold
                        cursor-pointer outline-none border-0 transition-all duration-300 ease-in-out
                        bg-white text-[var(--muted-3,#4b5563)]
-                       border-2 border-[var(--border,#e5e7eb)]
+                       border-[var(--border,#e5e7eb)]
                        hover:bg-[#f9fafb] hover:border-[var(--border-2,#d1d5db)]
                        hover:-translate-y-[2px] hover:shadow-[0_4px_6px_rgba(0,0,0,0.05)]"
             onClick={handleReset}
           >
-            <span className="btn-icon text-[16px]">↺</span>
+            <span className="btn-icon text-[16px]">
+              <span className="flex items-center gap-1">
+                <RefreshCcw size={18} className="shrink-0" />
+              </span>
+            </span>
             Restaurar Padrões
           </button>
 
@@ -281,7 +502,11 @@ export default function ProjectRankingConfig({
                        hover:-translate-y-[2px] hover:shadow-[0_6px_12px_rgba(59,130,246,0.3)]"
             onClick={handleSave}
           >
-            <span className="btn-icon text-[16px]">📊</span>
+            <span className="btn-icon text-[16px]">
+              <span className="flex items-center gap-1">
+                <BarChart3 size={18} className="shrink-0" />
+              </span>
+            </span>
             Atualizar Ranking
           </button>
         </div>

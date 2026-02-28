@@ -67,17 +67,17 @@ export default function Column({
             badgeClass = "badge-free";
             if (m_alocacoes === 0) badgeClass = "badge-free";
             else if (m_alocacoes === 1) badgeClass = "badge-semifree";
-            else if (m_alocacoes === 2) badgeClass = "badge-busy";
+            else if (m_alocacoes >= 2) badgeClass = "badge-busy";
           } else if (col_papel === "Gerentes") {
             badgeClass = "badge-free";
             if (alocacoes === 0) badgeClass = "badge-free";
             else if (alocacoes === 1) badgeClass = "badge-semifree";
-            else if (alocacoes === 2) badgeClass = "badge-busy";
+            else if (alocacoes >= 2) badgeClass = "badge-busy";
           } else if (col_papel === "Consultores") {
             badgeClass = "badge-free";
             if (alocacoes === 0) badgeClass = "badge-free";
             else if (alocacoes === 1) badgeClass = "badge-semifree";
-            else if (alocacoes === 2) badgeClass = "badge-busy";
+            else if (alocacoes >= 2) badgeClass = "badge-busy";
           } else {
             badgeText = "Livre";
             badgeClass = "badge-free";
