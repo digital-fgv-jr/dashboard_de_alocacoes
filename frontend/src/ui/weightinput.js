@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { RefreshCcw, BarChart3, User, UserCog, WeightIcon } from "lucide-react";
+import { useActionState } from "react";
 //import { backgroundColor, height} from "@airtable/blocks/dist/types/src/ui/system";
 
 function trava_100(valor, minimo, maximo) {
@@ -59,52 +60,54 @@ export default function ProjectRankingConfig({
   area,
   onAreaChange,
 }) {
-  const [criteria, setCriteria] = useState(
-    initialCriteria || [
-      {
-        id: "nps",
-        name: "NPS do Consultor",
-        weight: 30,
-        description: "Satisfação média dos clientes anteriores",
-        cor: "#7B4DE2",
-      },
-      {
-        id: "experience",
-        name: "Experiência na Área",
-        weight: 25,
-        description: "Número de projetos completos no setor do projeto",
-        cor: "#64C273",
-      },
-      {
-        id: "preferencia",
-        name: "Preferência",
-        weight: 20,
-        description: "Avaliação técnica específica",
-        cor: "#F5C247",
-      },
-      {
-        id: "availability",
-        name: "Disponibilidade",
-        weight: 15,
-        description: "Capacidade de dedicação ao projeto",
-        cor: "#F4431E",
-      },
-      {
-        id: "av_120",
-        name: "Avaliação 120°",
-        weight: 5,
-        description: "Média final da avaliação 120 rodada",
-        cor: "#E641A9",
-      },
-      {
-        id: "qap",
-        name: "Eficiência",
-        weight: 5,
-        description: "Média dos QAPs dos projetos realizados",
-        cor: "#4AA3DF",
-      },
-    ]
+  var [criteria, setCriteria] = useState(
+    initialCriteria || console.warn("Critérios errados")
   );
+
+  const crit_inicial = [
+    {
+      id: "nps",
+      name: "NPS do Profissional",
+      weight: 17,
+      description: "Satisfação média do cliente",
+      cor: "#7B4DE2",
+    },
+    {
+      id: "experience",
+      name: "Experiência",
+      weight: 17,
+      description: "Experiência na macroetapa",
+      cor: "#64C273",
+    },
+    {
+      id: "preferencia",
+      name: "Preferência",
+      weight: 17,
+      description: "Afinidade com o tipo de projeto",
+      cor: "#F5C247",
+    },
+    {
+      id: "availability",
+      name: "Disponibilidade",
+      weight: 17,
+      description: "Capacidade de dedicação",
+      cor: "#F4431E",
+    },
+    {
+      id: "av_120",
+      name: "Avaliação 120°",
+      weight: 16,
+      description: "Média final da avaliação 120",
+      cor: "#E641A9",
+    },
+    {
+      id: "qap",
+      name: "Eficiência",
+      weight: 16,
+      description: "Média dos QAPs",
+      cor: "#4AA3DF",
+    },
+  ];
 
   useEffect(() => {
     if (initialCriteria) setCriteria(initialCriteria);
@@ -124,9 +127,9 @@ export default function ProjectRankingConfig({
   const n = criteria.length;
 
   const initialHandles = useMemo(() => {
-    const src = initialCriteria ?? criteria;
+    const src = crit_inicial;
     return handle_mannager(src, altura);
-  }, [initialCriteria, altura, criteria]);
+  }, [altura, crit_inicial]);
 
   const [handles, setHandles] = useState(initialHandles);
 
@@ -157,42 +160,8 @@ export default function ProjectRankingConfig({
   };
 
   const handleReset = () => {
-    if (initialCriteria) {
-      setCriteria(initialCriteria);
-    } else {
-      setCriteria([
-        {
-          id: "nps",
-          name: "NPS do Consultor",
-          weight: 30,
-          description: "Satisfação média dos clientes anteriores",
-        },
-        {
-          id: "experience",
-          name: "Experiência na Área",
-          weight: 25,
-          description: "Anos de experiência no setor do projeto",
-        },
-        {
-          id: "skill_match",
-          name: "Habilidade Técnica",
-          weight: 20,
-          description: "Avaliação técnica específica",
-        },
-        {
-          id: "availability",
-          name: "Disponibilidade",
-          weight: 15,
-          description: "Capacidade de dedicação ao projeto",
-        },
-        {
-          id: "cultural_fit",
-          name: "Fit Cultural",
-          weight: 10,
-          description: "Adequação à cultura do cliente",
-        },
-      ]);
-    }
+    setCriteria(crit_inicial);
+    setHandles(initialHandles);
   };
 
   function onPointerDownHandle(idx, e) {
@@ -409,40 +378,45 @@ export default function ProjectRankingConfig({
           <div className="relative" style={{ width: 120 }}>
             <div
               ref={barRef}
-              className="relative rounded-[12px] overflow-hidden border border-gray-300 select-none touch-none"
-              style={{ width: 42, height: altura }}
+              className="relative select-none touch-none"
+              style={{ width: 120, height: altura }}
               onPointerMove={onPointerMove}
               onPointerUp={onpointerup}
               onPointerCancel={onpointerup}
               onPointerLeave={onpointerup}
             >
-              {segmentacao.map((h, i) => (
+              <div
+                className="absolute left-0 top-0 rounded-[12px] overflow-hidden border border-gray-300"
+                style={{ width: 42, height: altura }}
+              >
+                {segmentacao.map((h, i) => (
+                  <div
+                    key={criteria[i]?.id ?? i}
+                    style={{
+                      height: h,
+                      backgroundColor: criteria[i]?.cor ?? "#FFFFFF",
+                    }}
+                  />
+                ))}
+              </div>
+
+              {handles.map((y, i) => (
                 <div
-                  key={criteria[i]?.id ?? i}
-                  style={{
-                    height: h,
-                    backgroundColor: criteria[i]?.cor ?? "#FFFFFF",
-                  }}
-                />
+                  key={i}
+                  className="absolute left-[42px]"
+                  style={{ top: y - 16 }}
+                >
+                  <div className="flex items-center">
+                    <div className="h-[3px] w-[28px] bg-gray-500" />
+                    <div
+                      className="w-8 h-8 rounded-full border-[3px] border-gray-500 bg-white cursor-grab active:cursor-grabbing select-none"
+                      onPointerDown={(e) => onPointerDownHandle(i, e)}
+                      title="Arraste para ajustar"
+                    />
+                  </div>
+                </div>
               ))}
             </div>
-
-            {handles.map((y, i) => (
-              <div
-                key={i}
-                className="absolute left-[42px]"
-                style={{ top: y - 16 }}
-              >
-                <div className="flex items-center">
-                  <div className="h-[3px] w-[28px] bg-gray-500" />
-                  <div
-                    className="w-8 h-8 rounded-full border-[3px] border-gray-500 bg-white cursor-grab active:cursor-grabbing select-none"
-                    onPointerDown={(e) => onPointerDownHandle(i, e)}
-                    title="Arraste para ajustar"
-                  />
-                </div>
-              </div>
-            ))}
           </div>
 
           <div className="flex flex-col gap-6 w-full" style={{ paddingTop: 6 }}>

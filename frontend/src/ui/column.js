@@ -35,8 +35,9 @@ export default function Column({
           "p-[14px]",
           "flex-1 min-h-0 overflow-y-auto",
           "flex flex-col gap-2",
-          "min-h-[300px]",
-          "max-h-[calc(100vh-160px)]",
+          //"min-h-[300px]",
+          "h-full",
+          //"max-h-[calc(100vh-160px)]",
         ].join(" ")}
       >
         {items.length === 0 && (

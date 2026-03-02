@@ -112,11 +112,6 @@ export function get_info_proj(membros: MemMembro[], projetos: Projeto[], aloca: 
         if (!finalizado && papel?.papel !== "Padrinho") dispon += 1
         if (!finalizado && papel?.papel === "Padrinho") dipon_mad += 1
 
-        console.log(mem.nome)
-        console.log(dispon)
-        console.log(dipon_mad)
-        console.log(papel?.papel)
-
       }
     });
 

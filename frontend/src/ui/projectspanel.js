@@ -40,7 +40,7 @@ export default function ProjectsPanel({
       >
         <div className="flex-1 text-center font-bold">
           <span className="flex items-center gap-1">
-            <Folder size={14} classname="shrink-0" />
+            <Folder size={14} className="shrink-0" />
           </span>
           {selectedProject || indicador}
         </div>
@@ -101,7 +101,7 @@ export default function ProjectsPanel({
               {selectedProject || indicador}
               <div className="font-semibold text-[14px] text-[#1f2937]">
                 <span className="flex items-center gap-1">
-                  <Folder size={14} classname="shrink-0" />
+                  <Folder size={14} className="shrink-0" />
                 </span>
                 Todos os Projetos
               </div>
@@ -142,7 +142,7 @@ export default function ProjectsPanel({
                 }}
               >
                 <span className="flex items-center gap-1">
-                  <Folder size={14} classname="shrink-0" />
+                  <Folder size={14} className="shrink-0" />
                 </span>
 
                 <div className="flex flex-col">

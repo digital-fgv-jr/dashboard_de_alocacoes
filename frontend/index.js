@@ -1008,7 +1008,7 @@ function Dashboard() {
   };
 
   return (
-    <div className="grid grid-cols-1 grid-rows-[auto_1fr] gap-4 max-w-[1400px] mx-auto h-screen p-4 overflow-hidden box-border max-[1200px]:p-3 max-[1200px]:h-auto max-[1200px]:min-h-screen max-[768px]:p-[10px] max-[768px]:gap-3">
+    <div className="grid grid-cols-1 grid-rows-[auto_1fr] gap-4 max-w-[1400px] mx-auto h-screen p-4 overflow-hidden box-border max-[1200px]:p-3 max-[1200px]:h-auto max-[1200px]:min-h-screen max-[900px]:p-[10px] max-[900px]:gap-3">
       {/* HEADER APENAS NA PRIMEIRA SESSÃO */}
       {!selectedPerson && (
         <header className="col-span-full flex items-center justify-center px-4 py-3 bg-white border-b border-b-[rgba(0,0,0,0.05)] h-[60px] rounded-[10px] shadow-[0_2px_6px_rgba(0,0,0,0.04)] max-[768px]:p-[10px] max-[768px]:h-[52px]">
@@ -1019,11 +1019,10 @@ function Dashboard() {
       )}
 
       <div className="col-span-full flex flex-col gap-4 overflow-y-auto pr-1 h-[calc(100vh-92px)] max-[1200px]:h-auto max-[1200px]:flex-col">
-        {/* SESSÃO 1: (some quando seleciona alguém) */}
         {!selectedPerson &&
           (selectedProject ? (
             <div className="grid gap-5 min-h-0 items-stretch grid-cols-[380px_1fr] h-[calc(100vh-140px)] max-[1200px]:flex max-[1200px]:flex-col max-[1200px]:h-auto">
-              <div className="grid gap-3 h-full min-h-0 grid-rows-[auto_1fr] max-[1200px]:w-full max-[1200px]:flex-[0_0_auto] max-[1200px]:min-h-[320px]">
+              <div className="grid gap-3 h-full min-h-0 grid-rows-[auto_1fr] max-[1200px]:w-full max-[1200px]:flex-[0_0_auto] max-[1500px]:min-h-[320px]">
                 <ProjectsPanel
                   projects={nomes_projetos}
                   selectedProject={selectedProject}
@@ -1043,8 +1042,8 @@ function Dashboard() {
                 )}
               </div>
 
-              <div className="min-h-0 w-full overflow-hidden max-[1200px]:w-full">
-                <div className="flex flex-1 gap-3 min-w-0 min-h-0 overflow-x-auto pb-2">
+              <div className="min-h-0 w-full overflow-hidden h-full max-[1200px]:w-full">
+                <div className="flex gap-3 min-w-0 min-h-0 h-full overflow-x-auto pb-2">
                   {selectedProject && (
                     <Column
                       title="Consultores"
