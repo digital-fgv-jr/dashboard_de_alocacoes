@@ -26,6 +26,10 @@ import { useMemo } from "react";
 import { useTailwindReady } from "../tailwind-cdn";
 
 function Dashboard() {
+  const [selectedProject, setSelectedProject] = React.useState(null);
+  const [selectedPerson, setSelectedPerson] = React.useState(null);
+  const [colunaOrigem, setColunaOrigem] = React.useState(null);
+  const [selectedArea, setSelectedArea] = React.useState("consultores");
   const base = useBase();
   const table = base.getTableByName
     ? base.getTableByName("Dados - Alocação")
@@ -34,7 +38,7 @@ function Dashboard() {
     ? base.getTableByName("Zapier - Pipefy - Projetos")
     : null;
   const records = useRecords(table) || [];
-  const scores = useScores();
+  const scores = useScores(selectedProject);
   const base_projetos = tabela_proj ? useRecords(tabela_proj) : [];
   const macro_pe = [
     "Avaliação Estratégica",
@@ -198,12 +202,6 @@ function Dashboard() {
     });
   }, [records, radarFields, nota_membro]);
 
-  const [selectedProject, setSelectedProject] = React.useState(null);
-  const [selectedPerson, setSelectedPerson] = React.useState(null);
-  const [colunaOrigem, setColunaOrigem] = React.useState(null);
-  const [selectedProjects, setSelectedProjects] = React.useState({});
-  const [selectedArea, setSelectedArea] = React.useState("consultores");
-
   const handleWeightsChange = (area, obj) => {
     if (area === "consultores") setPesosConsultores(obj);
     else if (area === "gerentes") setPesosGerentes(obj);
@@ -280,7 +278,7 @@ function Dashboard() {
     else if (macro_sf.includes(macroe)) nota += sf_qap * pesos.qap;
     else if (macro_sm.includes(macroe)) nota += sm_qap * pesos.qap;
 
-    if (dispon >= 3) nota = 0
+    if (dispon >= 3) nota = 0;
 
     return {
       id: membro.id,
@@ -348,7 +346,7 @@ function Dashboard() {
     else if (macro_sf.includes(macroe)) nota += sf_qap * pesos.qap;
     else if (macro_sm.includes(macroe)) nota += sm_qap * pesos.qap;
 
-    if (dispon >= 3) nota = 0
+    if (dispon >= 3) nota = 0;
 
     return {
       id: membro.id,
@@ -360,22 +358,10 @@ function Dashboard() {
   const score_recalc_madrinhas = (scores || []).map((membro) => {
     const dispon = membro.disp_madrinha;
 
-    let pesos = pesosMadrinhas;
-
-    let nota = 0;
-
-    if (dispon === 0) {
-      nota += 10 * pesos.availability;
-    } else if (dispon === 1) {
-      nota += 6.66 * pesos.availability;
-    } else if (dispon === 2) {
-      nota += 3.33 * pesos.availability;
-    }
-
     return {
       id: membro.id,
       nome: membro.nome,
-      score: nota,
+      score: dispon,
     };
   });
 
@@ -443,7 +429,8 @@ function Dashboard() {
   let madrinhas = (madrinhas_rank || [])
     .filter((p) => p.padrinho === true)
     .filter((p) => p.status !== "Ex-membro")
-    .sort(byScoreThenName);
+    .sort(byScoreThenName)
+    .reverse();
 
   if (!people?.length) {
     console.warn("Nenhuma pessoa carregada do Airtable");
@@ -452,12 +439,10 @@ function Dashboard() {
   const handleSelectPerson = (p) => {
     if (!p) return;
     setSelectedPerson(p);
-    setSelectedProjects({});
   };
 
   const handleGoBack = () => {
     setSelectedPerson(null);
-    setSelectedProjects({});
   };
 
   // Função para calcular a disponibilidade baseado nas alocações
@@ -507,24 +492,6 @@ function Dashboard() {
     };
   };
 
-  // Função para alternar a seleção de um projeto
-  const toggleProjectSelection = (projectId) => {
-    setSelectedProjects((prev) => ({
-      ...prev,
-      [projectId]: !prev[projectId],
-    }));
-  };
-
-  const projectSuggestions = React.useMemo(() => {
-    return (lista_projetos || [])
-      .filter((p) => (p.equipe ?? 0) === 0)
-      .map((p) => ({
-        id: p.id,
-        name: p.nome,
-        macro: p.macro,
-      }));
-  }, [lista_projetos]);
-
   const pesosAtuais =
     selectedArea === "consultores"
       ? pesosConsultores
@@ -553,14 +520,14 @@ function Dashboard() {
         name: "Preferência",
         weight: Math.round((pesosAtuais.preferencia ?? 0) * 100),
         description: "Afinidade com o tipo de projeto",
-        cor: "#F5C247"
+        cor: "#F5C247",
       },
       {
         id: "availability",
         name: "Disponibilidade",
         weight: Math.round((pesosAtuais.availability ?? 0) * 100),
         description: "Capacidade de dedicação",
-        cor: "#F4431E"
+        cor: "#F4431E",
       },
       {
         id: "av_120",
@@ -624,7 +591,7 @@ function Dashboard() {
       const ruim = Array.isArray(selectedPerson?.ruim)
         ? selectedPerson.ruim
         : [];
-      const extra = selectedPerson.extra
+      const extra = selectedPerson.extra;
       let s = 5;
       if (gosta.includes(macro)) s += 2;
       if (bom.includes(macro)) s += 2;
@@ -710,8 +677,6 @@ function Dashboard() {
       : 0;
 
     // Obter status de disponibilidade
-    const currentProjects = selectedPerson.projectsLinked || [];
-
     return (
       <div className="w-full">
         {/* Novo cabeçalho para a segunda sessão - SEM O HEADER ORIGINAL */}
@@ -737,7 +702,7 @@ function Dashboard() {
         </div>
 
         {/* Grid Principal com 3 colunas */}
-        <div className="col-span-full grid gap-5 grid-cols-[320px_1fr_380px] h-[calc(100vh-240px)] min-h-[600px] max-[1200px]:grid-cols-1 max-[1200px]:h-auto max-[1200px]:gap-4">
+        <div className="col-span-full grid gap-5 grid-cols-[320px_1fr_380px] h-[calc(100vh-240px)] min-h-[600px] max-[1200px]:grid-cols-3 max-[1200px]:h-auto max-[1200px]:gap-4">
           {/* Coluna 1: Perfil */}
           <div className="bg-white rounded-xl p-6 border border-[var(--border,#e5e7eb)] flex flex-col gap-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
             <div className="flex flex-col items-center text-center gap-4 pb-5 border-b border-[var(--border,#e5e7eb)]">
@@ -790,9 +755,7 @@ function Dashboard() {
                       boxShadow: `0 0 0 3px ${availabilityStatus.color}20`,
                     }}
                   ></div>
-                  <span className="ml-1">
-                    {availabilityStatus.text}
-                  </span>
+                  <span className="ml-1">{availabilityStatus.text}</span>
                 </div>
 
                 <div className="flex items-center justify-between py-2 border-y border-[var(--border,#e5e7eb)]">
@@ -820,7 +783,17 @@ function Dashboard() {
 
               <div className="flex flex-col gap-2">
                 <div className="text-[32px] font-extrabold leading-none text-[var(--brand-dark,#0f3550)]">
-                  {overallScore.toFixed(1)}
+                  {selectedArea === "consultores"
+                    ? score_recalc_consultores.find(
+                        (p) => p.nome === selectedPerson.name
+                      )?.score ?? "-"
+                    : selectedArea === "gerentes"
+                    ? score_recalc_gerentes.find(
+                        (p) => p.nome === selectedPerson.name
+                      )?.score ?? "-"
+                    : score_recalc_madrinhas.find(
+                        (p) => p.nome === selectedPerson.name
+                      )?.score ?? "-"}
                   <span className="text-[18px] font-semibold ml-1 text-[var(--muted,#6b7280)]">
                     /10
                   </span>
@@ -849,158 +822,147 @@ function Dashboard() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Coluna 2: Radar + Sugestões de Alocação */}
-        <div className="bg-white rounded-xl p-6 border border-[var(--border,#e5e7eb)] flex flex-col gap-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between pb-4 border-b border-[var(--border,#e5e7eb)]">
-            <h3 className="text-[18px] font-bold m-0 text-[var(--brand-dark,#0f3550)]">
-              Perfil de Habilidades
-            </h3>
+          {/* Coluna 2: Radar + Sugestões de Alocação */}
+          <div className="bg-white rounded-xl p-6 border border-[var(--border,#e5e7eb)] flex flex-col gap-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center justify-between pb-4 border-b border-[var(--border,#e5e7eb)]">
+              <h3 className="text-[18px] font-bold m-0 text-[var(--brand-dark,#0f3550)]">
+                Perfil de Habilidades
+              </h3>
 
-            <div className="text-white px-[14px] py-[6px] rounded-full font-bold text-[15px] flex items-center gap-[6px] bg-[linear-gradient(135deg,var(--primary,#3b82f6),var(--primary-dark,#1d4ed8))]">
-              <span className="flex items-center gap-1">
-                <Star size={14} className="shrink-0" />
-              </span>
-              <span>{overallScore.toFixed(1)}</span>
-            </div>
-          </div>
-
-          {radarValues.length > 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-[10px] border border-[var(--surface-border,#e2e8f0)] p-[10px] bg-[var(--surface,#f8fafc)] h-[340px] mb-[10px]">
-              <div className="w-full flex items-center justify-center h-[300px]">
-                <RadarNotes values={radarValues} labels={radarLabels} />
-              </div>
-
-              <div className="flex justify-center gap-5 mt-[15px] pt-[15px] border-t border-[var(--border,#e5e7eb)] w-full">
-                <div className="flex items-center gap-2 text-[12px] text-[var(--muted,#6b7280)]">
-                  <div className="w-[10px] h-[10px] rounded-full bg-[#3b82f6]" />
-                  <span>Avaliação do Membro</span>
-                </div>
-                <div className="flex items-center gap-2 text-[12px] text-[var(--muted,#6b7280)]">
-                  <div className="w-[10px] h-[10px] rounded-full bg-[#e2e8f0]" />
-                  <span>Escala de Referência</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-[10px] p-[30px] border-2 border-dashed w-full bg-[var(--surface,#f8fafc)] border-[var(--border-2,#d1d5db)] h-[340px]">
-              <div className="text-[40px] opacity-40 mb-[10px]">
+              <div className="text-white px-[14px] py-[6px] rounded-full font-bold text-[15px] flex items-center gap-[6px] bg-[linear-gradient(135deg,var(--primary,#3b82f6),var(--primary-dark,#1d4ed8))]">
                 <span className="flex items-center gap-1">
-                  <BarChart3 size={14} className="shrink-0" />
+                  <Star size={14} className="shrink-0" />
                 </span>
+                <span>{overallScore.toFixed(1)}</span>
               </div>
-              <div className="text-[16px] font-semibold text-center text-[var(--muted-3,#4b5563)]">
-                Sem dados de habilidades
-              </div>
-              <p className="text-[14px] text-center m-0 leading-[1.4] max-w-[80%] text-[var(--muted-2,#9ca3af)]">
-                Adicione métricas de avaliação para visualizar o perfil gráfico.
-              </p>
             </div>
-          )}
-        </div>
 
-        {/* Coluna 3: Métricas Detalhadas */}
-        <div className="bg-white rounded-xl p-6 border border-[var(--border,#e5e7eb)] flex flex-col gap-6 overflow-y-auto shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between pb-4 border-b border-[var(--border,#e5e7eb)]">
-            <h3 className="text-[18px] font-bold m-0 text-[var(--brand-dark,#0f3550)]">
-              Métricas Detalhadas
-            </h3>
+            {radarValues.length > 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-[10px] border border-[var(--surface-border,#e2e8f0)] p-[10px] bg-[var(--surface,#f8fafc)] h-[340px] mb-[10px]">
+                <div className="w-full flex items-center justify-center h-[300px]">
+                  <RadarNotes values={radarValues} labels={radarLabels} />
+                </div>
 
-            <div className="px-3 py-1 rounded-xl text-[13px] font-semibold bg-[var(--chip-bg,#f3f4f6)] text-[var(--muted,#6b7280)]">
-              {criteriaList.length} critérios
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-5">
-            {criteriaList.map((metric, index) => {
-              const v = parseFloat(metric.value);
-
-              const statusClass =
-                v >= 8
-                  ? "bg-[#d1fae5] text-[#065f46]"
-                  : v >= 6
-                  ? "bg-[#fef3c7] text-[#92400e]"
-                  : v >= 4
-                  ? "bg-[#dbeafe] text-[#1e40af]"
-                  : "bg-[#fee2e2] text-[#991b1b]";
-
-              const statusText =
-                v >= 8
-                  ? "Excelente"
-                  : v >= 6
-                  ? "Bom"
-                  : v >= 4
-                  ? "Regular"
-                  : "A Melhorar";
-
-              return (
-                <div
-                  key={index}
-                  className="rounded-[10px] p-[18px] border border-[var(--surface-border,#e2e8f0)] bg-[var(--surface,#f8fafc)]"
-                >
-                  <div className="flex items-center justify-between mb-[10px]">
-                    <div className="flex items-center gap-[10px]">
-                      <span className="text-[12px] font-bold w-6 h-6 rounded-[6px] flex items-center justify-center border border-[var(--primary-soft-border,#dbeafe)] text-[var(--primary,#3b82f6)] bg-[var(--card-bg,#ffffff)]">
-                        0{index + 1}
-                      </span>
-                      <span className="text-[15px] font-semibold text-[var(--text-strong,#1f2937)]">
-                        {metric.name}
-                      </span>
-                    </div>
-
-                    <div className="flex items-baseline gap-[2px]">
-                      <span className="text-[20px] font-bold text-[var(--brand-dark,#0f3550)]">
-                        {metric.value}
-                      </span>
-                      <span className="text-[14px] text-[var(--muted-2,#9ca3af)]">
-                        /10
-                      </span>
-                    </div>
+                <div className="flex justify-center gap-5 mt-[15px] pt-[15px] border-t border-[var(--border,#e5e7eb)] w-full">
+                  <div className="flex items-center gap-2 text-[12px] text-[var(--muted,#6b7280)]">
+                    <div className="w-[10px] h-[10px] rounded-full bg-[#3b82f6]" />
+                    <span>Avaliação do Membro</span>
                   </div>
-
-                  <div className="text-[13px] mb-3 leading-[1.4] text-[var(--muted,#6b7280)]">
-                    {metric.description}
-                  </div>
-
-                  <div className="mt-3">
-                    <div className="h-2 rounded overflow-hidden mb-2 bg-[var(--border,#e5e7eb)]">
-                      <div
-                        className="h-full rounded transition-[width] duration-[700ms] ease-out"
-                        style={{
-                          width: `${metric.percentage}%`,
-                          background: metric.color,
-                        }}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] font-semibold text-[var(--muted,#6b7280)]">
-                        {metric.percentage}%
-                      </span>
-
-                      <span
-                        className={`text-[11px] font-bold px-[10px] py-1 rounded-xl uppercase ${statusClass}`}
-                      >
-                        {statusText}
-                      </span>
-                    </div>
+                  <div className="flex items-center gap-2 text-[12px] text-[var(--muted,#6b7280)]">
+                    <div className="w-[10px] h-[10px] rounded-full bg-[#e2e8f0]" />
+                    <span>Escala de Referência</span>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-[10px] p-[30px] border-2 border-dashed w-full bg-[var(--surface,#f8fafc)] border-[var(--border-2,#d1d5db)] h-[340px]">
+                <div className="text-[40px] opacity-40 mb-[10px]">
+                  <span className="flex items-center gap-1">
+                    <BarChart3 size={14} className="shrink-0" />
+                  </span>
+                </div>
+                <div className="text-[16px] font-semibold text-center text-[var(--muted-3,#4b5563)]">
+                  Sem dados de habilidades
+                </div>
+                <p className="text-[14px] text-center m-0 leading-[1.4] max-w-[80%] text-[var(--muted-2,#9ca3af)]">
+                  Adicione métricas de avaliação para visualizar o perfil
+                  gráfico.
+                </p>
+              </div>
+            )}
           </div>
 
-          {/* Nota Explicativa */}
-          <div className="rounded-lg p-[14px] text-[12px] leading-[1.4] mt-[10px] bg-[var(--note-bg,#f0f9ff)] text-[var(--muted-3,#4b5563)] border-l-4 border-l-[var(--primary,#3b82f6)]">
-            <p className="m-0">
-              <strong className="text-[var(--text-strong,#1f2937)]">
-                Disponibilidade:
-              </strong>{" "}
-              Calculada baseada no número de projetos atuais.
-              <br />0 projetos = 10/10 • 1 projeto = 6.7/10 • 2 projetos =
-              3.3/10 • 3+ projetos = 0/10
-            </p>
+          {/* Coluna 3: Métricas Detalhadas */}
+          <div className="bg-white rounded-xl p-6 border border-[var(--border,#e5e7eb)] flex flex-col gap-6 overflow-y-auto shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center justify-between pb-4 border-b border-[var(--border,#e5e7eb)]">
+              <h3 className="text-[18px] font-bold m-0 text-[var(--brand-dark,#0f3550)]">
+                Métricas Detalhadas
+              </h3>
+
+              <div className="px-3 py-1 rounded-xl text-[13px] font-semibold bg-[var(--chip-bg,#f3f4f6)] text-[var(--muted,#6b7280)]">
+                {criteriaList.length} critérios
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-5">
+              {criteriaList.map((metric, index) => {
+                const v = parseFloat(metric.value);
+
+                const statusClass =
+                  v >= 8
+                    ? "bg-[#d1fae5] text-[#065f46]"
+                    : v >= 6
+                    ? "bg-[#fef3c7] text-[#92400e]"
+                    : v >= 4
+                    ? "bg-[#dbeafe] text-[#1e40af]"
+                    : "bg-[#fee2e2] text-[#991b1b]";
+
+                const statusText =
+                  v >= 8
+                    ? "Excelente"
+                    : v >= 6
+                    ? "Bom"
+                    : v >= 4
+                    ? "Regular"
+                    : "A Melhorar";
+
+                return (
+                  <div
+                    key={index}
+                    className="rounded-[10px] p-[18px] border border-[var(--surface-border,#e2e8f0)] bg-[var(--surface,#f8fafc)]"
+                  >
+                    <div className="flex items-center justify-between mb-[10px]">
+                      <div className="flex items-center gap-[10px]">
+                        <span className="text-[12px] font-bold w-6 h-6 rounded-[6px] flex items-center justify-center border border-[var(--primary-soft-border,#dbeafe)] text-[var(--primary,#3b82f6)] bg-[var(--card-bg,#ffffff)]">
+                          0{index + 1}
+                        </span>
+                        <span className="text-[15px] font-semibold text-[var(--text-strong,#1f2937)]">
+                          {metric.name}
+                        </span>
+                      </div>
+
+                      <div className="flex items-baseline gap-[2px]">
+                        <span className="text-[20px] font-bold text-[var(--brand-dark,#0f3550)]">
+                          {metric.value}
+                        </span>
+                        <span className="text-[14px] text-[var(--muted-2,#9ca3af)]">
+                          /10
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-[13px] mb-3 leading-[1.4] text-[var(--muted,#6b7280)]">
+                      {metric.description}
+                    </div>
+
+                    <div className="mt-3">
+                      <div className="h-2 rounded overflow-hidden mb-2 bg-[var(--border,#e5e7eb)]">
+                        <div
+                          className="h-full rounded transition-[width] duration-[700ms] ease-out"
+                          style={{
+                            width: `${metric.percentage}%`,
+                            background: metric.color,
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-[12px] font-semibold text-[var(--muted,#6b7280)]">
+                          {metric.percentage}%
+                        </span>
+
+                        <span
+                          className={`text-[11px] font-bold px-[10px] py-1 rounded-xl uppercase ${statusClass}`}
+                        >
+                          {statusText}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -1021,13 +983,12 @@ function Dashboard() {
       <div className="col-span-full flex flex-col gap-4 overflow-y-auto pr-1 h-[calc(100vh-92px)] max-[1200px]:h-auto max-[1200px]:flex-col">
         {!selectedPerson &&
           (selectedProject ? (
-            <div className="grid gap-5 min-h-0 items-stretch grid-cols-[380px_1fr] h-[calc(100vh-140px)] max-[1200px]:flex max-[1200px]:flex-col max-[1200px]:h-auto">
-              <div className="grid gap-3 h-full min-h-0 grid-rows-[auto_1fr] max-[1200px]:w-full max-[1200px]:flex-[0_0_auto] max-[1500px]:min-h-[320px]">
+            <div className="grid gap-2 min-h-0 items-stretch grid-cols-[540px_1fr] h-[calc(100vh-140px)] max-[1200px]:flex max-[1200px]:flex-col max-[1200px]:h-auto">
+              <div className="grid gap-2 h-full min-h-0 grid-rows-[auto_1fr] max-[1200px]:w-full max-[1200px]:flex-[0_0_auto] max-[1500px]:min-h-[320px]">
                 <ProjectsPanel
                   projects={nomes_projetos}
                   selectedProject={selectedProject}
                   onSelectProject={setSelectedProject}
-                  projectInfo={selectedProjectObj}
                 />
 
                 {selectedProject && (
@@ -1043,7 +1004,7 @@ function Dashboard() {
               </div>
 
               <div className="min-h-0 w-full overflow-hidden h-full max-[1200px]:w-full">
-                <div className="flex gap-3 min-w-0 min-h-0 h-full overflow-x-auto pb-2">
+                <div className="flex gap-2 min-w-0 min-h-0 h-full overflow-x-auto pb-2">
                   {selectedProject && (
                     <Column
                       title="Consultores"

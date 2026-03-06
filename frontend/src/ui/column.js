@@ -10,7 +10,7 @@ export default function Column({
   return (
     <div
       className={[
-        "flex flex-col min-h-0 overflow-hidden border",
+        "flex flex-col overflow-hidden border",
         "rounded-[10px]",
         "shadow-[0_3px_12px_rgba(0,0,0,0.08)]",
         "flex-[0_0_180px] min-w-[263px]",
@@ -35,9 +35,8 @@ export default function Column({
           "p-[14px]",
           "flex-1 min-h-0 overflow-y-auto",
           "flex flex-col gap-2",
-          //"min-h-[300px]",
-          "h-full",
-          //"max-h-[calc(100vh-160px)]",
+          "min-h-[300px]",
+          "max-h-[calc(200vh-160px)]",
         ].join(" ")}
       >
         {items.length === 0 && (
@@ -66,9 +65,9 @@ export default function Column({
 
           if (col_papel === "Madrinhas") {
             badgeClass = "badge-free";
-            if (m_alocacoes === 0) badgeClass = "badge-free";
-            else if (m_alocacoes === 1) badgeClass = "badge-semifree";
-            else if (m_alocacoes >= 2) badgeClass = "badge-busy";
+            if (m_alocacoes <= 3) badgeClass = "badge-free";
+            else if (m_alocacoes === 4) badgeClass = "badge-semifree";
+            else if (m_alocacoes >= 5) badgeClass = "badge-busy";
           } else if (col_papel === "Gerentes") {
             badgeClass = "badge-free";
             if (alocacoes === 0) badgeClass = "badge-free";
