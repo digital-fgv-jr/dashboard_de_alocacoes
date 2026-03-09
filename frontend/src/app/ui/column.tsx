@@ -1,12 +1,35 @@
 import React from "react";
 
+type ColumnItem = {
+  id?: string | number;
+  name?: string;
+  role?: string;
+  disponibilidade?: number;
+  disp_madrinha?: number;
+  [key: string]: unknown;
+};
+
+type ScoreItem = {
+  id: string;
+  nome: string;
+  score: number;
+};
+
+type ColumnProps = {
+  title: string;
+  items?: ColumnItem[];
+  onSelect?: (item: ColumnItem) => void;
+  col_papel?: string;
+  scores?: ScoreItem[] | null;
+};
+
 export default function Column({
   title,
   items = [],
   onSelect,
   col_papel,
   scores = null,
-}) {
+}: ColumnProps): JSX.Element {
   return (
     <div
       className={[
@@ -57,11 +80,11 @@ export default function Column({
           const m_alocacoes = it.disp_madrinha ?? 0;
 
           const score_pessoas = scores?.find((p) => p.nome === it.name);
-          const score_total_quebrado = score_pessoas?.score;
+          const score_total_quebrado = score_pessoas?.score ?? 0;
           const score_total = Math.round(score_total_quebrado * 100) / 100;
 
           let badgeClass = "badge-free";
-          let badgeText = score_total ? String(score_total) : 0;
+          let badgeText: string | number = score_total ? String(score_total) : 0;
 
           if (col_papel === "Madrinhas") {
             badgeClass = "badge-free";

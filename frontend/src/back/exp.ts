@@ -1,5 +1,5 @@
-import { useMembros, useMemMembros, useAloc } from "./data_t";
-import { get_info_proj, useProjetos } from "./data_q";
+import { useMembros, useMemMembros, useAloc } from "../back/data_t";
+import { get_info_proj, useProjetos } from "../back/data_q";
 
 // ^^ Importações ^^ //
 
@@ -28,7 +28,7 @@ type Projeto = {
   escopo: number;
 };
 
-export function useXp(selproj: Projeto): Experiencia[] {
+export function useXp(selproj: Projeto | null): Experiencia[] {
     const membros = useMemMembros()
     const aloca = useAloc()
     const projetos = useProjetos()

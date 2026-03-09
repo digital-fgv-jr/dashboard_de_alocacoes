@@ -1,15 +1,39 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { RefreshCcw, BarChart3, User, UserCog, WeightIcon } from "lucide-react";
-import { useActionState } from "react";
-//import { backgroundColor, height} from "@airtable/blocks/dist/types/src/ui/system";
 
-function trava_100(valor, minimo, maximo) {
+type Criterion = {
+  id: string;
+  name: string;
+  weight: number;
+  description: string;
+  cor: string;
+};
+
+type WeightsObj = {
+  nps: number;
+  experience: number;
+  preferencia: number;
+  availability: number;
+  av_120: number;
+  qap: number;
+};
+
+type ProjectRankingConfigProps = {
+  projectId: string;
+  macro: string;
+  criteria: Criterion[];
+  onWeightsChange?: (area: string, obj: WeightsObj) => void;
+  area: string;
+  onAreaChange?: (area: string) => void;
+};
+
+function trava_100(valor: number, minimo: number, maximo: number): number {
   return Math.max(minimo, Math.min(maximo, valor));
 }
 
-function handle_mannager(pesos, altura) {
+function handle_mannager(pesos: Criterion[], altura: number): number[] {
   let acc = 0;
-  const handles = [];
+  const handles: number[] = [];
 
   for (let i = 0; i < pesos.length - 1; i++) {
     acc += (pesos[i].weight / 100) * altura;
@@ -18,18 +42,20 @@ function handle_mannager(pesos, altura) {
   return handles;
 }
 
-function montar_percentual(handles, altura, n) {
+function montar_percentual(
+  handles: number[],
+  altura: number,
+  n: number
+): number[] {
   const pontos = [0, ...handles, altura];
-
-  const tamanho = [];
+  const tamanho: number[] = [];
 
   for (let i = 0; i < n; i++) {
     tamanho.push(pontos[i + 1] - pontos[i]);
   }
 
   const total = tamanho.reduce((a, b) => a + b, 0) || 1;
-
-  let percentual = tamanho.map((px) => Math.round((px / total) * 100));
+  const percentual = tamanho.map((px) => Math.round((px / total) * 100));
 
   const eh_100 = percentual.reduce((a, b) => a + b, 0);
   percentual[percentual.length - 1] += 100 - eh_100;
@@ -37,7 +63,13 @@ function montar_percentual(handles, altura, n) {
   return percentual;
 }
 
-function nao_sobrepor(handles, idx, altura_mudada, altura, espacamento) {
+function nao_sobrepor(
+  handles: number[],
+  idx: number,
+  altura_mudada: number,
+  altura: number,
+  espacamento: number
+): number {
   const antigo = idx === 0 ? 0 : handles[idx - 1];
   const novo = idx === handles.length - 1 ? altura : handles[idx + 1];
 
@@ -47,7 +79,10 @@ function nao_sobrepor(handles, idx, altura_mudada, altura, espacamento) {
   return trava_100(altura_mudada, miny, maxy);
 }
 
-function getlocaly(e, barra) {
+function getlocaly(
+  e: React.PointerEvent<HTMLDivElement>,
+  barra: HTMLDivElement
+): number {
   const rect = barra.getBoundingClientRect();
   return e.clientY - rect.top;
 }
@@ -59,12 +94,8 @@ export default function ProjectRankingConfig({
   onWeightsChange,
   area,
   onAreaChange,
-}) {
-  var [criteria, setCriteria] = useState(
-    initialCriteria || console.warn("Critérios errados")
-  );
-
-  const crit_inicial = [
+}: ProjectRankingConfigProps) {
+  const crit_inicial: Criterion[] = [
     {
       id: "nps",
       name: "NPS do Profissional",
@@ -109,6 +140,10 @@ export default function ProjectRankingConfig({
     },
   ];
 
+  const [criteria, setCriteria] = useState<Criterion[]>(
+    initialCriteria || crit_inicial
+  );
+
   useEffect(() => {
     if (initialCriteria) setCriteria(initialCriteria);
   }, [initialCriteria, area, projectId]);
@@ -117,17 +152,23 @@ export default function ProjectRankingConfig({
     (sum, criterion) => sum + criterion.weight,
     0
   );
-  const barRef = useRef(null);
-  const draggingIndexRef = useRef(null);
 
-  const handleInputWeightChange = (index, value) => {
+  const barRef = useRef<HTMLDivElement | null>(null);
+  const draggingIndexRef = useRef<number | null>(null);
+
+  const altura = 360;
+  const minPct = 3;
+  const espacamento = (minPct / 100) * altura;
+  const n = criteria.length;
+
+  const handleInputWeightChange = (index: number, value: string) => {
     let novoValor = parseInt(value, 10);
 
-    if (value === ""){
-      novoValor = 0
+    if (value === "") {
+      novoValor = 0;
     }
 
-    if (Number.isNaN(novoValor)){
+    if (Number.isNaN(novoValor)) {
       novoValor = criteria[index].weight;
     }
 
@@ -146,7 +187,6 @@ export default function ProjectRankingConfig({
       return acc + (Number(c.weight) || 0);
     }, 0);
 
-    // se quiser aumentar mais do que os outros permitem
     if (diferenca > somaOutros) {
       novoValor = pesoAntigo + somaOutros;
     }
@@ -156,7 +196,6 @@ export default function ProjectRankingConfig({
     const novaDiferenca = novoValor - pesoAntigo;
 
     if (novaDiferenca > 0) {
-      // precisa tirar dos outros proporcionalmente
       const somaRestante = novaLista.reduce((acc, c, i) => {
         if (i === index) return acc;
         return acc + (Number(c.weight) || 0);
@@ -176,7 +215,6 @@ export default function ProjectRankingConfig({
         retirado += reducao;
       }
 
-      // ajuste fino por arredondamento
       let falta = novaDiferenca - retirado;
 
       for (let i = 0; i < novaLista.length && falta > 0; i++) {
@@ -187,8 +225,7 @@ export default function ProjectRankingConfig({
         }
       }
     } else {
-      // se diminuiu, redistribui sobra proporcionalmente
-      let sobra = Math.abs(novaDiferenca);
+      const sobra = Math.abs(novaDiferenca);
 
       const outrosIndices = novaLista
         .map((_, i) => i)
@@ -213,7 +250,6 @@ export default function ProjectRankingConfig({
         adicionado += acrescimo;
       }
 
-      // ajuste fino
       let excesso = adicionado - sobra;
 
       for (const i of outrosIndices) {
@@ -233,7 +269,6 @@ export default function ProjectRankingConfig({
       }
     }
 
-    // correção final para garantir soma = 100
     let somaFinal = novaLista.reduce(
       (acc, c) => acc + (Number(c.weight) || 0),
       0
@@ -261,20 +296,14 @@ export default function ProjectRankingConfig({
     setHandles(handle_mannager(novaLista, altura));
   };
 
-  const altura = 360;
-  const minPct = 3;
-  const espacamento = (minPct / 100) * altura;
-
-  const n = criteria.length;
-
   const initialHandles = useMemo(() => {
     const src = crit_inicial;
     return handle_mannager(src, altura);
-  }, [altura, crit_inicial]);
+  }, [altura]);
 
-  const [handles, setHandles] = useState(initialHandles);
+  const [handles, setHandles] = useState<number[]>(initialHandles);
 
-  function emitChange(nova_posicao) {
+  function emitChange(nova_posicao: number[]) {
     const pct = montar_percentual(nova_posicao, altura, n);
 
     setCriteria((antes) =>
@@ -295,7 +324,7 @@ export default function ProjectRankingConfig({
 
     const obj = Object.fromEntries(
       (criteria || []).map((c) => [c.id, (Number(c.weight) || 0) / 100])
-    );
+    ) as WeightsObj;
 
     onWeightsChange?.(area, obj);
   };
@@ -303,9 +332,33 @@ export default function ProjectRankingConfig({
   const handleReset = () => {
     setCriteria(crit_inicial);
     setHandles(initialHandles);
+
+    const obj: WeightsObj = {
+      nps:
+        (Number(crit_inicial.find((c) => c.id === "nps")?.weight) || 0) / 100,
+      experience:
+        (Number(crit_inicial.find((c) => c.id === "experience")?.weight) || 0) /
+        100,
+      preferencia:
+        (Number(crit_inicial.find((c) => c.id === "preferencia")?.weight) ||
+          0) / 100,
+      availability:
+        (Number(crit_inicial.find((c) => c.id === "availability")?.weight) ||
+          0) / 100,
+      av_120:
+        (Number(crit_inicial.find((c) => c.id === "av_120")?.weight) || 0) /
+        100,
+      qap:
+        (Number(crit_inicial.find((c) => c.id === "qap")?.weight) || 0) / 100,
+    };
+
+    onWeightsChange?.(area, obj);
   };
 
-  function onPointerDownHandle(idx, e) {
+  function onPointerDownHandle(
+    idx: number,
+    e: React.PointerEvent<HTMLDivElement>
+  ) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -313,7 +366,7 @@ export default function ProjectRankingConfig({
     e.currentTarget.setPointerCapture?.(e.pointerId);
   }
 
-  function onPointerMove(e) {
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
     const idx = draggingIndexRef.current;
     if (idx == null) return;
 
@@ -340,7 +393,7 @@ export default function ProjectRankingConfig({
 
   const segmentacao = useMemo(() => {
     const pontos = [0, ...handles, altura];
-    const segmentos = [];
+    const segmentos: number[] = [];
 
     for (let i = 0; i < n; i++) {
       segmentos.push(pontos[i + 1] - pontos[i]);
@@ -350,9 +403,7 @@ export default function ProjectRankingConfig({
 
   return (
     <div className="project-ranking-config">
-      {/* micro-css ONLY pra ficar idêntico: ::after e thumb do range */}
       <style>{`
-        /* Thumb do slider (sem isso NÃO fica idêntico) */
         .tw-weight-slider {
           -webkit-appearance: none;
           appearance: none;
@@ -383,7 +434,6 @@ export default function ProjectRankingConfig({
         }
       `}</style>
 
-      {/* Header */}
       <div className="ranking-header">
         <div
           className="ranking-project
@@ -409,11 +459,12 @@ export default function ProjectRankingConfig({
           </h3>
           <span className="absolute left-0 -bottom-[2px] w-[50px] h-[2px] bg-gradient-to-r from-[var(--primary,#3b82f6)] to-[var(--accent,#8b5cf6)]" />
         </div>
+
         <p className="m-0 text-[14px] leading-[1.5] text-[var(--muted,#6b7280)]">
           Ajuste a importância de cada critério para este projeto específico. Os
           pesos podem ser diferentes para cada área.
         </p>
-        {/* Área selector */}
+
         <div
           className="rounded-xl p-[14px] border my-[14px] mb-[18px]
                         bg-[var(--surface,#f8fafc)] border-[var(--surface-border,#e2e8f0)]"
@@ -515,6 +566,7 @@ export default function ProjectRankingConfig({
             </button>
           </div>
         </div>
+
         <div className="flex gap-6 items-start">
           <div className="relative" style={{ width: 120 }}>
             <div
@@ -594,7 +646,6 @@ export default function ProjectRankingConfig({
           </div>
         </div>
 
-        {/* Buttons */}
         <div className="action-buttons flex gap-4 mt-4">
           <button
             type="button"

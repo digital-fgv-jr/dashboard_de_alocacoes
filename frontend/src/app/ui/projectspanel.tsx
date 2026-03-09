@@ -1,10 +1,17 @@
-import { Folder, BarChart3, ArrowUp, ArrowDown, Settings } from "lucide-react";
+import React from "react";
+import { Folder, BarChart3, Settings } from "lucide-react";
+
+type ProjectsPanelProps = {
+  selectedProject: string | null;
+  onSelectProject?: (project: string | null) => void;
+  projects?: string[];
+};
 
 export default function ProjectsPanel({
   selectedProject,
   onSelectProject = () => {},
   projects = [],
-}) {
+}: ProjectsPanelProps): JSX.Element {
   let indicador = "";
   if (projects.length === 0) indicador = "Sem Projetos Para Alocar";
   else indicador = `Existem ${projects.length} Projetos sem alocação`;
@@ -35,6 +42,7 @@ export default function ProjectsPanel({
           {selectedProject || indicador}
         </span>
       </div>
+
       <div
         className={[
           "flex flex-row",
@@ -83,6 +91,7 @@ export default function ProjectsPanel({
             })}
           </div>
         </div>
+
         <div className="flex-1 p-[18px] overflow-y-auto min-h-0">
           {selectedProject ? (
             <div

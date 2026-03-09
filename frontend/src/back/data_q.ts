@@ -7,7 +7,6 @@ import {
   get_linked_ids,
   useMemMembros,
 } from "./data_t";
-import { useXp } from "./exp";
 
 // ^^ Imports ^^ //
 
@@ -26,6 +25,26 @@ const macro_em: string[] = [
 ];
 
 // ^^ Constantes usadas ^^ //
+
+type InfoProj = {
+  m_id: string;
+  nome: string;
+  maem_exp: number;
+  mape_exp: number;
+  masf_exp: number;
+  masm_exp: number;
+  maem_nps: number;
+  masf_nps: number;
+  masm_nps: number;
+  mape_nps: number;
+  maem_ef: number;
+  masf_ef: number;
+  mape_ef: number;
+  masm_ef: number;
+  disponibilidade: number;
+  disp_madrinha: number;
+  status: string;
+};
 
 type Projeto = {
   id: string;
@@ -88,8 +107,8 @@ export function get_info_proj(
   membros: MemMembro[],
   projetos: Projeto[],
   aloca: Alocacao[],
-  xp: Experiencia[],
-  ) {
+  xp: Experiencia[]
+): InfoProj[] {
   const xp_max_em = () => {
     const membro_mais_xp: Experiencia = xp.reduce((max, membro) => {
       return membro.xp_em > max.xp_em ? membro : max;
@@ -239,30 +258,43 @@ export function get_info_proj(
           dispon += 1;
         if (!finalizado && papel?.papel === "Padrinho") dipon_mad += 1;
 
-        xp.forEach( x => { if (x.nome === mem.nome) 
-          if(macro_sf.includes(macro) &&
-          papel?.papel !== "Padrinho" &&
-          papel?.papel !== "Coordenador") sf_xp = x.xp_sf
-          else if(macro_em.includes(macro) &&
-          papel?.papel !== "Padrinho" &&
-          papel?.papel !== "Coordenador") em_xp = x.xp_em
-          else if(macro_pe.includes(macro) &&
-          papel?.papel !== "Padrinho" &&
-          papel?.papel !== "Coordenador") pe_xp = x.xp_pe
-          else if(macro_sm.includes(macro) &&
-          papel?.papel !== "Padrinho" &&
-          papel?.papel !== "Coordenador") sm_xp = x.xp_sm
-          })
+        xp.forEach((x) => {
+          if (x.nome === mem.nome)
+            if (
+              macro_sf.includes(macro) &&
+              papel?.papel !== "Padrinho" &&
+              papel?.papel !== "Coordenador"
+            )
+              sf_xp = x.xp_sf;
+            else if (
+              macro_em.includes(macro) &&
+              papel?.papel !== "Padrinho" &&
+              papel?.papel !== "Coordenador"
+            )
+              em_xp = x.xp_em;
+            else if (
+              macro_pe.includes(macro) &&
+              papel?.papel !== "Padrinho" &&
+              papel?.papel !== "Coordenador"
+            )
+              pe_xp = x.xp_pe;
+            else if (
+              macro_sm.includes(macro) &&
+              papel?.papel !== "Padrinho" &&
+              papel?.papel !== "Coordenador"
+            )
+              sm_xp = x.xp_sm;
+        });
       }
     });
 
     return {
-      m_id: mem.id,
-      nome: mem.nome,
-      maem_exp: (em_xp/xp_max_em())*10,
-      mape_exp: (pe_xp/xp_max_pe())*10,
-      masf_exp: (sf_xp/xp_max_sf())*10,
-      masm_exp: (sm_xp/xp_max_sm())*10,
+      m_id: mem.id ?? "",
+      nome: mem.nome ?? "",
+      maem_exp: (em_xp / xp_max_em()) * 10,
+      mape_exp: (pe_xp / xp_max_pe()) * 10,
+      masf_exp: (sf_xp / xp_max_sf()) * 10,
+      masm_exp: (sm_xp / xp_max_sm()) * 10,
       maem_nps: maem_n > 0 ? maem_mnps / maem_n : 0,
       masf_nps: masf_n > 0 ? masf_mnps / masf_n : 0,
       masm_nps: masm_n > 0 ? masm_mnps / masm_n : 0,
@@ -271,8 +303,8 @@ export function get_info_proj(
       masf_ef: masf_n > 0 ? masf_mqap / masf_n : 0,
       mape_ef: mape_n > 0 ? mape_mqap / mape_n : 0,
       masm_ef: masm_n > 0 ? masm_mqap / masm_n : 0,
-      disponibilidade: dispon,
-      disp_madrinha: dipon_mad,
+      disponibilidade: dispon ?? 0,
+      disp_madrinha: dipon_mad ?? 0,
       status: status,
     };
   });

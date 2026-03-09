@@ -1,14 +1,26 @@
 import React from "react";
 
-export default function RadarNotes({ values = [], labels = [] }) {
+type RadarNotesProps = {
+  values?: Array<number | string>;
+  labels?: string[];
+};
+
+export default function RadarNotes({
+  values = [],
+  labels = [],
+}: RadarNotesProps): JSX.Element {
   const N = values.length;
   if (N === 0) return <div>Sem métricas</div>;
 
-  const cx = 100, cy = 100, radius = 70;
-  const angle = (i) => -Math.PI / 2 + (i * (2 * Math.PI)) / N;
+  const cx = 100;
+  const cy = 100;
+  const radius = 70;
 
-  const outer = [];
-  const inner = [];
+  const angle = (i: number): number => -Math.PI / 2 + (i * (2 * Math.PI)) / N;
+
+  const outer: string[] = [];
+  const inner: string[] = [];
+
   for (let i = 0; i < N; i++) {
     const a = angle(i);
     const ox = cx + radius * Math.cos(a);
@@ -23,10 +35,12 @@ export default function RadarNotes({ values = [], labels = [] }) {
   }
 
   const gridLines = [0.25, 0.5, 0.75, 1].map((f) => {
-    const pts = [];
+    const pts: string[] = [];
     for (let i = 0; i < N; i++) {
       const a = angle(i);
-      pts.push(`${cx + radius * f * Math.cos(a)},${cy + radius * f * Math.sin(a)}`);
+      pts.push(
+        `${cx + radius * f * Math.cos(a)},${cy + radius * f * Math.sin(a)}`
+      );
     }
     return pts.join(" ");
   });
@@ -40,10 +54,21 @@ export default function RadarNotes({ values = [], labels = [] }) {
       aria-label="Radar de competências"
     >
       {gridLines.map((pts, i) => (
-        <polygon key={i} points={pts} fill="none" stroke="#ddd" strokeWidth="0.8" />
+        <polygon
+          key={i}
+          points={pts}
+          fill="none"
+          stroke="#ddd"
+          strokeWidth="0.8"
+        />
       ))}
 
-      <polygon points={outer.join(" ")} fill="none" stroke="#ccc" strokeWidth="1" />
+      <polygon
+        points={outer.join(" ")}
+        fill="none"
+        stroke="#ccc"
+        strokeWidth="1"
+      />
       <polygon
         points={inner.join(" ")}
         fill="#60a5fa"
@@ -56,8 +81,13 @@ export default function RadarNotes({ values = [], labels = [] }) {
         const a = angle(i);
         const lx = cx + (radius + 18) * Math.cos(a);
         const ly = cy + (radius + 18) * Math.sin(a);
-        const anchor =
-          Math.abs(Math.cos(a)) < 0.2 ? "middle" : Math.cos(a) > 0 ? "start" : "end";
+        const anchor: "start" | "middle" | "end" =
+          Math.abs(Math.cos(a)) < 0.2
+            ? "middle"
+            : Math.cos(a) > 0
+            ? "start"
+            : "end";
+
         return (
           <text key={i} x={lx} y={ly} fontSize="10" textAnchor={anchor}>
             {lab}
