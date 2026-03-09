@@ -120,6 +120,147 @@ export default function ProjectRankingConfig({
   const barRef = useRef(null);
   const draggingIndexRef = useRef(null);
 
+  const handleInputWeightChange = (index, value) => {
+    let novoValor = parseInt(value, 10);
+
+    if (value === ""){
+      novoValor = 0
+    }
+
+    if (Number.isNaN(novoValor)){
+      novoValor = criteria[index].weight;
+    }
+
+    novoValor = Math.max(0, Math.min(100, novoValor));
+
+    const antigaLista = criteria.map((c) => ({ ...c }));
+    const pesoAntigo = Number(antigaLista[index].weight) || 0;
+    const diferenca = novoValor - pesoAntigo;
+
+    if (diferenca === 0) return;
+
+    const novaLista = antigaLista.map((c) => ({ ...c }));
+
+    const somaOutros = novaLista.reduce((acc, c, i) => {
+      if (i === index) return acc;
+      return acc + (Number(c.weight) || 0);
+    }, 0);
+
+    // se quiser aumentar mais do que os outros permitem
+    if (diferenca > somaOutros) {
+      novoValor = pesoAntigo + somaOutros;
+    }
+
+    novaLista[index].weight = novoValor;
+
+    const novaDiferenca = novoValor - pesoAntigo;
+
+    if (novaDiferenca > 0) {
+      // precisa tirar dos outros proporcionalmente
+      const somaRestante = novaLista.reduce((acc, c, i) => {
+        if (i === index) return acc;
+        return acc + (Number(c.weight) || 0);
+      }, 0);
+
+      let retirado = 0;
+
+      for (let i = 0; i < novaLista.length; i++) {
+        if (i === index) continue;
+
+        const peso = Number(novaLista[i].weight) || 0;
+        const parte =
+          somaRestante > 0 ? (peso / somaRestante) * novaDiferenca : 0;
+        const reducao = Math.min(peso, Math.round(parte));
+
+        novaLista[i].weight = peso - reducao;
+        retirado += reducao;
+      }
+
+      // ajuste fino por arredondamento
+      let falta = novaDiferenca - retirado;
+
+      for (let i = 0; i < novaLista.length && falta > 0; i++) {
+        if (i === index) continue;
+        if ((novaLista[i].weight || 0) > 0) {
+          novaLista[i].weight -= 1;
+          falta -= 1;
+        }
+      }
+    } else {
+      // se diminuiu, redistribui sobra proporcionalmente
+      let sobra = Math.abs(novaDiferenca);
+
+      const outrosIndices = novaLista
+        .map((_, i) => i)
+        .filter((i) => i !== index);
+
+      const somaOutrosAtual = outrosIndices.reduce(
+        (acc, i) => acc + (Number(novaLista[i].weight) || 0),
+        0
+      );
+
+      let adicionado = 0;
+
+      for (const i of outrosIndices) {
+        const peso = Number(novaLista[i].weight) || 0;
+        const parte =
+          somaOutrosAtual > 0
+            ? (peso / somaOutrosAtual) * sobra
+            : sobra / outrosIndices.length;
+
+        const acrescimo = Math.round(parte);
+        novaLista[i].weight = peso + acrescimo;
+        adicionado += acrescimo;
+      }
+
+      // ajuste fino
+      let excesso = adicionado - sobra;
+
+      for (const i of outrosIndices) {
+        if (excesso <= 0) break;
+        if ((novaLista[i].weight || 0) > 0) {
+          novaLista[i].weight -= 1;
+          excesso -= 1;
+        }
+      }
+
+      while (adicionado < sobra) {
+        for (const i of outrosIndices) {
+          if (adicionado >= sobra) break;
+          novaLista[i].weight += 1;
+          adicionado += 1;
+        }
+      }
+    }
+
+    // correção final para garantir soma = 100
+    let somaFinal = novaLista.reduce(
+      (acc, c) => acc + (Number(c.weight) || 0),
+      0
+    );
+
+    while (somaFinal > 100) {
+      for (let i = 0; i < novaLista.length && somaFinal > 100; i++) {
+        if (i === index) continue;
+        if (novaLista[i].weight > 0) {
+          novaLista[i].weight -= 1;
+          somaFinal -= 1;
+        }
+      }
+    }
+
+    while (somaFinal < 100) {
+      for (let i = 0; i < novaLista.length && somaFinal < 100; i++) {
+        if (i === index) continue;
+        novaLista[i].weight += 1;
+        somaFinal += 1;
+      }
+    }
+
+    setCriteria(novaLista);
+    setHandles(handle_mannager(novaLista, altura));
+  };
+
   const altura = 360;
   const minPct = 3;
   const espacamento = (minPct / 100) * altura;
@@ -435,8 +576,18 @@ export default function ProjectRankingConfig({
                   </span>
                 </div>
 
-                <div className="px-3 py-1 rounded-md border-2 border-gray-400 text-[14px] font-semibold min-w-[64px] text-center">
-                  {criterion.weight}%
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={criterion.weight}
+                    onChange={(e) => handleInputWeightChange(i, e.target.value)}
+                    className="w-[72px] px-3 py-1 rounded-md border-2 border-gray-400 text-[14px] font-semibold text-center outline-none focus:border-[var(--primary,#3b82f6)]"
+                  />
+                  <span className="text-[14px] font-semibold text-gray-600">
+                    %
+                  </span>
                 </div>
               </div>
             ))}
