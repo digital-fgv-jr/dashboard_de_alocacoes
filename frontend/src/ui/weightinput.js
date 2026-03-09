@@ -581,7 +581,7 @@ export default function ProjectRankingConfig({
                     type="number"
                     min={0}
                     max={100}
-                    value={criterion.weight}
+                    value={criterion.weight || ""}
                     onChange={(e) => handleInputWeightChange(i, e.target.value)}
                     className="w-[72px] px-3 py-1 rounded-md border-2 border-gray-400 text-[14px] font-semibold text-center outline-none focus:border-[var(--primary,#3b82f6)]"
                   />
