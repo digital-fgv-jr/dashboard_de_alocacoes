@@ -74,97 +74,106 @@ export default function Column({
           </div>
         )}
 
-        {items.map((it, idx) => {
-          const name = it.name || `Pessoa ${idx + 1}`;
-          const alocacoes = it.disponibilidade ?? 0;
-          const m_alocacoes = it.disp_madrinha ?? 0;
+        {[...items]
+          .sort((a, b) => {
+            if (col_papel === "Madrinhas") {
+              return (a.disp_madrinha ?? 0) - (b.disp_madrinha ?? 0);
+            }
+            return 0;
+          })
+          .map((it, idx) => {
+            const name = it.name || `Pessoa ${idx + 1}`;
+            const alocacoes = it.disponibilidade ?? 0;
+            const mAlocacoes = it.disp_madrinha ?? 0;
 
-          const score_pessoas = scores?.find((p) => p.nome === it.name);
-          const score_total_quebrado = score_pessoas?.score ?? 0;
-          const score_total = Math.round(score_total_quebrado * 100) / 100;
+            const scorePessoa = scores?.find(
+              (p) => String(p.id) === String(it.id)
+            );
 
-          let badgeClass = "badge-free";
-          let badgeText: string | number = score_total ? String(score_total) : 0;
+            const scoreTotalQuebrado = scorePessoa?.score ?? 0;
+            const scoreTotal = Math.round(scoreTotalQuebrado * 100) / 100;
 
-          if (col_papel === "Madrinhas") {
-            badgeClass = "badge-free";
-            if (m_alocacoes <= 3) badgeClass = "badge-free";
-            else if (m_alocacoes === 4) badgeClass = "badge-semifree";
-            else if (m_alocacoes >= 5) badgeClass = "badge-busy";
-          } else if (col_papel === "Gerentes") {
-            badgeClass = "badge-free";
-            if (alocacoes === 0) badgeClass = "badge-free";
-            else if (alocacoes === 1) badgeClass = "badge-semifree";
-            else if (alocacoes >= 2) badgeClass = "badge-busy";
-          } else if (col_papel === "Consultores") {
-            badgeClass = "badge-free";
-            if (alocacoes === 0) badgeClass = "badge-free";
-            else if (alocacoes === 1) badgeClass = "badge-semifree";
-            else if (alocacoes >= 2) badgeClass = "badge-busy";
-          } else {
-            badgeText = "Livre";
-            badgeClass = "badge-free";
-          }
+            let badgeClass = "badge-free";
+            let badgeText: string | number = scoreTotal ? String(scoreTotal) : 0;
 
-          const badgeBg =
-            badgeClass === "badge-free"
-              ? "bg-[var(--free-color,#10b981)]"
-              : badgeClass === "badge-semifree"
-              ? "bg-[var(--semibusy-color,#fdca40)]"
-              : "bg-[var(--busy-color,#ef4444)]";
+            if (col_papel === "Madrinhas") {
+              badgeText = mAlocacoes;
 
-          return (
-            <div
-              key={it.id || idx}
-              onClick={() => onSelect && onSelect(it)}
-              className={[
-                "flex items-center gap-[10px] p-[9px]",
-                "rounded-[7px] border cursor-pointer",
-                "transition-all duration-200 flex-shrink-0",
-                "bg-[var(--item-bg,#fbfdff)] border-[var(--border,#e5e7eb)]",
-                "hover:-translate-y-[1px]",
-                "hover:shadow-[0_4px_10px_rgba(0,0,0,0.08)]",
-                "hover:border-[var(--primary-soft-border,#dbeafe)]",
-                "hover:bg-[var(--card-bg,#ffffff)]",
-              ].join(" ")}
-            >
+              if (mAlocacoes <= 3) badgeClass = "badge-free";
+              else if (mAlocacoes === 4) badgeClass = "badge-semifree";
+              else if (mAlocacoes >= 5) badgeClass = "badge-busy";
+            } else if (col_papel === "Gerentes") {
+              if (alocacoes === 0) badgeClass = "badge-free";
+              else if (alocacoes === 1) badgeClass = "badge-semifree";
+              else if (alocacoes >= 2) badgeClass = "badge-busy";
+            } else if (col_papel === "Consultores") {
+              if (alocacoes === 0) badgeClass = "badge-free";
+              else if (alocacoes === 1) badgeClass = "badge-semifree";
+              else if (alocacoes >= 2) badgeClass = "badge-busy";
+            } else {
+              badgeText = "Livre";
+              badgeClass = "badge-free";
+            }
+
+            const badgeBg =
+              badgeClass === "badge-free"
+                ? "bg-[var(--free-color,#10b981)]"
+                : badgeClass === "badge-semifree"
+                ? "bg-[var(--semibusy-color,#fdca40)]"
+                : "bg-[var(--busy-color,#ef4444)]";
+
+            return (
               <div
+                key={it.id || idx}
+                onClick={() => onSelect && onSelect(it)}
                 className={[
-                  "w-8 h-8",
-                  "text-white font-bold",
-                  "flex items-center justify-center",
-                  "rounded-[6px] flex-shrink-0 text-[12px]",
-                  "bg-[var(--brand,#0b2540)]",
+                  "flex items-center gap-[10px] p-[9px]",
+                  "rounded-[7px] border cursor-pointer",
+                  "transition-all duration-200 flex-shrink-0",
+                  "bg-[var(--item-bg,#fbfdff)] border-[var(--border,#e5e7eb)]",
+                  "hover:-translate-y-[1px]",
+                  "hover:shadow-[0_4px_10px_rgba(0,0,0,0.08)]",
+                  "hover:border-[var(--primary-soft-border,#dbeafe)]",
+                  "hover:bg-[var(--card-bg,#ffffff)]",
                 ].join(" ")}
               >
-                #{String(idx + 1).padStart(2, "0")}
-              </div>
-
-              <div className="flex-1 min-w-0 overflow-hidden flex flex-col gap-[2px]">
-                <div className="text-[12px] font-medium whitespace-nowrap overflow-hidden text-ellipsis text-[var(--text-strong,#1f2937)]">
-                  {name}
+                <div
+                  className={[
+                    "w-8 h-8",
+                    "text-white font-bold",
+                    "flex items-center justify-center",
+                    "rounded-[6px] flex-shrink-0 text-[12px]",
+                    "bg-[var(--brand,#0b2540)]",
+                  ].join(" ")}
+                >
+                  #{String(idx + 1).padStart(2, "0")}
                 </div>
 
-                {it.role && (
-                  <div className="text-[10px] whitespace-nowrap overflow-hidden text-ellipsis text-[var(--muted,#6b7280)]">
-                    {it.role}
+                <div className="flex-1 min-w-0 overflow-hidden flex flex-col gap-[2px]">
+                  <div className="text-[12px] font-medium whitespace-nowrap overflow-hidden text-ellipsis text-[var(--text-strong,#1f2937)]">
+                    {name}
                   </div>
-                )}
-              </div>
 
-              <div
-                className={[
-                  "px-[9px] py-1",
-                  "rounded-full font-bold text-white whitespace-nowrap",
-                  "text-[10px] min-w-[50px] text-center flex-shrink-0",
-                  badgeBg,
-                ].join(" ")}
-              >
-                {badgeText}
+                  {it.role && (
+                    <div className="text-[10px] whitespace-nowrap overflow-hidden text-ellipsis text-[var(--muted,#6b7280)]">
+                      {it.role}
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  className={[
+                    "px-[9px] py-1",
+                    "rounded-full font-bold text-white whitespace-nowrap",
+                    "text-[10px] min-w-[50px] text-center flex-shrink-0",
+                    badgeBg,
+                  ].join(" ")}
+                >
+                  {badgeText}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
     </div>
   );
