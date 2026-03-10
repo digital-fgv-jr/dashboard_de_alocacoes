@@ -108,14 +108,14 @@ export default function Session2(props: Session2Props): JSX.Element | null {
 
   if (!selectedPerson) return null;
 
-  const Allocations = selectedPerson?.disponibilidade ?? 0;
-  const Aloc_Madrinha = selectedPerson.disp_madrinha ?? 0;
+  const allocations = selectedPerson.disponibilidade ?? 0;
+  const alocMadrinha = selectedPerson.disp_madrinha ?? 0;
 
   let totalAllocations: number | string = "-";
   if (colunaOrigem === "Madrinhas") {
-    totalAllocations = Aloc_Madrinha;
+    totalAllocations = alocMadrinha;
   } else if (colunaOrigem === "Consultores" || colunaOrigem === "Gerentes") {
-    totalAllocations = Allocations;
+    totalAllocations = allocations;
   } else {
     totalAllocations = 0;
   }
@@ -133,43 +133,39 @@ export default function Session2(props: Session2Props): JSX.Element | null {
   const macro = selectedProjectObj?.macro ?? "";
 
   const experienceScore = macro_em.includes(macro)
-    ? num(selectedPerson?.maem_exp)
+    ? num(selectedPerson.maem_exp)
     : macro_pe.includes(macro)
-    ? num(selectedPerson?.mape_exp)
+    ? num(selectedPerson.mape_exp)
     : macro_sf.includes(macro)
-    ? num(selectedPerson?.masf_exp)
+    ? num(selectedPerson.masf_exp)
     : macro_sm.includes(macro)
-    ? num(selectedPerson?.masm_exp)
+    ? num(selectedPerson.masm_exp)
     : 0;
 
-
   const npsScore = macro_em.includes(macro)
-    ? num(selectedPerson?.maem_nps)
+    ? num(selectedPerson.maem_nps)
     : macro_pe.includes(macro)
-    ? num(selectedPerson?.mape_nps)
+    ? num(selectedPerson.mape_nps)
     : macro_sf.includes(macro)
-    ? num(selectedPerson?.masf_nps)
+    ? num(selectedPerson.masf_nps)
     : macro_sm.includes(macro)
-    ? num(selectedPerson?.masm_nps)
+    ? num(selectedPerson.masm_nps)
     : 0;
 
   const qapScore = macro_em.includes(macro)
-    ? num(selectedPerson?.maem_ef)
+    ? num(selectedPerson.maem_ef)
     : macro_pe.includes(macro)
-    ? num(selectedPerson?.mape_ef)
+    ? num(selectedPerson.mape_ef)
     : macro_sf.includes(macro)
-    ? num(selectedPerson?.masf_ef)
+    ? num(selectedPerson.masf_ef)
     : macro_sm.includes(macro)
-    ? num(selectedPerson?.masm_ef)
+    ? num(selectedPerson.masm_ef)
     : 0;
 
-
   const preferenciaScore = (() => {
-    const gosta = Array.isArray(selectedPerson?.gosta)
-      ? selectedPerson.gosta
-      : [];
-    const bom = Array.isArray(selectedPerson?.bom) ? selectedPerson.bom : [];
-    const ruim = Array.isArray(selectedPerson?.ruim) ? selectedPerson.ruim : [];
+    const gosta = Array.isArray(selectedPerson.gosta) ? selectedPerson.gosta : [];
+    const bom = Array.isArray(selectedPerson.bom) ? selectedPerson.bom : [];
+    const ruim = Array.isArray(selectedPerson.ruim) ? selectedPerson.ruim : [];
     const extra = selectedPerson.extra;
 
     let s = 5;
@@ -193,7 +189,7 @@ export default function Session2(props: Session2Props): JSX.Element | null {
   const radarValues = [
     clamp10(num(npsScore)),
     clamp10(experienceScore),
-    clamp10(num(selectedPerson?.nota_120)),
+    clamp10(num(selectedPerson.nota_120)),
     clamp10(availabilityScore),
     clamp10(preferenciaScore),
     clamp10(num(qapScore)),
@@ -255,6 +251,15 @@ export default function Session2(props: Session2Props): JSX.Element | null {
   const overallScore = radarValues.length
     ? radarValues.reduce((a, b) => a + b, 0) / radarValues.length
     : 0;
+
+  const selectedScoreItem =
+    selectedArea === "consultores"
+      ? score_recalc_consultores.find((p) => p.id === selectedPerson.id)
+      : selectedArea === "gerentes"
+      ? score_recalc_gerentes.find((p) => p.id === selectedPerson.id)
+      : score_recalc_madrinhas.find((p) => p.id === selectedPerson.id);
+
+  const displayedScore = selectedScoreItem?.score ?? "-";
 
   return (
     <div className="w-full">
@@ -357,17 +362,7 @@ export default function Session2(props: Session2Props): JSX.Element | null {
 
             <div className="flex flex-col gap-2">
               <div className="text-[32px] font-extrabold leading-none text-[var(--brand-dark,#0f3550)]">
-                {selectedArea === "consultores"
-                  ? score_recalc_consultores.find(
-                      (p) => p.nome === selectedPerson.name
-                    )?.score ?? "-"
-                  : selectedArea === "gerentes"
-                  ? score_recalc_gerentes.find(
-                      (p) => p.nome === selectedPerson.name
-                    )?.score ?? "-"
-                  : score_recalc_madrinhas.find(
-                      (p) => p.nome === selectedPerson.name
-                    )?.score ?? "-"}
+                {displayedScore}
                 <span className="text-[18px] font-semibold ml-1 text-[var(--muted,#6b7280)]">
                   /10
                 </span>

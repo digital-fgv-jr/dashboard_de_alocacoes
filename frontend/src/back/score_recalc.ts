@@ -46,68 +46,139 @@ export type MembroScore = {
   mape_ef?: number;
 };
 
+function clamp10(value: number): number {
+  return Math.max(0, Math.min(10, value));
+}
+
+function getMacroScore(
+  macroe: string,
+  values: {
+    em?: number;
+    pe?: number;
+    sf?: number;
+    sm?: number;
+  }
+): number {
+  if (macro_em.includes(macroe)) return values.em ?? 0;
+  if (macro_pe.includes(macroe)) return values.pe ?? 0;
+  if (macro_sf.includes(macroe)) return values.sf ?? 0;
+  if (macro_sm.includes(macroe)) return values.sm ?? 0;
+  return 0;
+}
+
+function getAvailabilityScore(disponibilidade?: number): number {
+  if (disponibilidade === 0) return 10;
+  if (disponibilidade === 1) return 6.67;
+  if (disponibilidade === 2) return 3.33;
+  return 0;
+}
+
+function getPreferenciaConsultor(
+  macroe: string,
+  gosta?: string[],
+  bom?: string[],
+  ruim?: string[]
+): number {
+  const prefere = Array.isArray(gosta) ? gosta : [];
+  const domina = Array.isArray(bom) ? bom : [];
+  const dificuldade = Array.isArray(ruim) ? ruim : [];
+
+  let pref = 5;
+
+  if (prefere.includes(macroe)) pref += 2;
+  if (domina.includes(macroe)) pref += 3;
+  if (dificuldade.includes(macroe)) pref -= 5;
+
+  return clamp10(pref);
+}
+
+function getPreferenciaGerente(
+  macroe: string,
+  gosta?: string[],
+  bom?: string[],
+  ruim?: string[],
+  extra?: boolean
+): number {
+  const prefere = Array.isArray(gosta) ? gosta : [];
+  const domina = Array.isArray(bom) ? bom : [];
+  const dificuldade = Array.isArray(ruim) ? ruim : [];
+
+  let pref = 5;
+
+  if (prefere.includes(macroe)) pref += 2;
+  if (domina.includes(macroe)) pref += 2;
+  if (dificuldade.includes(macroe)) pref -= 5;
+  if (extra) pref += 1;
+
+  return clamp10(pref);
+}
+
+function roundScore(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 export function recalcConsultores(
   scores: MembroScore[] = [],
   selectedProjectObj: ProjectObj,
   pesosConsultores: PesosRanking
 ): ScoreResult[] {
   return (scores || []).map((membro) => {
-    const dispon = membro.disponibilidade;
     const macroe = selectedProjectObj?.macro ?? "";
-    const av_120 = membro.nota_120 ?? 0;
-    const prefere = Array.isArray(membro.gosta) ? membro.gosta : [];
-    const bom = Array.isArray(membro.bom) ? membro.bom : [];
-    const ruim = Array.isArray(membro.ruim) ? membro.ruim : [];
-    const em_exp = membro.maem_exp ?? 0;
-    const sf_exp = membro.masf_exp ?? 0;
-    const sm_exp = membro.masm_exp ?? 0;
-    const pe_exp = membro.mape_exp ?? 0;
-    const em_nps = membro.maem_nps ?? 0;
-    const sf_nps = membro.masf_nps ?? 0;
-    const sm_nps = membro.masm_nps ?? 0;
-    const pe_nps = membro.mape_nps ?? 0;
-    const em_qap = membro.maem_ef ?? 0;
-    const sf_qap = membro.masf_ef ?? 0;
-    const sm_qap = membro.masm_ef ?? 0;
-    const pe_qap = membro.mape_ef ?? 0;
 
-    const pesos = pesosConsultores;
+    const disponibilidadeScore = getAvailabilityScore(membro.disponibilidade);
+    const av120Score = clamp10(membro.nota_120 ?? 0);
+    const preferenciaScore = getPreferenciaConsultor(
+      macroe,
+      membro.gosta,
+      membro.bom,
+      membro.ruim
+    );
+
+    const experienceScore = clamp10(
+      getMacroScore(macroe, {
+        em: membro.maem_exp,
+        pe: membro.mape_exp,
+        sf: membro.masf_exp,
+        sm: membro.masm_exp,
+      })
+    );
+
+    const npsScore = clamp10(
+      getMacroScore(macroe, {
+        em: membro.maem_nps,
+        pe: membro.mape_nps,
+        sf: membro.masf_nps,
+        sm: membro.masm_nps,
+      })
+    );
+
+    const qapScore = clamp10(
+      getMacroScore(macroe, {
+        em: membro.maem_ef,
+        pe: membro.mape_ef,
+        sf: membro.masf_ef,
+        sm: membro.masm_ef,
+      })
+    );
+
     let nota = 0;
 
-    if (dispon === 0) nota += 3 * pesos.availability;
-    else if (dispon === 1) nota += 2 * pesos.availability;
-    else if (dispon === 2) nota += 1 * pesos.availability;
+    nota += disponibilidadeScore * pesosConsultores.availability;
+    nota += av120Score * pesosConsultores.av_120;
+    nota += preferenciaScore * pesosConsultores.preferencia;
+    nota += experienceScore * pesosConsultores.experience;
+    nota += npsScore * pesosConsultores.nps;
+    nota += qapScore * pesosConsultores.qap;
 
-    nota += av_120 * pesos.av_120;
 
-    let pref = 5;
-    if (prefere.includes(macroe)) pref += 2;
-    if (bom.includes(macroe)) pref += 3;
-    if (ruim.includes(macroe)) pref -= 5;
-
-    nota += pref * pesos.preferencia;
-
-    if (macro_em.includes(macroe)) nota += em_exp * pesos.experience;
-    else if (macro_pe.includes(macroe)) nota += pe_exp * pesos.experience;
-    else if (macro_sf.includes(macroe)) nota += sf_exp * pesos.experience;
-    else if (macro_sm.includes(macroe)) nota += sm_exp * pesos.experience;
-
-    if (macro_em.includes(macroe)) nota += em_nps * pesos.nps;
-    else if (macro_pe.includes(macroe)) nota += pe_nps * pesos.nps;
-    else if (macro_sf.includes(macroe)) nota += sf_nps * pesos.nps;
-    else if (macro_sm.includes(macroe)) nota += sm_nps * pesos.nps;
-
-    if (macro_em.includes(macroe)) nota += em_qap * pesos.qap;
-    else if (macro_pe.includes(macroe)) nota += pe_qap * pesos.qap;
-    else if (macro_sf.includes(macroe)) nota += sf_qap * pesos.qap;
-    else if (macro_sm.includes(macroe)) nota += sm_qap * pesos.qap;
-
-    if ((dispon ?? 0) >= 3) nota = 0;
+    if ((membro.disponibilidade ?? 0) >= 3) {
+      nota = 0;
+    }
 
     return {
       id: membro.id,
-      nome: membro.nome,
-      score: nota,
+      nome: (membro.nome ?? "").trim(),
+      score: roundScore(nota),
     };
   });
 }
@@ -118,64 +189,62 @@ export function recalcGerentes(
   pesosGerentes: PesosRanking
 ): ScoreResult[] {
   return (scores || []).map((membro) => {
-    const extra = membro.extra;
-    const dispon = membro.disponibilidade;
     const macroe = selectedProjectObj?.macro ?? "";
-    const av_120 = membro.nota_120 ?? 0;
-    const prefere = Array.isArray(membro.gosta) ? membro.gosta : [];
-    const bom = Array.isArray(membro.bom) ? membro.bom : [];
-    const ruim = Array.isArray(membro.ruim) ? membro.ruim : [];
-    const em_exp = membro.maem_exp ?? 0;
-    const sf_exp = membro.masf_exp ?? 0;
-    const sm_exp = membro.masm_exp ?? 0;
-    const pe_exp = membro.mape_exp ?? 0;
-    const em_nps = membro.maem_nps ?? 0;
-    const sf_nps = membro.masf_nps ?? 0;
-    const sm_nps = membro.masm_nps ?? 0;
-    const pe_nps = membro.mape_nps ?? 0;
-    const em_qap = membro.maem_ef ?? 0;
-    const sf_qap = membro.masf_ef ?? 0;
-    const sm_qap = membro.masm_ef ?? 0;
-    const pe_qap = membro.mape_ef ?? 0;
 
-    const pesos = pesosGerentes;
+    const disponibilidadeScore = getAvailabilityScore(membro.disponibilidade);
+    const av120Score = clamp10(membro.nota_120 ?? 0);
+    const preferenciaScore = getPreferenciaGerente(
+      macroe,
+      membro.gosta,
+      membro.bom,
+      membro.ruim,
+      membro.extra
+    );
+
+    const experienceScore = clamp10(
+      getMacroScore(macroe, {
+        em: membro.maem_exp,
+        pe: membro.mape_exp,
+        sf: membro.masf_exp,
+        sm: membro.masm_exp,
+      })
+    );
+
+    const npsScore = clamp10(
+      getMacroScore(macroe, {
+        em: membro.maem_nps,
+        pe: membro.mape_nps,
+        sf: membro.masf_nps,
+        sm: membro.masm_nps,
+      })
+    );
+
+    const qapScore = clamp10(
+      getMacroScore(macroe, {
+        em: membro.maem_ef,
+        pe: membro.mape_ef,
+        sf: membro.masf_ef,
+        sm: membro.masm_ef,
+      })
+    );
+
     let nota = 0;
 
-    if (dispon === 0) nota += 3 * pesos.availability;
-    else if (dispon === 1) nota += 2 * pesos.availability;
-    else if (dispon === 2) nota += 1 * pesos.availability;
+    nota += disponibilidadeScore * pesosGerentes.availability;
+    nota += av120Score * pesosGerentes.av_120;
+    nota += preferenciaScore * pesosGerentes.preferencia;
+    nota += experienceScore * pesosGerentes.experience;
+    nota += npsScore * pesosGerentes.nps;
+    nota += qapScore * pesosGerentes.qap;
 
-    nota += av_120 * pesos.av_120;
-
-    let pref = 5;
-    if (prefere.includes(macroe)) pref += 2;
-    if (bom.includes(macroe)) pref += 2;
-    if (ruim.includes(macroe)) pref -= 5;
-    if (extra) pref += 1;
-
-    nota += pref * pesos.preferencia;
-
-    if (macro_em.includes(macroe)) nota += em_exp * pesos.experience;
-    else if (macro_pe.includes(macroe)) nota += pe_exp * pesos.experience;
-    else if (macro_sf.includes(macroe)) nota += sf_exp * pesos.experience;
-    else if (macro_sm.includes(macroe)) nota += sm_exp * pesos.experience;
-
-    if (macro_em.includes(macroe)) nota += em_nps * pesos.nps;
-    else if (macro_pe.includes(macroe)) nota += pe_nps * pesos.nps;
-    else if (macro_sf.includes(macroe)) nota += sf_nps * pesos.nps;
-    else if (macro_sm.includes(macroe)) nota += sm_nps * pesos.nps;
-
-    if (macro_em.includes(macroe)) nota += em_qap * pesos.qap;
-    else if (macro_pe.includes(macroe)) nota += pe_qap * pesos.qap;
-    else if (macro_sf.includes(macroe)) nota += sf_qap * pesos.qap;
-    else if (macro_sm.includes(macroe)) nota += sm_qap * pesos.qap;
-
-    if ((dispon ?? 0) >= 3) nota = 0;
+    if ((membro.disponibilidade ?? 0) >= 3) {
+      nota = 0;
+    }
 
     return {
       id: membro.id,
-      nome: membro.nome,
-      score: nota,
+      nome: (membro.nome ?? "").trim(),
+      score: roundScore(nota),
     };
   });
 }
@@ -184,12 +253,20 @@ export function recalcMadrinhas(
   scores: MembroScore[] = []
 ): ScoreResult[] {
   return (scores || []).map((membro) => {
-    const dispon = membro.disp_madrinha ?? 0;
+    const disp = membro.disp_madrinha ?? 0;
+
+    let score = 0;
+    if (disp === 0) score = 10;
+    else if (disp === 1) score = 8;
+    else if (disp === 2) score = 6;
+    else if (disp === 3) score = 4;
+    else if (disp === 4) score = 2;
+    else score = 0;
 
     return {
       id: membro.id,
-      nome: membro.nome,
-      score: dispon,
+      nome: (membro.nome ?? "").trim(),
+      score,
     };
   });
 }
